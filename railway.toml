@@ -1,10 +1,10 @@
-[build]
-builder = "NIXPACKS"
-buildCommand = "npm ci && npm run build"
-
 [service]
 root = "api"
 start = "npm start"
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm ci && npm run build"
 
 [variables]
 NIXPACKS_NODE_VERSION = "18"
