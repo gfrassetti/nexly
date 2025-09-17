@@ -32,7 +32,7 @@ app.use(
 );
 app.use(express.json());
 
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 
 app.use("/health", healthRouter);
 app.use("/auth", authRouter);
@@ -41,7 +41,4 @@ app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
 
-app.listen(PORT, async () => {
-  await connectDB();
-  console.log(`API listening on http://localhost:${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log('up', PORT));
