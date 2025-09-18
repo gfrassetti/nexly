@@ -10,8 +10,6 @@ import integrationsRouter from "./routes/integrations";
 import { verifyMetaSignature } from "./middleware/verifyMetaSignature";
 import messageRoutes from "./routes/messages";
 
-
-
 dotenv.config();
 
 const app = express();
@@ -42,15 +40,22 @@ app.use(
     },
   })
 );
-app.use(express.json());
 
 const PORT = Number(process.env.PORT) || 4000;
 
 app.use("/health", healthRouter);
 app.use("/auth", authRouter);
 app.use("/webhook", verifyMetaSignature, webhookRouter);
-app.use("/contacts", contactsRouter); 
+app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
 
-app.listen(PORT, '0.0.0.0', () => console.log('up', PORT));
+// 👇 conectar DB primero, después arrancar server
+connectDB()
+  .then(() => {
+    app.listen(PORT, "0.0.0.0", () => console.log("✅ up", PORT));
+  })
+  .catch((err) => {
+    console.error("❌ Error al conectar DB:", err);
+    process.exit(1);
+  });
