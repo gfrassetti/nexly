@@ -1,6 +1,6 @@
 // src/routes/integrations.ts
 import { Router, Request, Response } from "express";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import handleAuth from "../middleware/auth";
 import { Integration, IntegrationDoc } from "../models/Integration";
 import { syncIntegration } from "../services/syncIntegration";
@@ -65,7 +65,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 
     // Si no pasan externalId/phoneNumberId ahora, igual creamos pendiente.
     const doc = await Integration.create({
-      userId,
+      userId: new Types.ObjectId(userId),
       provider,
       externalId,
       phoneNumberId,

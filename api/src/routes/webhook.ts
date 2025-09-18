@@ -42,7 +42,12 @@ router.post("/", verifyMetaSignature, async (req, res) => {
       const phone = msg.from;
       let contact = await Contact.findOne({ userId, phone });
       if (!contact) {
-        contact = await Contact.create({ userId, name: phone, phone, email: "" });
+        contact = await Contact.create({
+          userId,
+          name: phone,
+          phone,
+          email: "",
+        });
       }
 
       if (msg.type === "text" && msg.text?.body) {
@@ -63,4 +68,3 @@ router.post("/", verifyMetaSignature, async (req, res) => {
 });
 
 export default router;
-
