@@ -5,14 +5,14 @@ WORKDIR /app
 # Copiar package.json y package-lock.json
 COPY api/package*.json ./
 
-# Copiar tsconfig.json también
-COPY api/tsconfig.json ./
-
-# Instalar dependencias
+# Instalar TODAS las dependencias (incluyendo dev)
 RUN npm install --include=dev
 
 # Copiar el resto del código
 COPY api/ ./
+
+# Dar permisos al compilador TypeScript
+RUN chmod +x ./node_modules/.bin/tsc
 
 # Compilar TypeScript
 RUN npx tsc
