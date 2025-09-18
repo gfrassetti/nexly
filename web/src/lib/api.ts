@@ -66,3 +66,28 @@ export const linkIntegration = (
   body: { provider: "whatsapp" | "instagram" | "messenger"; externalId: string; phoneNumberId?: string; accessToken?: string; name?: string }
 ) =>
   fetchJson("/integrations/link", { method: "POST", body: JSON.stringify(body) }, token);
+
+  // src/lib/api.ts
+export async function apiFetch(
+  path: string,
+  options: RequestInit = {},
+  token?: string
+) {
+  const res = await fetch(
+    process.env.NEXT_PUBLIC_API_URL + path,
+    {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+
+  return res.json();
+}
