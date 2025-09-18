@@ -10,7 +10,7 @@ export default function Topbar() {
           onClick={() => {
             // logout simple: borra cookie y recarga
             document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
-            location.href = "/auth/login";
+            location.href = "/login";
           }}
           className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-sm"
         >
