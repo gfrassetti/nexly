@@ -1,5 +1,0 @@
-{
-  "/(private)/dashboard/contacts/page": "app/(private)/dashboard/contacts/page.js",
-  "/(private)/dashboard/integrations/page": "app/(private)/dashboard/integrations/page.js",
-  "/(private)/dashboard/inbox/page": "app/(private)/dashboard/inbox/page.js"
-}
