@@ -1,7 +1,5 @@
 [build]
 builder = "dockerfile"
-dockerfilePath = "api/Dockerfile"
-buildContext   = "api"
 
 [service]
 start = "npm start"
