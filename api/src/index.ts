@@ -17,7 +17,8 @@ const app = express();
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "https://nexly-93kgcbsuy-guido-fs-projects.vercel.app",
-  "https://nexly-git-master-guido-fs-projects.vercel.app"
+  "https://nexly-git-master-guido-fs-projects.vercel.app",
+  "https://nexly-topaz.vercel.app"
 ];
 
 app.use(cors({
