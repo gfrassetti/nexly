@@ -1,10 +1,15 @@
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/+$/, "");
+// web/src/lib/api.ts
 
+// Base de la API (sanitizada para NO dejar barra final)
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000")
+  .replace(/\/+$/, "");
+
+// Une base + path sin generar "//"
 const join = (path: string) => `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
-type Json = any;
+type JSONValue = any;
 
-function headers(token?: string, extra?: HeadersInit) {
+function makeHeaders(token?: string, extra?: HeadersInit) {
   const h: HeadersInit = { "Content-Type": "application/json" };
   if (token) (h as any).Authorization = `Bearer ${token}`;
   return { ...h, ...(extra || {}) };
@@ -13,51 +18,55 @@ function headers(token?: string, extra?: HeadersInit) {
 async function toJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
-    try {
-      const data = await res.json();
-      msg = data?.error || data?.message || msg;
-    } catch {}
+    try { const data = await res.json(); msg = data?.error || data?.message || msg; } catch {}
     throw new Error(msg);
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
-export async function apiFetch<T = Json>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
+// -------- core fetch --------
+export async function apiFetch<T = JSONValue>(
+  path: string,
+  options: RequestInit = {},
+  token?: string
+): Promise<T> {
   const res = await fetch(join(path), {
+    credentials: "omit",               // usa "include" si más adelante vas con cookies
     ...options,
-    headers: headers(token, options.headers || {}),
+    headers: makeHeaders(token, options.headers),
   });
   return toJson<T>(res);
 }
 
-export async function fetchJson<T = Json>(path: string, opts: RequestInit = {}, token?: string): Promise<T> {
-  const res = await fetch(join(path), {
-    ...opts,
-    headers: headers(token, opts.headers || {}),
-  });
-  return toJson<T>(res);
-}
+// -------- helpers HTTP --------
+export const get  = <T = JSONValue>(path: string, token?: string) =>
+  apiFetch<T>(path, { method: "GET" }, token);
 
-export const url = join;
+export const post = <T = JSONValue>(path: string, body?: unknown, token?: string) =>
+  apiFetch<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined }, token);
 
-/* Auth */
+export const put  = <T = JSONValue>(path: string, body?: unknown, token?: string) =>
+  apiFetch<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined }, token);
+
+export const del  = <T = JSONValue>(path: string, token?: string) =>
+  apiFetch<T>(path, { method: "DELETE" }, token);
+
+// -------- endpoints de alto nivel --------
 export const register = (body: { username: string; email: string; password: string }) =>
-  fetchJson("/auth/register", { method: "POST", body: JSON.stringify(body) });
+  post<{ message: string }>("/auth/register", body);
 
 export const login = (body: { identifier?: string; email?: string; username?: string; password: string }) =>
-  fetchJson<{ token: string; user: any }>("/auth/login", { method: "POST", body: JSON.stringify(body) });
+  post<{ token: string; user: { id: string; username: string; email: string } }>("/auth/login", body);
 
-/* Contacts */
 export const getContacts = (token: string) =>
-  fetchJson<any[]>("/contacts", { method: "GET" }, token);
+  get<any[]>("/contacts", token);
 
 export const createContact = (
   token: string,
   body: { name: string; phone: string; email?: string; tags?: string[] }
-) => fetchJson("/contacts", { method: "POST", body: JSON.stringify(body) }, token);
+) => post("/contacts", body, token);
 
-/* Messages */
 export const getMessages = (
   token: string,
   params: { contactId?: string; provider?: string } = {}
@@ -65,8 +74,8 @@ export const getMessages = (
   const q = new URLSearchParams();
   if (params.contactId) q.set("contactId", params.contactId);
   if (params.provider) q.set("provider", params.provider);
-  const suffix = q.toString() ? `?${q.toString()}` : "";
-  return fetchJson<any[]>(`/messages${suffix}`, { method: "GET" }, token);
+  const s = q.toString();
+  return get<any[]>(`/messages${s ? `?${s}` : ""}`, token);
 };
 
 export const sendMessageApi = (
@@ -78,9 +87,8 @@ export const sendMessageApi = (
     body?: string;
     contactId?: string;
   }
-) => fetchJson("/messages/send", { method: "POST", body: JSON.stringify(body) }, token);
+) => post("/messages/send", body, token);
 
-/* Integrations */
 export const linkIntegration = (
   token: string,
   body: {
@@ -90,6 +98,10 @@ export const linkIntegration = (
     accessToken?: string;
     name?: string;
   }
-) => fetchJson("/integrations/link", { method: "POST", body: JSON.stringify(body) }, token);
+) => post("/integrations/link", body, token);
 
+// util por si necesitás construir URLs absolutas
+export const url = join;
+
+// permite importar como default o nombrada
 export default apiFetch;
