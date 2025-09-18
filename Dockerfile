@@ -2,19 +2,16 @@ FROM node:18
 
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
+# 1) Dependencias (aprovecha cache)
 COPY api/package*.json ./
-
-# Instalar TODAS las dependencias (incluyendo dev)
 RUN npm install --include=dev
 
-# Copiar el resto del código
-COPY api/ ./
+# 2) Código de la API (manteniendo la carpeta src/) + tsconfig
+COPY api/src ./src
+COPY api/tsconfig.json ./
 
-# Dar permisos al compilador TypeScript
+# 3) Compilar TS
 RUN chmod +x ./node_modules/.bin/tsc
-
-# Compilar TypeScript
 RUN npx tsc
 
 EXPOSE 3000

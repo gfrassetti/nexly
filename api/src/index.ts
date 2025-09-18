@@ -1,14 +1,14 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { connectDB } from "./src/db/connect";
-import healthRouter from "./src/routes/health";
-import webhookRouter from "./src/routes/webhook";
-import authRouter from "./src/routes/auth";
-import contactsRouter from "./src/routes/contacts";
-import integrationsRouter from "./src/routes/integrations";
-import { verifyMetaSignature } from "./src/middleware/verifyMetaSignature";
-import messageRoutes from "./src/routes/messages";
+import { connectDB } from "./db/connect";
+import healthRouter from "./routes/health";
+import webhookRouter from "./routes/webhook";
+import authRouter from "./routes/auth";
+import contactsRouter from "./routes/contacts";
+import integrationsRouter from "./routes/integrations";
+import { verifyMetaSignature } from "./middleware/verifyMetaSignature";
+import messageRoutes from "./routes/messages";
 
 
 
