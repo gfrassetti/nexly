@@ -1,38 +1,39 @@
 "use client";
+
 import { useState } from "react";
-import { useMessages } from "@/hooks/useMessages";
 
-export default function Composer({
-  contactId,
-  token,
-}: {
-  contactId: string;
-  token: string;
-}) {
-  const [body, setBody] = useState("");
-  const { sendMessage } = useMessages(token);
+interface ComposerProps {
+  threadId: string | null;
+  token?: string;
+}
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!body.trim()) return;
-    await sendMessage(contactId, body);
-    setBody("");
+export default function Composer({ threadId, token }: ComposerProps) {
+  const [text, setText] = useState("");
+
+  if (!threadId) {
+    return null; // no mostramos composer si no hay thread seleccionado
   }
 
+  const send = () => {
+    if (!text.trim()) return;
+    console.log("Enviar mensaje:", { threadId, text, token });
+    setText("");
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="flex gap-2 p-2 border-t border-neutral-800">
       <input
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Escribe un mensaje…"
-        className="flex-1 px-3 py-2 rounded bg-neutral-900 border border-neutral-700 outline-none"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Escribe un mensaje..."
+        className="flex-1 bg-neutral-900 text-white p-2 rounded"
       />
       <button
-        className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500"
-        type="submit"
+        onClick={send}
+        className="px-3 py-1 bg-blue-600 text-white rounded"
       >
         Enviar
       </button>
-    </form>
+    </div>
   );
 }
