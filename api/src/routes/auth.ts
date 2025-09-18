@@ -24,12 +24,14 @@ router.post("/register", async (req, res) => {
         .json({ message: "La contraseña debe tener al menos 6 caracteres" });
     }
 
-const existingUser = await User.findOne({
-  $or: [{ email }, { username }]
-});
-if (existingUser) {
-  return res.status(409).json({ message: "Email o username ya está en uso" });
-}
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ message: "Email o username ya está en uso" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -45,15 +47,20 @@ if (existingUser) {
 
     res.status(201).json({ message: "Usuario registrado exitosamente" });
   } catch (err: any) {
-     console.error("REGISTER error:", err);
-     res.status(500).json({ message: "Error en el registro", error: err.message });
+    console.error("REGISTER error:", err);
+    res
+      .status(500)
+      .json({
+        message: "Error en el registro",
+        error: err.message,
+        stack: err.stack,
+      });
   }
 });
 
 // Login
 router.post("/login", async (req, res) => {
   try {
-    
     const { identifier, email, username, password } = req.body;
     const key = (identifier ?? email ?? username ?? "").trim();
 

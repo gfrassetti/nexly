@@ -15,23 +15,26 @@ import messageRoutes from "./routes/messages";
 dotenv.config();
 
 const app = express();
-const allowedOrigins = [
+
+const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://nexly-topaz.vercel.app"
+  "https://nexly-93kgcbsuy-guido-fs-projects.vercel.app",
+  "https://nexly-git-master-guido-fs-projects.vercel.app"
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    return cb(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"]
+}));
+
+app.options("*", cors());
+
 app.use(
   express.json({
     verify: (req: any, _res, buf) => {
