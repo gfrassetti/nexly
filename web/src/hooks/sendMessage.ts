@@ -4,11 +4,15 @@ import { sendMessageApi } from "@/lib/api";
 
 type Provider = "whatsapp" | "instagram" | "messenger";
 
-// Exactamente uno de los dos: contactId (hilo existente) o to (nuevo destino)
 type SendMessagePayload =
-  | { provider: Provider; contactId: string; body: string; to?: never }
-  | { provider: Provider; to: string; body: string; contactId?: never };
+  | { provider: Provider; contactId: string; body: string; to?: string }
+  | { provider: Provider; to: string; body: string; contactId?: string };
 
 export async function sendMessage(token: string, payload: SendMessagePayload) {
-  return sendMessageApi(token, payload);
+  return sendMessageApi(token, {
+    provider: payload.provider,
+    body: payload.body,
+    contactId: payload.contactId,
+    to: payload.to ?? "", // asegurar string, aunque sea vacío
+  });
 }
