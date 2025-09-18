@@ -1,36 +1,30 @@
 "use client";
-
 import { useState } from "react";
 
-interface ComposerProps {
+type ComposerProps = {
   threadId: string | null;
-  token?: string;
-}
+  token: string;
+  onSend: (text: string) => Promise<void>;
+};
 
-export default function Composer({ threadId, token }: ComposerProps) {
+export default function Composer({ threadId, token, onSend }: ComposerProps) {
   const [text, setText] = useState("");
 
-  if (!threadId) {
-    return null; // no mostramos composer si no hay thread seleccionado
-  }
-
-  const send = () => {
-    if (!text.trim()) return;
-    console.log("Enviar mensaje:", { threadId, text, token });
-    setText("");
-  };
-
   return (
-    <div className="flex gap-2 p-2 border-t border-neutral-800">
+    <div className="p-2 border-t flex gap-2">
       <input
+        className="flex-1 border px-2"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Escribe un mensaje..."
-        className="flex-1 bg-neutral-900 text-white p-2 rounded"
       />
       <button
-        onClick={send}
-        className="px-3 py-1 bg-blue-600 text-white rounded"
+        onClick={async () => {
+          if (!text.trim()) return;
+          await onSend(text);
+          setText("");
+        }}
+        className="bg-black text-white px-3 py-1 rounded"
       >
         Enviar
       </button>
