@@ -6,7 +6,6 @@
     "moduleResolution": "node",
     "rootDir": "src",
     "outDir": "dist",
-    "baseUrl": "./src",
     "types": ["node"],
     "resolveJsonModule": true,
     "esModuleInterop": true,
