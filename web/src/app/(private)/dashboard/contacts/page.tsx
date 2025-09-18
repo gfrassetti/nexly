@@ -16,9 +16,8 @@ export default function ContactsPage() {
   const [selectedContact, setSelectedContact] = useState<ContactItem | null>(null);
 
 async function handleSaveContact(data: any) {
-  const token = localStorage.getItem("token") || "";
   const payload = { ...data, integrationId }; // opcional si querés etiquetar por canal
-  await createContact(token, payload);
+  await createContact(payload);
   setSelectedContact(null);
   location.reload();
 }
