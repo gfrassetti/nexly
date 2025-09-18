@@ -1,20 +1,38 @@
 "use client";
 import useSWR from "swr";
-import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/store/useAuth";
 import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
 import { useState } from "react";
+import { sendMessage } from "@/hooks/sendMessage";
+
 const channels = ["whatsapp", "instagram", "messenger"] as const;
+
 export default function InboxPage() {
   const token = useAuth((s) => s.token);
   const [channel, setChannel] = useState<(typeof channels)[number]>("whatsapp");
   const [activeId, setActiveId] = useState<string | null>(null);
+
   const { data: threads } = useSWR(
     token ? ["/inbox", channel] : null,
-    ([p, c]) => apiFetch(`${p}?channel=${c}`, {}, token!)
+    async ([p, c]) => {
+      const res = await fetch(`/api${p}?channel=${c}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return res.json();
+    }
   );
+
+  async function handleSend(text: string) {
+    if (!token || !activeId) return;
+    await sendMessage(token, {
+      provider: channel,
+      contactId: activeId,
+      body: text,
+    });
+  }
+
   return (
     <div className="h-full grid grid-rows-[auto_1fr_auto]">
       <div className="flex gap-2 p-3 border-b">
@@ -37,8 +55,12 @@ export default function InboxPage() {
           onSelect={setActiveId}
         />
         <div className="min-w-0 grid grid-rows-[1fr_auto]">
-          <MessageThread threadId={activeId} token={token || undefined} />
-          <Composer threadId={activeId} token={token || undefined} />
+          <MessageThread threadId={activeId} token={token || ""} />
+          <Composer
+            threadId={activeId}
+            token={token || ""}
+            onSend={handleSend}
+          />
         </div>
       </div>
     </div>
