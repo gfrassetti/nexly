@@ -1,7 +1,8 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 
 export interface IntegrationDoc extends Document {
-  userId: string;
+  // 👇 Debe ser ObjectId porque en el schema usás Schema.Types.ObjectId
+  userId: Types.ObjectId;
   provider: "whatsapp" | "instagram" | "messenger";
   externalId: string;
   phoneNumberId?: string;
@@ -12,44 +13,30 @@ export interface IntegrationDoc extends Document {
     displayPhone?: string;
     verifiedName?: string;
   };
-  createdAt?: Date;   // 👈 agregados
-  updatedAt?: Date;   // 👈 agregados
+  // timestamps agregados para que TS no proteste en las rutas
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const integrationSchema = new Schema<IntegrationDoc>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    provider: {
-      type: String,
-      enum: ["whatsapp", "instagram", "messenger"],
-      required: true,
-    },
-    // Para WhatsApp Cloud: phone_number_id
+    provider: { type: String, enum: ["whatsapp", "instagram", "messenger"], required: true },
     externalId: { type: String, required: true },
-
-    // Opcional (si no lo mandás, igualamos a externalId)
     phoneNumberId: { type: String },
-
-    // Token por integración (en caso de que no uses global de app)
     accessToken: { type: String },
-
-    name: String,
-
-    status: {
-      type: String,
-      enum: ["pending", "linked", "error"],
-      default: "pending",
-    },
-
+    name: { type: String },
+    status: { type: String, enum: ["pending", "linked", "error"], default: "pending" },
     meta: {
-      displayPhone: String,
-      verifiedName: String,
+      displayPhone: { type: String },
+      verifiedName: { type: String },
     },
   },
-  { timestamps: true } // 👈 esto crea createdAt/updatedAt automáticamente
+  { timestamps: true, versionKey: false }
 );
 
 // ÚNICA por usuario + proveedor + externalId
 integrationSchema.index({ userId: 1, provider: 1, externalId: 1 }, { unique: true });
 
 export const Integration = model<IntegrationDoc>("Integration", integrationSchema);
+

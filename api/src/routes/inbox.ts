@@ -1,15 +1,28 @@
-// src/routes/inbox.ts
-import { Router } from "express";
+import { Router, Response } from "express";
 import { Message } from "../models/Message";
 import handleAuth from "../middleware/auth";
+import { PipelineStage, Types } from "mongoose";
+
+type AuthRequest = {
+  user?: { id?: string; _id?: string };
+} & Express.Request;
 
 const router = Router();
 
-// Últimos mensajes de cada contacto
-router.get("/", handleAuth, async (req: any, res) => {
+/**
+ * GET /inbox
+ * Devuelve el último mensaje por contacto para el usuario autenticado.
+ */
+router.get("/", handleAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const pipeline = [
-      { $match: { userId: req.user.id } },
+    const userIdStr = req.user?.id || req.user?._id;
+    if (!userIdStr) return res.status(401).json({ error: "no_user_in_token" });
+
+    // Si en tu schema Message.userId es ObjectId, casteamos:
+    const userId = new Types.ObjectId(String(userIdStr));
+
+    const pipeline: PipelineStage[] = [
+      { $match: { userId } },
       { $sort: { createdAt: -1 } },
       {
         $group: {
@@ -25,7 +38,7 @@ router.get("/", handleAuth, async (req: any, res) => {
           as: "contact",
         },
       },
-      { $unwind: "$contact" },
+      { $unwind: { path: "$contact", preserveNullAndEmptyArrays: false } },
       {
         $project: {
           _id: 0,
@@ -36,9 +49,10 @@ router.get("/", handleAuth, async (req: any, res) => {
     ];
 
     const inbox = await Message.aggregate(pipeline);
-    res.json(inbox);
+    return res.json(inbox);
   } catch (err) {
-    res.status(500).json({ error: "failed_to_fetch_inbox" });
+    console.error("inbox_list_failed:", err);
+    return res.status(500).json({ error: "failed_to_fetch_inbox" });
   }
 });
 

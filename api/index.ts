@@ -7,7 +7,7 @@ import webhookRouter from "./src/routes/webhook";
 import authRouter from "./src/routes/auth";
 import contactsRouter from "./src/routes/contacts";
 import integrationsRouter from "./src/routes/integrations";
-import verifyMetaSignature from "./src/middleware/verifyMetaSignature";
+import { verifyMetaSignature } from "./src/middleware/verifyMetaSignature";
 import messageRoutes from "./src/routes/messages";
 
 

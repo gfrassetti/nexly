@@ -3,7 +3,7 @@ import { config } from "../config";
 import { Contact } from "../models/Contact";
 import { Message } from "../models/Message";
 import { Integration } from "../models/Integration";
-import verifyMetaSignature from "../middleware/verifyMetaSignature";
+import { verifyMetaSignature } from "../middleware/verifyMetaSignature";
 
 const router = Router();
 
