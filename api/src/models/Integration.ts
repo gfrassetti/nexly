@@ -12,6 +12,8 @@ export interface IntegrationDoc extends Document {
     displayPhone?: string;
     verifiedName?: string;
   };
+  createdAt?: Date;   // 👈 agregados
+  updatedAt?: Date;   // 👈 agregados
 }
 
 const integrationSchema = new Schema<IntegrationDoc>(
@@ -44,7 +46,7 @@ const integrationSchema = new Schema<IntegrationDoc>(
       verifiedName: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true } // 👈 esto crea createdAt/updatedAt automáticamente
 );
 
 // ÚNICA por usuario + proveedor + externalId
