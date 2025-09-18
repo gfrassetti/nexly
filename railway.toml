@@ -1,9 +1,10 @@
-[service]
-root = "api"
-start = "npm start"
-
 [build]
 builder = "dockerfile"
+dockerfilePath = "api/Dockerfile"
+buildContext   = "api"
+
+[service]
+start = "npm start"
 
 [variables]
 NIXPACKS_NODE_VERSION = "18"
