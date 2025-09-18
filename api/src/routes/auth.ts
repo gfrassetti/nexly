@@ -50,10 +50,10 @@ router.post("/register", async (req, res) => {
 // Login
 router.post("/login", async (req, res) => {
   try {
-    const { identifier, email, password } = req.body;
-    console.log(req.body);
+    
+    const { identifier, email, username, password } = req.body;
+    const key = (identifier ?? email ?? username ?? "").trim();
 
-    const key = (identifier ?? email ?? "").trim();
     if (!key || !password) {
       return res
         .status(400)
@@ -83,7 +83,11 @@ router.post("/login", async (req, res) => {
 
     res.json({
       token,
-      user: { id: user._id.toString(), username: user.username, email: user.email },
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        email: user.email,
+      },
     });
   } catch (err) {
     console.error("LOGIN error:", err);
