@@ -43,14 +43,14 @@ export default function RegisterPage() {
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         <input
-          className="w-full border rounded-md px-3 py-2"
+          className="w-full border rounded-md px-3 py-2 text-black"
           placeholder="Nombre de usuario"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
 
         <input
-          className="w-full border rounded-md px-3 py-2"
+          className="w-full border rounded-md px-3 py-2 text-black"
           placeholder="Email"
           type="email"
           value={email}
@@ -58,7 +58,7 @@ export default function RegisterPage() {
         />
 
         <input
-          className="w-full border rounded-md px-3 py-2"
+          className="w-full border rounded-md px-3 py-2 text-black"
           placeholder="Contraseña"
           type="password"
           value={password}
