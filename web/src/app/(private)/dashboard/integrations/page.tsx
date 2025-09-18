@@ -1,45 +1,61 @@
+// web/src/app/(private)/dashboard/integrations/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
+import {
+  listIntegrations,
+  linkIntegration,
+  type IntegrationDto,
+  type Provider,
+} from "@/lib/api";
+
+const BTN_STYLE =
+  "px-4 py-2 rounded font-medium text-white hover:opacity-90 transition";
+
+const COLORS: Record<Provider, string> = {
+  whatsapp: "bg-emerald-600",
+  instagram: "bg-pink-600",
+  messenger: "bg-indigo-600",
+};
 
 export default function IntegrationsPage() {
-  const [integrations, setIntegrations] = useState<any[]>([]);
+  const [items, setItems] = useState<IntegrationDto[]>([]);
   const [loading, setLoading] = useState(false);
 
+  async function load() {
+    try {
+      setLoading(true);
+      const data = await listIntegrations();
+      setItems(data);
+    } catch (e: any) {
+      // 401 => probablemente sin token en Authorization
+      toast.error(e.message || "Error al cargar integraciones");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    apiFetch("/integrations")
-      .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar integraciones");
-        return res.json();
-      })
-      .then((data) => setIntegrations(data))
-      .catch((err) => {
-        console.error(err);
-        toast.error("Error cargando integraciones");
-      });
+    load();
   }, []);
 
-  async function connect(provider: string) {
-    setLoading(true);
+  async function connect(provider: Provider) {
     try {
-      const res = await apiFetch("/integrations", {
-        method: "POST",
-        body: JSON.stringify({ provider }),
+      setLoading(true);
+      // DEMO: externalId = phoneNumberId
+      const demoExternal = provider === "whatsapp" ? "123456789012345" : "demo-external";
+      await linkIntegration({
+        provider,
+        externalId: demoExternal,
+        phoneNumberId: demoExternal,
+        name: `Mi ${provider}`,
+        // accessToken: "EAAG...." // en real, recoger del usuario
       });
-
-      if (res.ok) {
-        const newIntegration = await res.json();
-        setIntegrations((prev) => [...prev, newIntegration]);
-        toast.success(`Integración con ${provider} conectada correctamente`);
-      } else {
-        const error = await res.json().catch(() => ({}));
-        toast.error(error.message || `Error al conectar ${provider}`);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error de red al conectar integración");
+      toast.success(`Integración ${provider} conectada`);
+      await load();
+    } catch (e: any) {
+      toast.error(e.message || "Error de red al conectar integración");
     } finally {
       setLoading(false);
     }
@@ -48,46 +64,46 @@ export default function IntegrationsPage() {
   return (
     <div className="p-6 space-y-6">
       <h2 className="text-xl font-semibold">Integraciones</h2>
-      <div className="flex gap-4">
-        <button
-          onClick={() => connect("whatsapp")}
-          disabled={loading}
-          className="px-4 py-2 rounded bg-green-600 hover:bg-green-700"
-        >
-          Conectar WhatsApp
-        </button>
-        <button
-          onClick={() => connect("instagram")}
-          disabled={loading}
-          className="px-4 py-2 rounded bg-pink-600 hover:bg-pink-700"
-        >
-          Conectar Instagram
-        </button>
-        <button
-          onClick={() => connect("messenger")}
-          disabled={loading}
-          className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700"
-        >
-          Conectar Messenger
-        </button>
+
+      <div className="flex gap-3">
+        {(["whatsapp", "instagram", "messenger"] as Provider[]).map((p) => (
+          <button
+            key={p}
+            className={`${BTN_STYLE} ${COLORS[p]}`}
+            disabled={loading}
+            onClick={() => connect(p)}
+          >
+            Conectar {p.charAt(0).toUpperCase() + p.slice(1)}
+          </button>
+        ))}
       </div>
 
-      <div>
-        <h3 className="text-lg font-medium mt-6 mb-2">Integraciones activas</h3>
-        <ul className="space-y-2">
-          {integrations.map((i) => (
-            <li
-              key={i._id}
-              className="px-3 py-2 rounded bg-neutral-800 flex justify-between"
-            >
-              <span>{i.name || i.provider}</span>
-              <span className="text-sm text-neutral-400">{i.provider}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="mt-6">
+        {loading && <p className="text-sm text-neutral-400">Cargando…</p>}
+        {!loading && items.length === 0 && (
+          <p className="text-sm text-neutral-400">
+            No hay integraciones. Conecta al menos una.
+          </p>
+        )}
+        {!loading && items.length > 0 && (
+          <ul className="divide-y divide-neutral-800 rounded-lg border border-neutral-800 bg-neutral-900/40">
+            {items.map((it) => (
+              <li key={it._id} className="p-4 flex items-center justify-between">
+                <div>
+                  <div className="font-medium capitalize">{it.provider}</div>
+                  <div className="text-xs text-neutral-400">
+                    ExtId: {it.externalId}
+                    {it.phoneNumberId ? ` · PhoneId: ${it.phoneNumberId}` : ""}
+                  </div>
+                </div>
+                <span className="text-xs text-neutral-400">
+                  {new Date(it.updatedAt).toLocaleString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
 }
-
-

@@ -1,170 +1,187 @@
-// src/lib/api.ts
+// web/src/lib/api.ts
+// ------------------------------------------------------
+// Base URL y utilidades de red con token (Authorization)
+// ------------------------------------------------------
 
-// ==== Base URL ====
-// Usa NEXT_PUBLIC_API_URL para producción (Railway), con fallback a localhost.
-// Quita cualquier barra final para evitar // en las rutas.
-export const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"
-).replace(/\/+$/, "");
+/**
+ * Debe apuntar a tu backend en Railway:
+ *   NEXT_PUBLIC_API_URL=https://<tu-app>.up.railway.app
+ * En local: http://localhost:4000
+ */
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000")
+  .replace(/\/+$/, "");
 
-// Une base + path sin generar doble slash
-export const apiPath = (p: string) =>
-  `${API_URL}${p.startsWith("/") ? p : `/${p}`}`;
+export const apiPath = (p: string) => `${API_URL}${p.startsWith("/") ? p : `/${p}`}`;
 
-// ==== Helpers de Auth/Fetch ====
-function authHeaders(token?: string): HeadersInit {
-  const h: HeadersInit = { "Content-Type": "application/json" };
-  if (token) h.Authorization = `Bearer ${token}`;
-  return h;
+// -------- token helpers (cliente) ---------------------------------
+
+/** Intenta leer el token desde cookie "token" (en cliente) */
+export function getCookieToken(): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const m = document.cookie.match(/(?:^|;\s*)token=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : undefined;
 }
 
-async function handle<T>(res: Response): Promise<T> {
+/** Permite forzar un token o caer al cookie */
+export function resolveToken(override?: string) {
+  return override || getCookieToken();
+}
+
+// -------- fetch helpers -------------------------------------------
+
+/**
+ * apiFetch: wrapper de fetch con:
+ * - Base URL
+ * - Headers JSON
+ * - Authorization: Bearer <token> (si hay)
+ * - Manejo de error coherente
+ */
+export async function apiFetch<T = any>(
+  path: string,
+  options: RequestInit = {},
+  tokenOverride?: string
+): Promise<T> {
+  const token = resolveToken(tokenOverride);
+
+  const res = await fetch(apiPath(path), {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
+    // Importante si usas cookies/sesiones del mismo dominio:
+    // credentials: "include",
+  });
+
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try {
       const data = await res.json();
-      msg = data?.error || data?.message || msg;
-    } catch (_) {}
+      msg = data?.message || data?.error || msg;
+    } catch {
+      // ignore
+    }
     throw new Error(msg);
   }
-  // 204 No Content
+
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
-export async function fetchJson<T>(
-  path: string,
-  opts: RequestInit = {},
-  token?: string
-) {
-  const res = await fetch(apiPath(path), {
-    ...opts,
-    headers: { ...authHeaders(token), ...(opts.headers || {}) },
-  });
-  return handle<T>(res);
-}
+// ------------------------------------------------------
+// Endpoints de AUTENTICACIÓN
+// ------------------------------------------------------
 
-// ==== Tipos comunes ====
-export type Provider = "whatsapp" | "instagram" | "messenger";
-
-// ==== Auth ====
-// Registro
-export const registerApi = (body: {
+export function registerApi(body: {
   username: string;
   email: string;
   password: string;
-}) =>
-  fetchJson<{ message: string }>("/auth/register", {
+}) {
+  return apiFetch<{ message: string }>("/auth/register", {
     method: "POST",
     body: JSON.stringify(body),
   });
+}
 
-// Login (acepta identifier o email/username)
-export const loginApi = (body: {
+export function loginApi(body: {
   identifier?: string;
   email?: string;
   username?: string;
   password: string;
-}) =>
-  fetchJson<{
+}) {
+  return apiFetch<{
     token: string;
     user: { id: string; username: string; email: string };
   }>("/auth/login", { method: "POST", body: JSON.stringify(body) });
+}
 
-// ==== Contacts ====
-// Crear contacto (usa token)
-export const createContact = (
-  token: string,
-  body: {
-    name?: string;
-    phone: string;
-    email?: string;
-    tags?: string[];
-    // opcionales si querés relacionarlo a un canal/alias
-    provider?: Provider;
-    integrationId?: string;
-  }
-) => fetchJson("/contacts", { method: "POST", body: JSON.stringify(body) }, token);
+// ------------------------------------------------------
+// Endpoints de CONTACTOS / MENSAJES
+// ------------------------------------------------------
 
-// Listar contactos (con filtro opcional por integrationId o provider)
-export const getContacts = (
-  token: string,
-  params?: { integrationId?: string; provider?: Provider }
-) => {
-  const q = new URLSearchParams();
-  if (params?.integrationId) q.set("integrationId", params.integrationId);
-  if (params?.provider) q.set("provider", params.provider);
-  const suffix = q.toString() ? `?${q.toString()}` : "";
-  return fetchJson<any[]>(`/contacts${suffix}`, { method: "GET" }, token);
-};
+export type Provider = "whatsapp" | "instagram" | "messenger";
 
-// Actualizar contacto
-export const updateContact = (
-  token: string,
-  id: string,
-  body: Partial<{ name: string; phone: string; email: string; tags: string[] }>
-) =>
-  fetchJson(`/contacts/${id}`, { method: "PUT", body: JSON.stringify(body) }, token);
+export function getContacts() {
+  return apiFetch<any[]>("/contacts", { method: "GET" });
+}
 
-// Eliminar contacto
-export const deleteContact = (token: string, id: string) =>
-  fetchJson(`/contacts/${id}`, { method: "DELETE" }, token);
+/**
+ * Crear contacto manual (si lo mantenés). Si tu backend
+ * agrega el integrationId por webhook/sync, podés omitirlo.
+ */
+export function createContact(body: {
+  name?: string;
+  phone?: string;
+  email?: string;
+  tags?: string[];
+  provider?: Provider;
+}) {
+  return apiFetch("/contacts", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
 
-// ==== Messages ====
-// Enviar mensaje saliente
-export const sendMessageApi = (
-  token: string,
-  body: {
-    provider: Provider;
-    // dos alternativas:
-    to?: string;         // número/destino libre
-    contactId?: string;  // ó a partir de un contacto existente
-    body?: string;       // alias de message
-    message?: string;
-  }
-) =>
-  fetchJson(
-    "/messages/send",
-    { method: "POST", body: JSON.stringify(body) },
-    token
-  );
-
-// Listar mensajes (por contacto y/o por proveedor)
-export const getMessages = (
-  token: string,
-  params: { contactId?: string; provider?: Provider } = {}
-) => {
+export function getMessages(params: { contactId?: string; provider?: Provider } = {}) {
   const q = new URLSearchParams();
   if (params.contactId) q.set("contactId", params.contactId);
   if (params.provider) q.set("provider", params.provider);
   const suffix = q.toString() ? `?${q.toString()}` : "";
-  return fetchJson<any[]>(`/messages${suffix}`, { method: "GET" }, token);
+  return apiFetch<any[]>(`/messages${suffix}`, { method: "GET" });
+}
+
+export function sendMessageApi(body: {
+  provider: Provider;
+  to?: string;
+  body?: string;         // alias de message
+  message?: string;      // permitido
+  contactId?: string;
+}) {
+  // normalizamos body/message
+  const payload = { ...body, body: body.body ?? body.message };
+  return apiFetch("/messages/send", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// ------------------------------------------------------
+// Endpoints de INTEGRACIONES
+// ------------------------------------------------------
+
+export type IntegrationDto = {
+  _id: string;
+  userId: string;
+  provider: Provider;
+  externalId: string;
+  phoneNumberId?: string;
+  accessToken?: string;
+  name?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-// ==== Integrations ====
-// Vincular integración
-export const linkIntegration = (
-  token: string,
-  body: {
-    provider: Provider;
-    externalId: string;     // ej: phone_number_id (Meta)
-    phoneNumberId?: string; // opcional (si distinto)
-    accessToken?: string;   // opcional si guardás por integración
-    name?: string;          // alias para mostrar
-  }
-) =>
-  fetchJson(
-    "/integrations/link",
-    { method: "POST", body: JSON.stringify(body) },
-    token
-  );
+export function listIntegrations() {
+  return apiFetch<IntegrationDto[]>("/integrations", { method: "GET" });
+}
 
-// Listar integraciones del usuario
-export const listIntegrations = (token: string) =>
-  fetchJson<any[]>("/integrations", { method: "GET" }, token);
+/**
+ * Vincular integración (modo demo: tu endpoint crea/actualiza)
+ * - En producción, pedirás phoneNumberId y accessToken reales.
+ */
+export function linkIntegration(body: {
+  provider: Provider;
+  externalId: string;
+  phoneNumberId?: string;
+  accessToken?: string;
+  name?: string;
+}) {
+  return apiFetch<IntegrationDto>("/integrations/link", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
 
-// Eliminar integración
-export const unlinkIntegration = (token: string, id: string) =>
-  fetchJson(`/integrations/${id}`, { method: "DELETE" }, token);
+export default apiFetch;
 
-export default fetchJson;
