@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { useAuth } from "@/store/useAuth";
-import { apiFetch } from "@/lib/api";
+import apiFetch from "@/lib/api";
 import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
