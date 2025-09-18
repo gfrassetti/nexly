@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { API_URL } from "@/lib/api";
+import { registerApi, loginApi } from "@/lib/api";
 import { useAuth } from "@/store/useAuth";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
   const router = useRouter();
   const setAuth = useAuth((s) => s.setAuth);
 
@@ -19,15 +19,15 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-      if (!res.ok) throw new Error("Error al registrar usuario");
-      const data = await res.json();
-      document.cookie = `token=${data.token}; Path=/; SameSite=Lax`;
-      setAuth(data.token, data.user);
+      // 1) Registrar (tu back NO devuelve token acá)
+      await registerApi({ username, email, password });
+
+      // 2) Loguear para obtener token (podés usar email o username)
+      const { token, user } = await loginApi({ email, password });
+
+      // 3) Guardar sesión y redirigir
+      document.cookie = `token=${token}; Path=/; SameSite=Lax`;
+      setAuth(token, user);
       router.replace("/dashboard");
     } catch (e: any) {
       setError(e.message || "Error de registro");
@@ -44,9 +44,9 @@ export default function RegisterPage() {
 
         <input
           className="w-full border rounded-md px-3 py-2"
-          placeholder="Nombre"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          placeholder="Nombre de usuario"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
 
         <input
