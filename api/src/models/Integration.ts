@@ -21,12 +21,20 @@ export interface IntegrationDoc extends Document {
 const integrationSchema = new Schema<IntegrationDoc>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    provider: { type: String, enum: ["whatsapp", "instagram", "messenger"], required: true },
+    provider: {
+      type: String,
+      enum: ["whatsapp", "instagram", "messenger"],
+      required: true,
+    },
     externalId: { type: String, required: true },
     phoneNumberId: { type: String },
     accessToken: { type: String },
     name: { type: String },
-    status: { type: String, enum: ["pending", "linked", "error"], default: "pending" },
+    status: {
+      type: String,
+      enum: ["pending", "linked", "error"],
+      default: "pending",
+    },
     meta: {
       displayPhone: { type: String },
       verifiedName: { type: String },
@@ -36,7 +44,12 @@ const integrationSchema = new Schema<IntegrationDoc>(
 );
 
 // ÚNICA por usuario + proveedor + externalId
-integrationSchema.index({ userId: 1, provider: 1, externalId: 1 }, { unique: true });
+integrationSchema.index(
+  { userId: 1, provider: 1, externalId: 1 },
+  { unique: true }
+);
 
-export const Integration = model<IntegrationDoc>("Integration", integrationSchema);
-
+export const Integration = model<IntegrationDoc>(
+  "Integration",
+  integrationSchema
+);

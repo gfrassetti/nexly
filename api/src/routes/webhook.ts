@@ -16,7 +16,7 @@ router.get("/", (req, res) => {
 });
 
 // POST
-router.post("/", async (req, res) => {
+router.post("/", verifyMetaSignature, async (req, res) => {
   try {
     // Solo validar firma en prod
     if (process.env.NODE_ENV === "production") {
