@@ -15,13 +15,13 @@ export default function ContactsPage() {
   const { items: contacts, loading, error } = useContacts(integrationId);
   const [selectedContact, setSelectedContact] = useState<ContactItem | null>(null);
 
-  async function handleSaveContact(data: any) {
-    const token = localStorage.getItem("token") || "";
-    const payload = { ...data, integrationId };
-    await createContact(token, payload);
-    setSelectedContact(null);
-    location.reload();
-  }
+async function handleSaveContact(data: any) {
+  const token = localStorage.getItem("token") || "";
+  const payload = { ...data, integrationId }; // opcional si querés etiquetar por canal
+  await createContact(token, payload);
+  setSelectedContact(null);
+  location.reload();
+}
 
   return (
     <div className="p-6 space-y-6">
