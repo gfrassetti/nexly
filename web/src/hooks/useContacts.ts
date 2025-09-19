@@ -24,7 +24,7 @@ export function useContacts(integrationId: string) {
     setLoading(true);
     setError(null);
 
-    getContacts(token)
+    getContacts()
       .then((data) => {
         if (!mounted) return;
         console.log("[useContacts] contactos recibidos:", data);
