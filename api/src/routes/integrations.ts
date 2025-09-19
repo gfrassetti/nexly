@@ -1,15 +1,17 @@
 // src/routes/integrations.ts
 import { Router, Request, Response } from "express";
 import mongoose, { Types } from "mongoose";
+import axios from "axios";
 import handleAuth from "../middleware/auth";
 import { Integration, IntegrationDoc } from "../models/Integration";
 import { syncIntegration } from "../services/syncIntegration";
+import { config } from "../config";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
 const router = Router();
 
-// Todas requieren JWT
+// Todas requieren JWT excepto las de OAuth
 router.use(handleAuth);
 
 /**
@@ -22,14 +24,13 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     if (!userId) return res.status(401).json({ error: "no_user_in_token" });
 
     const items = await Integration.find({ userId }).lean();
-    // Aseguramos shape estable: status/meta presentes aunque sean undefined
     const withShape = items.map((it) => ({
       _id: it._id,
       userId: it.userId,
       provider: it.provider,
       externalId: it.externalId,
       phoneNumberId: it.phoneNumberId,
-      accessToken: it.accessToken ? "********" : undefined, // nunca devolver token en claro
+      accessToken: it.accessToken ? "********" : undefined,
       name: it.name,
       status: it.status ?? "pending",
       meta: it.meta ?? {},
@@ -44,16 +45,155 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * GET /integrations/connect/whatsapp
+ * Inicia el flujo OAuth para conectar WhatsApp Business
+ */
+router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    if (!config.metaAppId) {
+      return res.status(500).json({ error: "meta_app_not_configured" });
+    }
+
+    // Verificar si ya tiene WhatsApp conectado
+    const existing = await Integration.findOne({ 
+      userId, 
+      provider: "whatsapp" 
+    });
+
+    if (existing && existing.status === "linked") {
+      return res.status(409).json({ 
+        error: "whatsapp_already_connected",
+        integration: existing._id 
+      });
+    }
+
+    // Generar state para seguridad OAuth
+    const state = `${userId}_${Date.now()}`;
+    
+    // URL de autorización de Meta
+    const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
+      `client_id=${config.metaAppId}&` +
+      `redirect_uri=${config.apiUrl}/api/integrations/oauth/whatsapp/callback&` +
+      `scope=whatsapp_business_management,whatsapp_business_messaging&` +
+      `response_type=code&` +
+      `state=${state}`;
+
+    res.json({ 
+      authUrl,
+      state 
+    });
+  } catch (err) {
+    console.error("whatsapp_connect_failed:", err);
+    res.status(500).json({ error: "whatsapp_connect_failed" });
+  }
+});
+
+/**
+ * GET /integrations/oauth/whatsapp/callback
+ * Callback del OAuth de WhatsApp
+ */
+router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
+  try {
+    const { code, state, error } = req.query;
+
+    if (error) {
+      return res.redirect(`${config.frontendUrl}/integrations?error=oauth_denied`);
+    }
+
+    if (!code || !state) {
+      return res.redirect(`${config.frontendUrl}/integrations?error=missing_code`);
+    }
+
+    // Extraer userId del state
+    const userId = state.toString().split('_')[0];
+    if (!userId) {
+      return res.redirect(`${config.frontendUrl}/integrations?error=invalid_state`);
+    }
+
+    // Intercambiar código por token de acceso
+    const tokenResponse = await axios.post(
+      'https://graph.facebook.com/v19.0/oauth/access_token',
+      {
+        client_id: config.metaAppId,
+        client_secret: config.metaAppSecret,
+        redirect_uri: `${config.apiUrl}/api/integrations/oauth/whatsapp/callback`,
+        code: code
+      }
+    );
+
+    const { access_token } = tokenResponse.data;
+
+    // Obtener información del token (para verificar permisos)
+    const tokenInfo = await axios.get(
+      `https://graph.facebook.com/v19.0/me`,
+      {
+        params: { access_token },
+        headers: { Authorization: `Bearer ${access_token}` }
+      }
+    );
+
+    // Obtener WhatsApp Business Account ID
+    const wabaResponse = await axios.get(
+      `https://graph.facebook.com/v19.0/me/businesses`,
+      {
+        params: { 
+          access_token,
+          fields: 'id,name,whatsapp_business_accounts'
+        }
+      }
+    );
+
+    // Por ahora, usamos el primer WABA disponible
+    const waba = wabaResponse.data.data?.[0];
+    if (!waba) {
+      return res.redirect(`${config.frontendUrl}/integrations?error=no_waba_found`);
+    }
+
+    // Obtener phone number ID
+    const phoneNumbersResponse = await axios.get(
+      `https://graph.facebook.com/v19.0/${waba.whatsapp_business_accounts.data[0].id}/phone_numbers`,
+      {
+        params: { access_token },
+        headers: { Authorization: `Bearer ${access_token}` }
+      }
+    );
+
+    const phoneNumber = phoneNumbersResponse.data.data?.[0];
+    if (!phoneNumber) {
+      return res.redirect(`${config.frontendUrl}/integrations?error=no_phone_number`);
+    }
+
+    // Crear o actualizar integración
+    const integration = await Integration.findOneAndUpdate(
+      { userId, provider: "whatsapp" },
+      {
+        userId: new Types.ObjectId(userId),
+        provider: "whatsapp",
+        externalId: waba.whatsapp_business_accounts.data[0].id,
+        phoneNumberId: phoneNumber.id,
+        accessToken: access_token,
+        name: `WhatsApp Business - ${phoneNumber.display_phone_number}`,
+        status: "pending"
+      },
+      { upsert: true, new: true }
+    );
+
+    // Sincronizar para obtener metadata
+    await syncIntegration(integration);
+
+    res.redirect(`${config.frontendUrl}/integrations?success=whatsapp_connected`);
+  } catch (err: any) {
+    console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
+    res.redirect(`${config.frontendUrl}/integrations?error=oauth_failed`);
+  }
+});
+
+/**
  * POST /integrations
- * Crea una integración (modo simple: sólo provider) con status `pending`.
- * Luego dispara syncIntegration para completar datos y pasar a `linked` o `error`.
- *
- * Body:
- *  - provider: "whatsapp" | "instagram" | "messenger" (requerido)
- *  - externalId?: string            (recomendado: phone_number_id en WhatsApp)
- *  - phoneNumberId?: string         (WhatsApp)
- *  - accessToken?: string           (token por integración si lo usas)
- *  - name?: string
+ * Crea una integración manual (para casos especiales)
  */
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
@@ -63,7 +203,14 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     const { provider, externalId, phoneNumberId, accessToken, name } = req.body || {};
     if (!provider) return res.status(400).json({ error: "missing_provider" });
 
-    // Si no pasan externalId/phoneNumberId ahora, igual creamos pendiente.
+    // Para WhatsApp, redirigir al flujo OAuth
+    if (provider === "whatsapp") {
+      return res.status(400).json({ 
+        error: "use_oauth_flow",
+        message: "Use GET /integrations/connect/whatsapp for WhatsApp integration"
+      });
+    }
+
     const doc = await Integration.create({
       userId: new Types.ObjectId(userId),
       provider,
@@ -74,10 +221,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       status: "pending",
     } as Partial<IntegrationDoc>);
 
-    // Disparamos sync (bloqueante aquí — si prefieres, podrías encolar)
     const sync = await syncIntegration(doc);
-
-    // Releemos para devolver estado/meta actualizados
     const fresh = await Integration.findById(doc._id).lean();
 
     res.status(201).json({
@@ -86,7 +230,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       provider: fresh?.provider,
       externalId: fresh?.externalId,
       phoneNumberId: fresh?.phoneNumberId,
-      accessToken: fresh?.accessToken ? "********" : undefined, // no exponer
+      accessToken: fresh?.accessToken ? "********" : undefined,
       name: fresh?.name,
       status: fresh?.status ?? "pending",
       meta: fresh?.meta ?? {},
@@ -95,7 +239,6 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       sync,
     });
   } catch (err: any) {
-    // Duplicado por unique index (userId+provider+externalId)
     if (err?.code === 11000) {
       return res.status(409).json({ error: "integration_already_exists" });
     }
