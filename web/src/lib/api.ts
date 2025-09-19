@@ -123,12 +123,13 @@ export function createContact(body: {
   });
 }
 
-export function getMessages(params: { contactId?: string; provider?: Provider } = {}) {
+export function getMessages(params: { contactId?: string; provider?: Provider; integrationId?: string } = {}) {
   const q = new URLSearchParams();
   if (params.contactId) q.set("contactId", params.contactId);
   if (params.provider) q.set("provider", params.provider);
+  if (params.integrationId) q.set("integrationId", params.integrationId);
   const suffix = q.toString() ? `?${q.toString()}` : "";
-  return apiFetch<any[]>(`/messages${suffix}`, { method: "GET" });
+  return apiFetch<any[]>(`/messages${suffix}`);
 }
 
 export function sendMessageApi(body: {

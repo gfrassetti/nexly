@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { getMessages } from "@/lib/api";
 
+import type { Provider } from "@/lib/api";
+
 export function useMessages(
   token: string,
-  filter: { contactId?: string; provider?: string } = {}
+  filter: { contactId?: string; provider?: Provider } = {}
 ) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -17,7 +19,7 @@ export function useMessages(
     (async () => {
       try {
         setLoading(true);
-        const data = await getMessages(token, filter);
+        const data = await getMessages(filter);
         if (alive) setItems(data || []);
       } catch (e: any) {
         if (alive) setError(e.message || "error");
