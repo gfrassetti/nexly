@@ -8,11 +8,11 @@ type SendMessagePayload =
   | { provider: Provider; contactId: string; body: string; to?: string }
   | { provider: Provider; to: string; body: string; contactId?: string };
 
-export async function sendMessage(token: string, payload: SendMessagePayload) {
-  return sendMessageApi(token, {
+export async function sendMessage(_token: string, payload: SendMessagePayload) {
+  return sendMessageApi({
     provider: payload.provider,
     body: payload.body,
     contactId: payload.contactId,
-    to: payload.to ?? "", // asegurar string, aunque sea vacío
+    to: payload.to ?? "",
   });
 }
