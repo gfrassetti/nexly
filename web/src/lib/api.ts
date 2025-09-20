@@ -184,5 +184,14 @@ export function linkIntegration(body: {
   });
 }
 
+/**
+ * Iniciar flujo OAuth para conectar WhatsApp
+ */
+export function connectWhatsApp() {
+  return apiFetch<{ authUrl: string; state: string }>("/integrations/connect/whatsapp", {
+    method: "GET",
+  });
+}
+
 export default apiFetch;
 

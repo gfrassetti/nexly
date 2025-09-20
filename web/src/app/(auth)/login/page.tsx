@@ -18,7 +18,7 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: identifier, password }),
+        body: JSON.stringify({ identifier, password }),
       });
       if (!res.ok) throw new Error("Credenciales inválidas");
       const data = await res.json();
