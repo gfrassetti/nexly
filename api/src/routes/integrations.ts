@@ -11,8 +11,14 @@ type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
 const router = Router();
 
-// Todas requieren JWT excepto las de OAuth
-router.use(handleAuth);
+// Middleware de auth para todas las rutas EXCEPTO el callback OAuth
+router.use((req, res, next) => {
+  // Excluir el callback OAuth del middleware de autenticación
+  if (req.path === "/oauth/whatsapp/callback") {
+    return next();
+  }
+  return handleAuth(req, res, next);
+});
 
 /**
  * GET /integrations
