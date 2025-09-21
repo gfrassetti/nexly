@@ -125,7 +125,7 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
       {
         client_id: config.metaAppId,
         client_secret: config.metaAppSecret,
-        redirect_uri: `${config.apiUrl}/api/integrations/oauth/whatsapp/callback`,
+        redirect_uri: `${config.apiUrl}/integrations/oauth/whatsapp/callback`,
         code: code
       }
     );
