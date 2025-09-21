@@ -105,4 +105,39 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Verificar token
+router.get("/verify", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: "Token no proporcionado" });
+    }
+
+    const token = authHeader.substring(7);
+    
+    // Verificar y decodificar el token
+    const decoded = jwt.verify(token, config.jwtSecret) as { id: string };
+    
+    // Buscar el usuario
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ message: "Usuario no encontrado" });
+    }
+
+    res.json({
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (err: any) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: "Token inválido o expirado" });
+    }
+    console.error("VERIFY error:", err);
+    res.status(500).json({ message: "Error verificando token" });
+  }
+});
+
 export default router;

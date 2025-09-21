@@ -352,6 +352,54 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * POST /integrations/send-whatsapp
+ * Envía un mensaje de WhatsApp usando el número de prueba
+ */
+router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
+  try {
+    const { to, message } = req.body;
+    
+    if (!to || !message) {
+      return res.status(400).json({ error: "missing_to_or_message" });
+    }
+
+    if (!config.metaAccessToken || !config.metaPhoneNumberId) {
+      return res.status(500).json({ error: "whatsapp_not_configured" });
+    }
+
+    const response = await axios.post(
+      `https://graph.facebook.com/v22.0/${config.metaPhoneNumberId}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: to,
+        type: "text",
+        text: {
+          body: message
+        }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${config.metaAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      messageId: response.data.messages[0].id,
+      response: response.data 
+    });
+  } catch (err: any) {
+    console.error("whatsapp_send_failed:", err?.response?.data || err?.message);
+    res.status(500).json({ 
+      error: "whatsapp_send_failed",
+      details: err?.response?.data || err?.message 
+    });
+  }
+});
+
+/**
  * DELETE /integrations/:id
  * Elimina una integración del usuario.
  */

@@ -193,5 +193,22 @@ export function connectWhatsApp() {
   });
 }
 
+/**
+ * Enviar mensaje de WhatsApp
+ */
+export function sendWhatsAppMessage(body: {
+  to: string;
+  message: string;
+}) {
+  return apiFetch<{
+    success: boolean;
+    messageId: string;
+    response: any;
+  }>("/integrations/send-whatsapp", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export default apiFetch;
 
