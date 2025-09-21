@@ -5,14 +5,13 @@ import { usePathname } from "next/navigation";
 
 const NexlyLogo = () => (
   <div className="flex items-center gap-3">
-    <div className="w-8 h-8 flex items-center justify-center">
+    <div className="w-16 h-16 flex items-center justify-center">
       <img 
         src="/logo_nexly.png" 
         alt="Nexly Logo" 
         className="w-full h-full object-contain"
       />
     </div>
-    <span className="font-bold text-lg text-white tracking-tight">Nexly</span>
   </div>
 );
 
