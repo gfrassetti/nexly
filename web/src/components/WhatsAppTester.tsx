@@ -30,11 +30,11 @@ export default function WhatsAppTester() {
 
   return (
     <div className="bg-white rounded-lg shadow p-6 max-w-md">
-      <h3 className="text-lg font-semibold mb-4">🧪 Probar WhatsApp</h3>
+      <h3 className="text-lg font-semibold mb-4 text-black">🧪 Probar WhatsApp</h3>
       
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-black mb-2">
             Número de teléfono (con código de país)
           </label>
           <input
@@ -42,22 +42,22 @@ export default function WhatsAppTester() {
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             placeholder="+5491123456789"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-black placeholder-gray-500"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-600 mt-1">
             Ejemplo: +5491123456789 (Argentina)
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-black mb-2">
             Mensaje
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-black placeholder-gray-500"
             placeholder="Escribe tu mensaje aquí..."
           />
         </div>
