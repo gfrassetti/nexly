@@ -76,7 +76,7 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
     // URL de autorización de Meta
     const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
       `client_id=${config.metaAppId}&` +
-      `redirect_uri=${config.apiUrl}/api/integrations/oauth/whatsapp/callback&` +
+      `redirect_uri=${config.apiUrl}/integrations/oauth/whatsapp/callback&` +
       `scope=whatsapp_business_management,whatsapp_business_messaging&` +
       `response_type=code&` +
       `state=${state}`;
