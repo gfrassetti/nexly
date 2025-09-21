@@ -34,17 +34,120 @@ function IntegrationsContent() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">WhatsApp Business</h2>
-        <p className="text-gray-600 mb-4">
-          Conecta tu cuenta de WhatsApp Business para enviar y recibir mensajes.
-        </p>
-        <button 
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          onClick={() => window.location.href = '/dashboard/integrations/connect/whatsapp'}
-        >
-          Conectar WhatsApp
-        </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* WhatsApp Business */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+              <span className="text-white text-sm font-bold">W</span>
+            </div>
+            <h2 className="text-lg font-semibold">WhatsApp Business</h2>
+          </div>
+          <p className="text-gray-600 mb-4 text-sm">
+            Conecta tu cuenta de WhatsApp Business para enviar y recibir mensajes.
+          </p>
+          <button 
+            className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+            onClick={() => window.location.href = '/dashboard/integrations/connect/whatsapp'}
+          >
+            Conectar WhatsApp
+          </button>
+        </div>
+
+        {/* Instagram */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-3">
+              <span className="text-white text-sm font-bold">I</span>
+            </div>
+            <h2 className="text-lg font-semibold">Instagram</h2>
+          </div>
+          <p className="text-gray-600 mb-4 text-sm">
+            Conecta tu cuenta de Instagram para gestionar mensajes directos.
+          </p>
+          <button 
+            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
+            disabled
+          >
+            Próximamente
+          </button>
+        </div>
+
+        {/* Facebook Messenger */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+              <span className="text-white text-sm font-bold">F</span>
+            </div>
+            <h2 className="text-lg font-semibold">Facebook Messenger</h2>
+          </div>
+          <p className="text-gray-600 mb-4 text-sm">
+            Conecta Facebook Messenger para gestionar conversaciones.
+          </p>
+          <button 
+            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
+            disabled
+          >
+            Próximamente
+          </button>
+        </div>
+
+        {/* TikTok */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-3">
+              <span className="text-white text-sm font-bold">T</span>
+            </div>
+            <h2 className="text-lg font-semibold">TikTok</h2>
+          </div>
+          <p className="text-gray-600 mb-4 text-sm">
+            Conecta TikTok para gestionar mensajes y comentarios.
+          </p>
+          <button 
+            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
+            disabled
+          >
+            Próximamente
+          </button>
+        </div>
+
+        {/* Telegram */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center mr-3">
+              <span className="text-white text-sm font-bold">T</span>
+            </div>
+            <h2 className="text-lg font-semibold">Telegram</h2>
+          </div>
+          <p className="text-gray-600 mb-4 text-sm">
+            Conecta Telegram para gestionar bots y mensajes.
+          </p>
+          <button 
+            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
+            disabled
+          >
+            Próximamente
+          </button>
+        </div>
+
+        {/* Twitter/X */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-3">
+              <span className="text-white text-sm font-bold">X</span>
+            </div>
+            <h2 className="text-lg font-semibold">Twitter/X</h2>
+          </div>
+          <p className="text-gray-600 mb-4 text-sm">
+            Conecta Twitter/X para gestionar mensajes directos.
+          </p>
+          <button 
+            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
+            disabled
+          >
+            Próximamente
+          </button>
+        </div>
       </div>
     </div>
   );
