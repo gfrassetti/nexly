@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NexlyLogo = () => (
-  <div className="flex items-center gap-3">
-    <div className="w-16 h-16 flex items-center justify-center">
+  <div className="h-[4rem] flex items-center gap-3">
+    <div className="w-[7rem] flex items-center justify-center">
       <img 
         src="/logo_nexly.png" 
         alt="Nexly Logo" 

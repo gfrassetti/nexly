@@ -134,26 +134,7 @@ function IntegrationsContent() {
           </button>
         </div>
 
-        {/* Twitter/X */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-3">
-              <span className="text-white text-sm font-bold">X</span>
-            </div>
-            <h2 className="text-lg font-semibold text-black">Twitter/X</h2>
-          </div>
-          <p className="text-gray-600 mb-4 text-sm">
-            Conecta Twitter/X para gestionar mensajes directos.
-          </p>
-          <button 
-            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-            disabled
-          >
-            Próximamente
-          </button>
-        </div>
       </div>
-
       {/* WhatsApp Tester */}
       <div id="whatsapp-tester" className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Probar WhatsApp</h2>
