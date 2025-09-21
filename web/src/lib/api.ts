@@ -9,9 +9,9 @@
  * En local: http://localhost:4000
  */
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000")
-  .replace(/\/+$/, "") + "/api";
+  .replace(/\/+$/, "");
 
-export const apiPath = (p: string) => `${API_URL}${p.startsWith("/") ? p : `/${p}`}`;
+export const apiPath = (p: string) => `${API_URL}/api${p.startsWith("/") ? p : `/${p}`}`;
 
 // -------- token helpers (cliente) ---------------------------------
 
