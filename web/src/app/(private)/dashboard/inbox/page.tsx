@@ -1,6 +1,6 @@
 "use client";
 import useSWR from "swr";
-import { useAuth } from "@/store/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
@@ -10,14 +10,14 @@ import { sendMessage } from "@/hooks/sendMessage";
 const channels = ["whatsapp", "instagram", "messenger"] as const;
 
 export default function InboxPage() {
-  const token = useAuth((s) => s.token);
+  const { token } = useAuth();
   const [channel, setChannel] = useState<(typeof channels)[number]>("whatsapp");
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const { data: threads } = useSWR(
-    token ? ["/inbox", channel] : null,
+  const { data: conversationsData } = useSWR(
+    token ? ["/integrations/conversations", channel] : null,
     async ([p, c]) => {
-      const res = await fetch(`/api${p}?channel=${c}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${p}?provider=${c}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return res.json();
@@ -26,11 +26,26 @@ export default function InboxPage() {
 
   async function handleSend(text: string) {
     if (!token || !activeId) return;
-    await sendMessage(token, {
-      provider: channel,
-      contactId: activeId,
-      body: text,
-    });
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/integrations/conversations/${activeId}/reply`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: text })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error enviando mensaje');
+      }
+      
+      // Refrescar la conversación
+      window.location.reload();
+    } catch (error) {
+      console.error('Error:', error);
+    }
   }
 
   return (
@@ -50,7 +65,7 @@ export default function InboxPage() {
       </div>
       <div className="grid grid-cols-[360px_1fr] min-h-0">
         <InboxList
-          items={threads?.items || []}
+          items={conversationsData?.conversations || []}
           activeId={activeId}
           onSelect={setActiveId}
         />

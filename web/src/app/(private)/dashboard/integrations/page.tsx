@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import WhatsAppTester from "@/components/WhatsAppTester";
 
 function IntegrationsContent() {
   const [message, setMessage] = useState("");
@@ -49,12 +48,9 @@ function IntegrationsContent() {
           </p>
           <button 
             className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-            onClick={() => {
-              // Scroll hacia el tester de WhatsApp
-              document.getElementById('whatsapp-tester')?.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={() => window.location.href = '/dashboard/integrations/connect/whatsapp'}
           >
-            ✅ WhatsApp Conectado (Probar ahora)
+            Conectar WhatsApp
           </button>
         </div>
 
@@ -134,11 +130,6 @@ function IntegrationsContent() {
           </button>
         </div>
 
-      </div>
-      {/* WhatsApp Tester */}
-      <div id="whatsapp-tester" className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Probar WhatsApp</h2>
-        <WhatsAppTester />
       </div>
     </div>
   );

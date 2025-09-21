@@ -352,6 +352,175 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * GET /integrations/conversations
+ * Obtiene las conversaciones de WhatsApp del usuario
+ */
+router.get("/conversations", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { provider = "whatsapp" } = req.query;
+
+    // Buscar integraciones del usuario
+    const integrations = await Integration.find({ 
+      userId, 
+      provider,
+      status: "linked"
+    });
+
+    if (integrations.length === 0) {
+      return res.json({ conversations: [] });
+    }
+
+    // Por ahora, devolver conversaciones de ejemplo
+    // En producción, esto vendría de la API de Meta
+    const conversations = [
+      {
+        id: "conv_1",
+        contactId: "contact_1",
+        contactName: "Juan Pérez",
+        contactPhone: "+5491123456789",
+        lastMessage: "Hola, ¿cómo estás?",
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 2,
+        provider: provider
+      },
+      {
+        id: "conv_2", 
+        contactId: "contact_2",
+        contactName: "María García",
+        contactPhone: "+549876543210",
+        lastMessage: "Gracias por la información",
+        lastMessageTime: new Date(Date.now() - 3600000).toISOString(),
+        unreadCount: 0,
+        provider: provider
+      }
+    ];
+
+    res.json({ conversations });
+  } catch (err) {
+    console.error("conversations_fetch_failed:", err);
+    res.status(500).json({ error: "conversations_fetch_failed" });
+  }
+});
+
+/**
+ * GET /integrations/conversations/:id/messages
+ * Obtiene los mensajes de una conversación específica
+ */
+router.get("/conversations/:id/messages", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { id } = req.params;
+
+    // Por ahora, devolver mensajes de ejemplo
+    // En producción, esto vendría de la API de Meta
+    const messages = [
+      {
+        id: "msg_1",
+        conversationId: id,
+        from: "customer",
+        to: "business",
+        body: "Hola, ¿tienen disponibilidad para mañana?",
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        status: "delivered"
+      },
+      {
+        id: "msg_2",
+        conversationId: id,
+        from: "business", 
+        to: "customer",
+        body: "¡Hola! Sí, tenemos disponibilidad. ¿A qué hora te conviene?",
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        status: "delivered"
+      },
+      {
+        id: "msg_3",
+        conversationId: id,
+        from: "customer",
+        to: "business", 
+        body: "Perfecto, a las 3 PM",
+        timestamp: new Date().toISOString(),
+        status: "delivered"
+      }
+    ];
+
+    res.json({ messages });
+  } catch (err) {
+    console.error("messages_fetch_failed:", err);
+    res.status(500).json({ error: "messages_fetch_failed" });
+  }
+});
+
+/**
+ * POST /integrations/conversations/:id/reply
+ * Envía una respuesta a una conversación
+ */
+router.post("/conversations/:id/reply", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { id } = req.params;
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "message_required" });
+    }
+
+    // Buscar la integración de WhatsApp del usuario
+    const integration = await Integration.findOne({
+      userId,
+      provider: "whatsapp",
+      status: "linked"
+    });
+
+    if (!integration || !integration.accessToken || !integration.phoneNumberId) {
+      return res.status(400).json({ error: "whatsapp_not_connected" });
+    }
+
+    // Obtener el número del contacto desde la conversación
+    // Por ahora, usar un número de ejemplo
+    const toNumber = "+5491123456789"; // En producción, esto vendría de la DB
+
+    // Enviar mensaje a través de la API de Meta
+    const response = await axios.post(
+      `https://graph.facebook.com/v22.0/${integration.phoneNumberId}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: toNumber,
+        type: "text",
+        text: {
+          body: message
+        }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${integration.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json({
+      success: true,
+      messageId: response.data.messages[0].id,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (err: any) {
+    console.error("reply_send_failed:", err?.response?.data || err?.message);
+    res.status(500).json({ 
+      error: "reply_send_failed",
+      details: err?.response?.data || err?.message 
+    });
+  }
+});
+
+/**
  * POST /integrations/send-whatsapp
  * Envía un mensaje de WhatsApp usando el número de prueba
  */
