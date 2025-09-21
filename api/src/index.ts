@@ -44,12 +44,12 @@ app.use(
 
 const PORT = Number(process.env.PORT) || 4000;
 
-app.use("/health", healthRouter);
-app.use("/auth", authRouter);
-app.use("/webhook", verifyMetaSignature, webhookRouter);
-app.use("/contacts", contactsRouter);
-app.use("/integrations", integrationsRouter);
-app.use("/messages", messageRoutes);
+app.use("/api/health", healthRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/webhook", verifyMetaSignature, webhookRouter);
+app.use("/api/contacts", contactsRouter);
+app.use("/api/integrations", integrationsRouter);
+app.use("/api/messages", messageRoutes);
 
 // 👇 conectar DB primero, después arrancar server
 connectDB()
