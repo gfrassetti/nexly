@@ -1,6 +1,6 @@
 "use client";
-import { useState, Suspense } from "react";
 import Link from "next/link";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { API_URL } from "@/lib/api";
 import AuthGuard from "@/components/AuthGuard";

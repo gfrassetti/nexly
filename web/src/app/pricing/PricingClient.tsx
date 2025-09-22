@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
 

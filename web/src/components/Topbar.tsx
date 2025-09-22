@@ -1,10 +1,12 @@
 "use client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useRouter } from "next/navigation";
 
 export default function Topbar() {
   const { user, clear } = useAuth();
   const { subscription } = useSubscription();
+  const router = useRouter();
 
   const handleLogout = () => {
     // Limpiar localStorage
