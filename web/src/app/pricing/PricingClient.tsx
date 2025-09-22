@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
 
-export default function PricingClient() {
+function PricingContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
@@ -306,5 +306,13 @@ export default function PricingClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PricingClient() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div></div>}>
+      <PricingContent />
+    </Suspense>
   );
 }
