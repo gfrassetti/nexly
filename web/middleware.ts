@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your-secret-key"
-);
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export async function middleware(req: NextRequest) {
   const isApp = req.nextUrl.pathname.startsWith("/dashboard");
@@ -20,11 +18,11 @@ export async function middleware(req: NextRequest) {
 
   try {
     // Verificar JWT en el middleware
-    await jwtVerify(token, JWT_SECRET);
+    jwt.verify(token, JWT_SECRET);
     return NextResponse.next();
   } catch (error) {
     // Token inválido o expirado
-    console.warn(`Invalid token from IP: ${req.ip}`);
+    console.warn(`Invalid token from IP: ${req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'}`);
     
     // Limpiar cookie inválida
     const response = NextResponse.redirect(new URL("/login", req.url));
