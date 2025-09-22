@@ -37,7 +37,7 @@ class EmailService {
     try {
       const msg = {
         to: email,
-        from: 'noreply@nexly.com.ar', // Tu dominio verificado en SendGrid
+        from: 'no-reply@nexly.com.ar', // Tu email verificado en SendGrid
         subject: '🔐 Recuperación de contraseña - Nexly',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
