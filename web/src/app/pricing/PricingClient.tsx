@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
+import Accordion from "@/components/Accordion";
 
 function PricingContent() {
   const { token } = useAuth();
@@ -143,12 +144,12 @@ function PricingContent() {
           </p>
 
           {/* Trial Banner */}
-          <div className="bg-green-600/10 border border-green-600/20 rounded-lg p-6 max-w-2xl mx-auto mb-12">
+          <div className="bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg p-6 max-w-2xl mx-auto mb-12">
             <div className="flex items-center justify-center gap-3 mb-2">
-              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-nexly-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-lg font-semibold text-green-400">15 días de prueba gratis</h3>
+              <h3 className="text-lg font-semibold text-nexly-teal">15 días de prueba gratis</h3>
             </div>
             <p className="text-neutral-300">
               Acceso completo a todas las funciones durante tu período de prueba
@@ -163,15 +164,15 @@ function PricingContent() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative rounded-2xl p-8 border transition-all duration-300 ${
+              className={`relative rounded-2xl p-8 border transition-all duration-300 flex flex-col h-full ${
                 plan.popular
-                  ? 'border-green-500 bg-neutral-800/50 scale-105'
+                  ? 'border-nexly-teal bg-neutral-800/50 scale-105'
                   : 'border-neutral-700 bg-neutral-800/30 hover:border-neutral-600'
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-green-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-nexly-teal text-white px-4 py-1 rounded-full text-sm font-medium">
                     Más popular
                   </span>
                 </div>
@@ -199,7 +200,7 @@ function PricingContent() {
 
               {!token ? (
                 // Usuario no autenticado - Botón de registro
-                <div className="space-y-3">
+                <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => window.location.href = `/register?plan=${plan.id}`}
                     className={`w-full py-4 rounded-lg font-semibold transition-colors ${
@@ -216,7 +217,7 @@ function PricingContent() {
                 </div>
               ) : (
                 // Usuario autenticado - Botón de compra
-                <div className="space-y-3">
+                <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
                     className={`w-full py-4 rounded-lg font-semibold transition-colors ${
@@ -250,7 +251,7 @@ function PricingContent() {
             
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-lg">1</span>
                 </div>
                 <h3 className="font-semibold mb-2">Regístrate gratis</h3>
@@ -258,7 +259,7 @@ function PricingContent() {
               </div>
               
               <div className="text-center">
-                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-lg">2</span>
                 </div>
                 <h3 className="font-semibold mb-2">Elige tu plan</h3>
@@ -266,7 +267,7 @@ function PricingContent() {
               </div>
               
               <div className="text-center">
-                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-lg">3</span>
                 </div>
                 <h3 className="font-semibold mb-2">Paga con seguridad</h3>
@@ -280,35 +281,58 @@ function PricingContent() {
         <div className="mt-20 max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Preguntas frecuentes</h2>
           
-          <div className="space-y-8">
-            <div className="border-b border-neutral-700 pb-6">
-              <h3 className="text-lg font-semibold mb-2">¿Qué incluye la prueba gratuita?</h3>
-              <p className="text-neutral-300">
-                Acceso completo a todas las funciones de Nexly durante 15 días. No se requiere tarjeta de crédito.
-              </p>
-            </div>
-
-            <div className="border-b border-neutral-700 pb-6">
-              <h3 className="text-lg font-semibold mb-2">¿Puedo cambiar de plan más tarde?</h3>
-              <p className="text-neutral-300">
-                Sí, puedes cambiar entre planes en cualquier momento desde tu dashboard.
-              </p>
-            </div>
-
-            <div className="border-b border-neutral-700 pb-6">
-              <h3 className="text-lg font-semibold mb-2">¿Qué métodos de pago aceptan?</h3>
-              <p className="text-neutral-300">
-                Aceptamos todas las tarjetas de crédito y débito, transferencias bancarias y efectivo a través de Mercado Pago.
-              </p>
-            </div>
-
-            <div className="border-b border-neutral-700 pb-6">
-              <h3 className="text-lg font-semibold mb-2">¿Puedo cancelar mi suscripción?</h3>
-              <p className="text-neutral-300">
-                Sí, puedes cancelar tu suscripción en cualquier momento sin penalizaciones.
-              </p>
-            </div>
-          </div>
+          <Accordion 
+            items={[
+              {
+                title: "¿Qué incluye la prueba gratuita?",
+                content: (
+                  <p>
+                    Acceso completo a todas las funciones de Nexly durante 15 días. No se requiere tarjeta de crédito.
+                  </p>
+                )
+              },
+              {
+                title: "¿Puedo cambiar de plan más tarde?",
+                content: (
+                  <p>
+                    Sí, puedes cambiar entre planes en cualquier momento desde tu dashboard.
+                  </p>
+                )
+              },
+              {
+                title: "¿Qué métodos de pago aceptan?",
+                content: (
+                  <p>
+                    Aceptamos todas las tarjetas de crédito y débito, transferencias bancarias y efectivo a través de Mercado Pago.
+                  </p>
+                )
+              },
+              {
+                title: "¿Puedo cancelar mi suscripción?",
+                content: (
+                  <p>
+                    Sí, puedes cancelar tu suscripción en cualquier momento sin penalizaciones.
+                  </p>
+                )
+              },
+              {
+                title: "¿Puedo cambiar de plan en cualquier momento?",
+                content: (
+                  <p>
+                    Sí, puedes actualizar o degradar tu plan en cualquier momento desde tu panel de control. Los cambios se aplicarán al inicio de tu próximo ciclo de facturación.
+                  </p>
+                )
+              },
+              {
+                title: "¿Qué sucede si cancelo mi suscripción?",
+                content: (
+                  <p>
+                    Si cancelas, tu plan permanecerá activo hasta el final del período de facturación actual. Después de eso, tu cuenta volverá al plan gratuito.
+                  </p>
+                )
+              }
+            ]}
+          />
         </div>
       </div>
     </div>
