@@ -33,10 +33,9 @@ export const config = {
   // Google AI Configuration
   googleAIApiKey: process.env.GOOGLE_AI_API_KEY || "",
   
-  // Twilio Configuration
-  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || "",
-  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || "",
-  twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER || "",
+  // Email Configuration
+  emailUser: process.env.EMAIL_USER || "",
+  emailPass: process.env.EMAIL_PASS || "",
   
   // Environment
   nodeEnv: process.env.NODE_ENV || "development",
