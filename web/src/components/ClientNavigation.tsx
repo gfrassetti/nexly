@@ -30,7 +30,7 @@ export default function ClientNavigation() {
         </Link>
         <Link
           href="/register"
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+          className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors"
         >
           Probar gratis
         </Link>
@@ -65,7 +65,7 @@ export default function ClientNavigation() {
               <Link href="/login" className="block px-3 py-2 text-neutral-300 hover:text-white">
                 Iniciar sesión
               </Link>
-              <Link href="/register" className="block px-3 py-2 text-green-400 hover:text-green-300">
+              <Link href="/register" className="block px-3 py-2 text-nexly-teal hover:text-nexly-green">
                 Probar gratis
               </Link>
             </div>
