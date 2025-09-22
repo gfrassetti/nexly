@@ -6,6 +6,7 @@ import useSWR from "swr";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useSearchParams } from "next/navigation";
+import { usePaymentLink } from "@/hooks/usePaymentLink";
 
 interface DashboardStats {
   totalContacts: number;
@@ -22,6 +23,7 @@ export default function DashboardPage() {
   const { token } = useAuth();
   const { subscription } = useSubscription();
   const searchParams = useSearchParams();
+  const { createPaymentLink } = usePaymentLink();
   const [stats, setStats] = useState<DashboardStats>({
     totalContacts: 0,
     totalMessages: 0,
@@ -363,7 +365,7 @@ export default function DashboardPage() {
             {/* Botón de pago - solo mostrar si está en estado pendiente de pago */}
             {subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && (
               <button 
-                onClick={() => window.location.href = '/checkout'}
+                onClick={createPaymentLink}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

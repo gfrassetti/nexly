@@ -1,5 +1,6 @@
 "use client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { usePaymentLink } from "@/hooks/usePaymentLink";
 
 export default function SubscriptionStatus() {
   const { 
@@ -19,40 +20,7 @@ export default function SubscriptionStatus() {
     cancelSubscription
   } = useSubscription();
 
-  const handleCreatePaymentLink = async () => {
-    if (!subscription?.subscription) return;
-
-    try {
-      // Obtener token del localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('No estás autenticado');
-        return;
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          planType: subscription.subscription.planType 
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.paymentUrl) {
-        window.open(data.paymentUrl, '_blank');
-      } else {
-        alert('Error al crear el enlace de pago');
-      }
-    } catch (error) {
-      console.error('Error creating payment link:', error);
-      alert('Error al crear el enlace de pago');
-    }
-  };
+  const { createPaymentLink } = usePaymentLink();
 
   if (loading) {
     return (
@@ -98,12 +66,12 @@ export default function SubscriptionStatus() {
           <p className="text-yellow-300 mb-4">
             Tu cuenta está registrada pero necesitas completar el método de pago para comenzar tu prueba gratuita.
           </p>
-          <a
-            href="/checkout"
+          <button
+            onClick={createPaymentLink}
             className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-300"
           >
             Completar Pago
-          </a>
+          </button>
         </div>
       </div>
     );
@@ -220,7 +188,7 @@ export default function SubscriptionStatus() {
           {/* Botón para renewar solo si está expirado */}
           {isExpired && (
             <button
-              onClick={handleCreatePaymentLink}
+              onClick={createPaymentLink}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Volver a comprar

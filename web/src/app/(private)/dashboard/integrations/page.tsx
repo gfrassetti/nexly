@@ -2,12 +2,14 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { usePaymentLink } from "@/hooks/usePaymentLink";
 
 function IntegrationsContent() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const { subscription, getMaxIntegrations, isTrialActive, isActive, isPendingPaymentMethod } = useSubscription();
+  const { createPaymentLink } = usePaymentLink();
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -88,12 +90,12 @@ function IntegrationsContent() {
                 Completa tu método de pago para comenzar tu prueba gratuita de 7 días
               </p>
             </div>
-            <a
-              href="/checkout"
+            <button
+              onClick={createPaymentLink}
               className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
             >
               Completar Pago
-            </a>
+            </button>
           </div>
         </div>
       )}
@@ -112,7 +114,7 @@ function IntegrationsContent() {
             </div>
             {isPendingPaymentMethod() && (
               <button
-                onClick={() => window.location.href = '/checkout'}
+                onClick={createPaymentLink}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 Completar Pago
