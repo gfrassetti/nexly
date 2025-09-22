@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
 import Accordion from "@/components/Accordion";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 function PricingContent() {
   const { token } = useAuth();
@@ -92,45 +94,8 @@ function PricingContent() {
 
   return (
     <div className="min-h-screen bg-neutral-900 text-white">
-      {/* Navigation */}
-      <nav className="border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="rounded-lg flex items-center justify-center">
-              <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />
-              </div>
-            </Link>
-
-            <div className="flex items-center space-x-4">
-              {token ? (
-                <Link
-                  href="/dashboard"
-                  className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <>
-                  <Link href="/" className="text-neutral-300 hover:text-white transition-colors">
-                    Volver al inicio
-                  </Link>
-                  <Link href="/login" className="text-neutral-300 hover:text-white transition-colors">
-                    Iniciar sesión
-                  </Link>
-                  <Link
-                    href="/register"
-          
-                    className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    Registrarse
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Header */}
+      <Header variant="simple" />
 
       {/* Hero Section */}
       <div className="py-20">
@@ -203,7 +168,7 @@ function PricingContent() {
                 <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => window.location.href = `/register?plan=${plan.id}`}
-                    className={`w-full py-4 rounded-lg font-semibold transition-colors ${
+                    className={`w-full py-4 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
                       plan.popular
                         ? 'bg-nexly-teal hover:bg-nexly-green text-white'
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
@@ -220,7 +185,7 @@ function PricingContent() {
                 <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
-                    className={`w-full py-4 rounded-lg font-semibold transition-colors ${
+                    className={`w-full py-4 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
                       plan.popular
                         ? 'bg-nexly-teal hover:bg-nexly-green text-white'
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
@@ -335,6 +300,9 @@ function PricingContent() {
           />
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

@@ -92,7 +92,7 @@ export default function RegisterForm() {
 
         <button
           disabled={loading || success}
-          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors"
+          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-all duration-300 hover:scale-105 disabled:hover:scale-100"
         >
           {loading ? "Creando cuenta..." : success ? "¡Cuenta creada!" : "Registrarse"}
         </button>
@@ -101,7 +101,7 @@ export default function RegisterForm() {
           <span className="text-neutral-400 text-sm">
             ¿Ya tienes cuenta?{" "}
           </span>
-          <Link href="/login" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors">
+          <Link href="/login" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors duration-300">
             Inicia sesión aquí
           </Link>
         </div>

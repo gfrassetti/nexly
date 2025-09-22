@@ -76,14 +76,14 @@ export default function LoginForm() {
         </div>
         <button
           disabled={loading}
-          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors"
+          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-all duration-300 hover:scale-105 disabled:hover:scale-100"
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
       
         <div className="text-center space-y-3">
           <div>
-            <Link href="/forgot-password" className="text-nexly-azul hover:text-nexly-light-blue text-sm transition-colors">
+            <Link href="/forgot-password" className="text-nexly-azul hover:text-nexly-light-blue text-sm transition-colors duration-300">
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
@@ -91,7 +91,7 @@ export default function LoginForm() {
             <span className="text-neutral-400 text-sm">
               ¿No estás registrado?{" "}
             </span>
-            <Link href="/register" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors">
+            <Link href="/register" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors duration-300">
               Regístrate aquí
             </Link>
           </div>

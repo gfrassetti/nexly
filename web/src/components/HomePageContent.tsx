@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import ContactForm from "./ContactForm";
+import Header from "./Header";
+import Footer from "./Footer";
 
 export default function a() {
   const { token, user } = useAuth();
@@ -20,34 +22,8 @@ export default function a() {
 
   return (
     <div className="min-h-screen bg-neutral-900 text-white">
-      {/* Navigation */}
-      <nav className="border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />
-            </Link>
-
-            <div className="flex items-center space-x-4">
-              <Link href="#features" className="text-neutral-300 hover:text-white transition-colors">
-                Características
-              </Link>
-              <Link href="#contact" className="text-neutral-300 hover:text-white transition-colors">
-                Contacto
-              </Link>
-              <Link href="/login" className="text-neutral-300 hover:text-white transition-colors">
-                Iniciar sesión
-              </Link>
-              <Link
-                href="/register"
-                className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Probar gratis
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Header */}
+      <Header />
 
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -72,7 +48,7 @@ export default function a() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link
                 href="/register"
-                className="bg-nexly-teal hover:bg-nexly-green text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center space-x-2 shadow-lg shadow-nexly-teal/25 hover:shadow-nexly-green/25"
+                className="bg-nexly-teal hover:bg-nexly-green text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-nexly-teal/25 hover:shadow-nexly-green/25 hover:scale-105"
               >
                 <span>Registrarse y Probar Gratis</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +57,7 @@ export default function a() {
               </Link>
               <Link
                 href="/pricing"
-                className="bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center space-x-2 border border-nexly-azul/30 hover:border-nexly-azul/50"
+                className="bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-nexly-azul/30 hover:border-nexly-azul/50 hover:scale-105"
               >
                 <span>Ver Planes y Precios</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,19 +71,19 @@ export default function a() {
                 <svg className="w-5 h-5 text-nexly-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>15 días gratis</span>
+                <span className="text-nexly-green font-medium">15 días gratis</span>
               </div>
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-nexly-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <span>Sin tarjeta requerida</span>
+                <span className="text-nexly-green font-medium">Sin tarjeta requerida</span>
               </div>
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-nexly-light-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span>Configuración en minutos</span>
+                <span className="text-nexly-green font-medium">Configuración en minutos</span>
               </div>
             </div>
           </div>
@@ -172,23 +148,8 @@ export default function a() {
         <ContactForm />
       </section>
 
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-neutral-800">
-        <div className="max-w-7xl mx-auto text-center">
-          <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
-            <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />
-          </Link>
-          <p className="text-neutral-400 mb-4">
-            Unifica tus mensajerías y convierte más clientes.
-          </p>
-          <div className="flex justify-center space-x-6 text-sm text-neutral-500">
-            <Link href="/privacy-policy" className="hover:text-white transition-colors">
-              Política de Privacidad
-            </Link>
-            <span>•</span>
-            <span>© 2024 Nexly. Todos los derechos reservados.</span>
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

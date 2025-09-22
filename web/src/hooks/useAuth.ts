@@ -40,6 +40,7 @@ export function useAuth() {
     token,
     setAuth,
     clear,
-    isLoading
+    isLoading,
+    isAuthenticated: !!token && !!user,
   };
 }

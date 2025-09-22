@@ -1,18 +1,34 @@
+import { Metadata } from "next";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Política de Privacidad - Nexly",
+  description: "Política de privacidad de Nexly. Conoce cómo protegemos y utilizamos tu información personal.",
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Política de Privacidad</h1>
-          
-          <div className="prose prose-lg max-w-none">
-            <p className="text-sm text-gray-600 mb-6">
-              <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-ES')}
-            </p>
+    <div className="min-h-screen bg-neutral-900 text-white">
+      {/* Header */}
+      <Header variant="auth" />
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Información General</h2>
-              <p className="text-gray-700 mb-4">
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="prose prose-invert max-w-none">
+          <h1 className="text-4xl font-bold mb-8">Política de Privacidad</h1>
+          <p className="text-neutral-400 text-lg mb-8">
+            Última actualización: {new Date().toLocaleDateString('es-AR')}
+          </p>
+          
+          <div className="space-y-8">
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">1. Información General</h2>
+              <p className="text-neutral-300 leading-relaxed mb-4">
                 Nexly ("nosotros", "nuestro" o "la empresa") se compromete a proteger la privacidad de nuestros usuarios. 
                 Esta Política de Privacidad describe cómo recopilamos, utilizamos, almacenamos y protegemos su información 
                 personal cuando utiliza nuestra plataforma de gestión de mensajería.
@@ -134,16 +150,12 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
             </section>
-
-            <div className="mt-12 pt-8 border-t border-gray-200">
-              <p className="text-sm text-gray-500 text-center">
-                Esta política de privacidad es efectiva a partir del {new Date().toLocaleDateString('es-ES')} 
-                y se aplica a todos los usuarios de Nexly.
-              </p>
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer variant="minimal" />
     </div>
   );
 }
