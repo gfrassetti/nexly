@@ -69,17 +69,23 @@ function PricingContent() {
         body: JSON.stringify({ planType }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
         // Abrir enlace de pago en nueva ventana
         window.open(data.paymentUrl, '_blank');
       } else {
-        alert('Error al crear el enlace de pago: ' + (data.error || 'Error desconocido'));
+        throw new Error(data.error || 'Error al crear el enlace de pago');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting trial:', error);
-      alert('Error al crear el enlace de pago');
+      // Mostrar error en consola y redirigir al dashboard para que el usuario vea su estado
+      window.location.href = '/dashboard';
     }
   };
 
@@ -97,9 +103,6 @@ function PricingContent() {
             </Link>
 
             <div className="flex items-center space-x-4">
-              <Link href="/" className="text-neutral-300 hover:text-white transition-colors">
-                Volver al inicio
-              </Link>
               {token ? (
                 <Link
                   href="/dashboard"
@@ -109,6 +112,9 @@ function PricingContent() {
                 </Link>
               ) : (
                 <>
+                  <Link href="/" className="text-neutral-300 hover:text-white transition-colors">
+                    Volver al inicio
+                  </Link>
                   <Link href="/login" className="text-neutral-300 hover:text-white transition-colors">
                     Iniciar sesión
                   </Link>
@@ -219,7 +225,7 @@ function PricingContent() {
                         : 'bg-neutral-700 hover:bg-neutral-600 text-white'
                     }`}
                   >
-                    Comprar Plan {plan.name}
+                    Comprar {plan.name}
                   </button>
                   <p className="text-center text-xs text-neutral-400">
                     Pago seguro con Mercado Pago
