@@ -189,19 +189,19 @@ router.post("/forgot-password", async (req, res) => {
     // Crear URL de recuperación
     const resetUrl = `${config.frontendUrl}/reset-password?token=${resetToken}`;
     
-    // Enviar SMS de recuperación
-    const smsSent = await emailService.sendPasswordResetSMS(email, resetUrl);
+    // Enviar email de recuperación
+    const emailSent = await emailService.sendPasswordResetEmail(email, resetUrl);
     
-    if (smsSent) {
-      console.log(`✅ Password reset SMS sent to ${email}`);
+    if (emailSent) {
+      console.log(`✅ Password reset email sent to ${email}`);
       res.json({ 
-        message: "Si el número existe, recibirás un SMS con el enlace de recuperación"
+        message: "Si el email existe, recibirás un enlace de recuperación"
       });
     } else {
-      console.log(`⚠️ Twilio service not configured. Reset URL for ${email}: ${resetUrl}`);
+      console.log(`⚠️ Email service not configured. Reset URL for ${email}: ${resetUrl}`);
       res.json({ 
-        message: "Si el número existe, recibirás un SMS con el enlace de recuperación",
-        // Solo para desarrollo cuando Twilio no está configurado
+        message: "Si el email existe, recibirás un enlace de recuperación",
+        // Solo para desarrollo cuando el email no está configurado
         resetUrl: process.env.NODE_ENV === 'development' ? resetUrl : undefined
       });
     }
