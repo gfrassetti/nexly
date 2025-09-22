@@ -73,7 +73,7 @@ function IntegrationsContent() {
                 Plan actual: {subscription.subscription.planType === 'basic' ? 'Básico' : 'Premium'}
               </p>
               <p className="text-neutral-400 text-sm">
-                Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Ilimitadas' : `${getMaxIntegrations()}`}
+                Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Ilimitadas' : `Hasta ${getMaxIntegrations()}`}
               </p>
             </div>
             {!isActive() && !isTrialActive() && (
