@@ -72,7 +72,7 @@ export default function Topbar() {
         )}
         <button
           onClick={handleLogout}
-          className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-sm"
+          className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-sm transition-colors duration-200"
         >
           Salir
         </button>

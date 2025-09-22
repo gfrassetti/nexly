@@ -14,7 +14,7 @@ function AccordionItem({ title, children, isOpen, onClick }: AccordionItemProps)
     <div className="bg-neutral-800 rounded-lg border border-neutral-700 overflow-hidden">
       <button
         onClick={onClick}
-        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-neutral-700/50 transition-colors"
+        className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-neutral-700/50 transition-colors duration-200"
       >
         <h3 className="text-lg font-semibold text-white">{title}</h3>
         <motion.div

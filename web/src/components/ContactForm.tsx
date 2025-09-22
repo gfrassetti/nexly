@@ -99,7 +99,7 @@ export default function ContactForm() {
           </div>
           <button
             onClick={() => setToast(null)}
-            className="ml-4 text-current hover:opacity-70"
+            className="ml-4 text-current hover:opacity-70 transition-opacity duration-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -177,7 +177,7 @@ export default function ContactForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
+          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
         >
           {loading ? (
             <>

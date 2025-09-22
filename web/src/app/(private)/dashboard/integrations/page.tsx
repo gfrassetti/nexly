@@ -48,9 +48,9 @@ function IntegrationsContent() {
 
   // Función para obtener el estilo del botón
   const getButtonStyle = (integrationName: string): string => {
-    if (integrationName === 'whatsapp') return 'w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors';
-    if (isIntegrationAvailable(integrationName)) return 'w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors';
-    return 'w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed';
+    if (integrationName === 'whatsapp') return 'w-full bg-nexly-teal text-white px-4 py-2 rounded hover:bg-nexly-green transition-colors duration-200';
+    if (isIntegrationAvailable(integrationName)) return 'w-full bg-nexly-azul text-white px-4 py-2 rounded hover:bg-nexly-light-blue transition-colors duration-200';
+    return 'w-full bg-neutral-600 text-neutral-400 px-4 py-2 rounded cursor-not-allowed transition-colors duration-200';
   };
 
   // Función para manejar el click del botón
@@ -85,7 +85,7 @@ function IntegrationsContent() {
             {!isActive() && !isTrialActive() && (
               <button
                 onClick={() => window.location.href = '/pricing'}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 Actualizar Plan
               </button>
