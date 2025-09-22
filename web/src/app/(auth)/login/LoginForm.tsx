@@ -33,9 +33,9 @@ export default function LoginForm() {
       
       // Redirigir según el contexto
       const plan = searchParams.get('plan');
-      if (plan) {
-        // Ir a pricing para que el usuario complete el pago
-        router.replace(`/pricing?plan=${plan}`);
+      if (plan && (plan === 'basic' || plan === 'premium')) {
+        // Ir a checkout para completar el pago
+        router.replace(`/checkout?plan=${plan}`);
       } else {
         router.replace("/dashboard");
       }

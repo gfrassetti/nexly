@@ -77,8 +77,9 @@ export function registerApi(body: {
   username: string;
   email: string;
   password: string;
+  plan?: string;
 }) {
-  return apiFetch<{ message: string }>("/auth/register", {
+  return apiFetch<{ message: string; token?: string; user?: any }>("/auth/register", {
     method: "POST",
     body: JSON.stringify(body),
   });

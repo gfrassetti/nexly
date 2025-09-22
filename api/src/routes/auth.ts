@@ -11,7 +11,7 @@ const router = Router();
 // Registro
 router.post("/register", async (req, res) => {
   try {
-    const { email, password, username } = req.body;
+    const { email, password, username, plan } = req.body;
 
     if (!email || !password || !username) {
       return res
@@ -45,6 +45,26 @@ router.post("/register", async (req, res) => {
     });
 
     await user.save();
+
+    // Si hay un plan válido, crear el token para auto-login
+    if (plan && (plan === 'basic' || plan === 'premium')) {
+      const token = jwt.sign(
+        { id: user._id.toString() },
+        config.jwtSecret,
+        { expiresIn: "24h" }
+      );
+
+      return res.status(201).json({ 
+        message: "Usuario registrado exitosamente",
+        token,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          username: user.username
+        },
+        plan
+      });
+    }
 
     res.status(201).json({ message: "Usuario registrado exitosamente" });
   } catch (err: any) {

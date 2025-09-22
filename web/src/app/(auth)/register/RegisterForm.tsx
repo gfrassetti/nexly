@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { registerApi } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import Logo from "@/components/Logo";
 
 export default function RegisterForm() {
@@ -14,6 +15,7 @@ export default function RegisterForm() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setAuth } = useAuth();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,18 +24,26 @@ export default function RegisterForm() {
     setSuccess(false);
 
     try {
-      await registerApi({ username, email, password });
+      const plan = searchParams.get('plan');
+      const response = await registerApi({ username, email, password, plan: plan || undefined });
       setSuccess(true);
       
-      // Redirigir al login después de 2 segundos
-      setTimeout(() => {
-        const plan = searchParams.get('plan');
-        if (plan) {
-          router.push(`/login?plan=${plan}`);
-        } else {
+      // Si hay un plan, hacer auto-login y redirigir al checkout
+      if (plan && (plan === 'basic' || plan === 'premium') && response.token && response.user) {
+        // Auto-login
+        localStorage.setItem("token", response.token);
+        document.cookie = `token=${response.token}; Path=/; SameSite=Lax`;
+        setAuth(response.token, response.user);
+        
+        setTimeout(() => {
+          router.push(`/checkout?plan=${plan}`);
+        }, 1500);
+      } else {
+        // Si no hay plan, ir al login normal
+        setTimeout(() => {
           router.push("/login");
-        }
-      }, 1500); // Reducir tiempo de espera
+        }, 1500);
+      }
     } catch (err: any) {
       setError(err.message || "Error al crear la cuenta");
     } finally {

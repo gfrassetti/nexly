@@ -193,13 +193,13 @@ export default function SubscriptionStatus() {
         </div>
 
         <div className="flex gap-2">
-          {/* Botón para activar/renewar */}
-          {(isTrialActive() || isExpired) && (
+          {/* Botón para renewar solo si está expirado */}
+          {isExpired && (
             <button
               onClick={handleCreatePaymentLink}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
             >
-              {isTrialActive() ? 'Activar ahora' : 'Volver a comprar'}
+              Volver a comprar
             </button>
           )}
           
