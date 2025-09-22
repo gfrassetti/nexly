@@ -30,21 +30,23 @@ export const generalRateLimit = rateLimit({
 
 // Validar origen de webhooks
 export const validateWebhookOrigin = (req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin;
-  const referer = req.headers.referer;
+  const origin = req.headers.origin as string | undefined;
+  const referer = req.headers.referer as string | undefined;
   
   // Lista de orígenes permitidos
-  const allowedOrigins = [
+  const allowedOrigins: string[] = [
     'https://api.mercadopago.com',
     'https://www.mercadopago.com.ar',
     process.env.FRONTEND_URL
-  ].filter(Boolean);
+  ].filter((url): url is string => Boolean(url));
 
   // Para webhooks de Mercado Pago, verificar que venga de su dominio
   if (req.path.includes('/webhook')) {
-    if (!allowedOrigins.some(allowed => 
-      origin?.includes(allowed) || referer?.includes(allowed)
-    )) {
+    const isAuthorized = allowedOrigins.some(allowed => 
+      (origin && origin.includes(allowed)) || (referer && referer.includes(allowed))
+    );
+    
+    if (!isAuthorized) {
       throw new CustomError('Origen no autorizado para webhook', 403);
     }
   }
