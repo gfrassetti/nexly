@@ -24,8 +24,7 @@ export default function HomePageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center space-x-2">
-              <img src="/logo_nexly.png" alt="Nexly" className="w-8 h-8" />
-              <span className="text-xl font-bold">Nexly</span>
+              <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />
             </Link>
 
             <div className="flex items-center space-x-4">
@@ -163,8 +162,7 @@ export default function HomePageContent() {
       <footer id="contact" className="py-12 px-4 sm:px-6 lg:px-8 border-t border-neutral-800">
         <div className="max-w-7xl mx-auto text-center">
           <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
-            <img src="/logo_nexly.png" alt="Nexly" className="w-8 h-8" />
-            <span className="text-xl font-bold">Nexly</span>
+            <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />
           </Link>
           <p className="text-neutral-400 mb-4">
             Unifica tus mensajerías y convierte más clientes.

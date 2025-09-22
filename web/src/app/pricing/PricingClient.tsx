@@ -97,9 +97,8 @@ function PricingContent() {
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">N</span>
+              <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />
               </div>
-              <span className="text-xl font-bold">Nexly</span>
             </Link>
 
             <div className="flex items-center space-x-4">
