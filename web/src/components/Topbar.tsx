@@ -16,8 +16,8 @@ export default function Topbar() {
     // Limpiar estado de Zustand
     clear();
     
-    // Redirigir a login
-    window.location.href = "/login";
+    // Forzar recarga completa para limpiar todo el estado
+    window.location.replace("/login");
   };
 
   const getPlanBadge = () => {

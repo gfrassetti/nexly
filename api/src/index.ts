@@ -10,6 +10,8 @@ import integrationsRouter from "./routes/integrations";
 import { verifyMetaSignature } from "./middleware/verifyMetaSignature";
 import messageRoutes from "./routes/messages";
 import subscriptionsRouter from "./routes/subscriptions";
+import aiRouter from "./routes/ai";
+import analyticsRouter from "./routes/analytics";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -33,7 +35,8 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "https://nexly-93kgcbsuy-guido-fs-projects.vercel.app",
   "https://nexly-git-master-guido-fs-projects.vercel.app",
-  "https://nexly-topaz.vercel.app"
+  "https://nexly-topaz.vercel.app",
+  "https://www.nexly.com.ar" // nuevo dominio agregado
 ];
 
 app.use(cors({
@@ -72,6 +75,8 @@ app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
 app.use("/subscriptions", paymentRateLimit, subscriptionsRouter);
+app.use("/ai", aiRouter);
+app.use("/analytics", analyticsRouter);
 
 // Error handler (debe ir al final)
 app.use(errorHandler);

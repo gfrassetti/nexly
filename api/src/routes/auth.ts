@@ -2,6 +2,7 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { User } from "../models/User";
 import { config } from "../config";
 
@@ -137,6 +138,87 @@ router.get("/verify", async (req, res) => {
     }
     console.error("VERIFY error:", err);
     res.status(500).json({ message: "Error verificando token" });
+  }
+});
+
+// Solicitar recupero de contraseña
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email es requerido" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Por seguridad, no revelamos si el email existe o no
+      return res.json({ message: "Si el email existe, recibirás un enlace de recuperación" });
+    }
+
+    // Generar token de recuperación
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hora
+
+    // Guardar token en el usuario
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = resetTokenExpiry;
+    await user.save();
+
+    // En un entorno real, aquí enviarías un email
+    // Por ahora, retornamos el token para testing
+    const resetUrl = `${config.frontendUrl}/reset-password?token=${resetToken}`;
+    
+    console.log(`🔗 Enlace de recuperación para ${email}: ${resetUrl}`);
+
+    res.json({ 
+      message: "Si el email existe, recibirás un enlace de recuperación",
+      // Solo para desarrollo - remover en producción
+      resetUrl: process.env.NODE_ENV === 'development' ? resetUrl : undefined
+    });
+
+  } catch (error) {
+    console.error("FORGOT-PASSWORD error:", error);
+    res.status(500).json({ message: "Error procesando solicitud" });
+  }
+});
+
+// Resetear contraseña
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token y nueva contraseña son requeridos" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Token inválido o expirado" });
+    }
+
+    // Hashear nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar usuario
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+    await user.save();
+
+    res.json({ message: "Contraseña actualizada exitosamente" });
+
+  } catch (error) {
+    console.error("RESET-PASSWORD error:", error);
+    res.status(500).json({ message: "Error actualizando contraseña" });
   }
 });
 

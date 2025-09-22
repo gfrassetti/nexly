@@ -69,6 +69,12 @@ function LoginForm() {
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
+          
+          <div className="text-center">
+            <Link href="/forgot-password" className="text-blue-600 hover:underline text-sm">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
         </form>
       </div>
     </AuthGuard>

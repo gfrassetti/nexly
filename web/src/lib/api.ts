@@ -220,5 +220,56 @@ export function sendWhatsAppMessage(body: {
   });
 }
 
+// AI Functions
+export function analyzeMessage(message: string, context?: string) {
+  const token = localStorage.getItem("token");
+  return apiFetch<{
+    success: boolean;
+    analysis: {
+      sentiment: 'positive' | 'negative' | 'neutral';
+      category: 'sales' | 'support' | 'complaint' | 'general';
+      suggestedResponse?: string;
+      confidence: number;
+    };
+  }>("/ai/analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify({ message, context }),
+  });
+}
+
+export function generateResponse(message: string, businessContext?: string) {
+  const token = localStorage.getItem("token");
+  return apiFetch<{
+    success: boolean;
+    response: string;
+  }>("/ai/generate-response", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify({ message, businessContext }),
+  });
+}
+
+export function classifyUrgency(message: string) {
+  const token = localStorage.getItem("token");
+  return apiFetch<{
+    success: boolean;
+    urgency: 'low' | 'medium' | 'high';
+  }>("/ai/classify-urgency", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify({ message }),
+  });
+}
+
 export default apiFetch;
 

@@ -31,19 +31,9 @@ export default function DashboardPage() {
     unreadConversations: 0,
   });
 
-  // Fetch datos en paralelo
-  const { data: contacts } = useSWR(
-    token ? ["/contacts", token] : null,
-    async ([url, t]) => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      return res.json();
-    }
-  );
-
-  const { data: messages } = useSWR(
-    token ? ["/messages", token] : null,
+  // Fetch analytics del dashboard
+  const { data: analytics } = useSWR(
+    token ? ["/analytics/dashboard", token] : null,
     async ([url, t]) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
         headers: { Authorization: `Bearer ${t}` },
@@ -62,56 +52,23 @@ export default function DashboardPage() {
     }
   );
 
-  // Calcular estadísticas
+  // Actualizar estadísticas cuando los datos de analytics cambien
   useEffect(() => {
-    if (!contacts || !messages || !integrations) return;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Mensajes de hoy
-    const messagesToday = messages.filter((msg: any) => {
-      const msgDate = new Date(msg.createdAt || msg.timestamp);
-      return msgDate >= today;
-    });
-
-    // Conversaciones únicas de hoy
-    const conversationsToday = new Set(
-      messagesToday.map((msg: any) => msg.conversationId || msg.contactId)
-    ).size;
-
-    // Mensajes por plataforma
-    const messagesByPlatform = messages.reduce((acc: any, msg: any) => {
-      const platform = msg.provider || msg.integrationId || 'unknown';
-      acc[platform] = (acc[platform] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Tiempo promedio de respuesta (simulado)
-    const averageResponseTime = Math.floor(Math.random() * 30) + 5; // 5-35 minutos
-
-    // Mensajes recientes (últimos 5)
-    const recentMessages = messages
-      .sort((a: any, b: any) => 
-        new Date(b.createdAt || b.timestamp).getTime() - 
-        new Date(a.createdAt || a.timestamp).getTime()
-      )
-      .slice(0, 5);
-
-    // Conversaciones no leídas (simulado)
-    const unreadConversations = Math.floor(Math.random() * 10);
-
-    setStats({
-      totalContacts: contacts.length,
-      totalMessages: messages.length,
-      conversationsToday: conversationsToday,
-      averageResponseTime,
-      activeIntegrations: integrations.length,
-      messagesByPlatform,
-      recentMessages,
-      unreadConversations,
-    });
-  }, [contacts, messages, integrations]);
+    if (analytics?.success && analytics.metrics) {
+      const metrics = analytics.metrics;
+      
+      setStats({
+        totalContacts: metrics.totalContacts.value,
+        totalMessages: Object.values(metrics.messagesByPlatform).reduce((sum: number, count: any) => sum + count, 0),
+        conversationsToday: metrics.conversationsToday.value,
+        averageResponseTime: metrics.averageResponseTime.value,
+        activeIntegrations: metrics.activeIntegrations.value,
+        messagesByPlatform: metrics.messagesByPlatform,
+        recentMessages: metrics.recentMessages || [],
+        unreadConversations: metrics.unreadConversations || 0,
+      });
+    }
+  }, [analytics]);
 
   const getPlatformColor = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -164,8 +121,19 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-green-400 text-sm">+12%</span>
-              <span className="text-neutral-500 text-sm ml-2">vs mes pasado</span>
+              {analytics?.success && analytics.metrics.totalContacts ? (
+                <>
+                  <span className={`text-sm ${analytics.metrics.totalContacts.changeType === 'increase' ? 'text-green-400' : 'text-red-400'}`}>
+                    {analytics.metrics.totalContacts.change > 0 ? '+' : ''}{analytics.metrics.totalContacts.change}%
+                  </span>
+                  <span className="text-neutral-500 text-sm ml-2">vs mes pasado</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-green-400 text-sm">+12%</span>
+                  <span className="text-neutral-500 text-sm ml-2">vs mes pasado</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -183,8 +151,19 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-green-400 text-sm">+8%</span>
-              <span className="text-neutral-500 text-sm ml-2">vs ayer</span>
+              {analytics?.success && analytics.metrics.conversationsToday ? (
+                <>
+                  <span className={`text-sm ${analytics.metrics.conversationsToday.changeType === 'increase' ? 'text-green-400' : 'text-red-400'}`}>
+                    {analytics.metrics.conversationsToday.change > 0 ? '+' : ''}{analytics.metrics.conversationsToday.change}%
+                  </span>
+                  <span className="text-neutral-500 text-sm ml-2">vs ayer</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-green-400 text-sm">+8%</span>
+                  <span className="text-neutral-500 text-sm ml-2">vs ayer</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -202,8 +181,19 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-red-400 text-sm">-15%</span>
-              <span className="text-neutral-500 text-sm ml-2">vs semana pasada</span>
+              {analytics?.success && analytics.metrics.averageResponseTime ? (
+                <>
+                  <span className={`text-sm ${analytics.metrics.averageResponseTime.changeType === 'decrease' ? 'text-green-400' : 'text-red-400'}`}>
+                    {analytics.metrics.averageResponseTime.change > 0 ? '+' : ''}{analytics.metrics.averageResponseTime.change}%
+                  </span>
+                  <span className="text-neutral-500 text-sm ml-2">vs semana pasada</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-red-400 text-sm">-15%</span>
+                  <span className="text-neutral-500 text-sm ml-2">vs semana pasada</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -221,8 +211,19 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-green-400 text-sm">+2</span>
-              <span className="text-neutral-500 text-sm ml-2">este mes</span>
+              {analytics?.success && analytics.metrics.activeIntegrations ? (
+                <>
+                  <span className={`text-sm ${analytics.metrics.activeIntegrations.changeType === 'increase' ? 'text-green-400' : 'text-red-400'}`}>
+                    +{analytics.metrics.activeIntegrations.change}
+                  </span>
+                  <span className="text-neutral-500 text-sm ml-2">este mes</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-green-400 text-sm">+2</span>
+                  <span className="text-neutral-500 text-sm ml-2">este mes</span>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import AIAssistant from "./AIAssistant";
 
 type ComposerProps = {
   threadId: string | null;
@@ -142,6 +143,20 @@ export default function Composer({
     setShowEmojiPicker(false);
   };
 
+  // Funciones para IA
+  const handleResponseGenerated = (response: string) => {
+    setText(response);
+    // Auto-enviar la respuesta generada por IA
+    setTimeout(() => {
+      handleSend();
+    }, 500);
+  };
+
+  const handleAnalysisComplete = (analysis: any) => {
+    console.log('Análisis de IA completado:', analysis);
+    // Aquí podrías mostrar notificaciones o actualizar la UI
+  };
+
   const getChannelInfo = () => {
     switch (channel.toLowerCase()) {
       case 'whatsapp':
@@ -249,6 +264,14 @@ export default function Composer({
               </div>
             )}
           </div>
+
+          {/* AI Assistant */}
+          <AIAssistant
+            message={text}
+            onResponseGenerated={handleResponseGenerated}
+            onAnalysisComplete={handleAnalysisComplete}
+            disabled={disabled}
+          />
 
           {/* Botón de enviar */}
           <button

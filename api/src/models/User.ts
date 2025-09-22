@@ -5,6 +5,8 @@ export interface IUser {
   username: string;
   email: string;
   password: string; // hash bcrypt
+  resetPasswordToken?: string;
+  resetPasswordExpiry?: Date;
 }
 
 // Documento “vivo” que retorna Mongoose al hacer .create/.find
@@ -15,6 +17,8 @@ const userSchema = new Schema<IUser>(
     username: String,
     email: String,
     password: String,
+    resetPasswordToken: String,
+    resetPasswordExpiry: Date,
   },
   { timestamps: true }
 );

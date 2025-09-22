@@ -30,6 +30,9 @@ export const config = {
   mercadoPagoAccessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
   mercadoPagoBaseUrl: process.env.MERCADOPAGO_BASE_URL || "https://api.mercadopago.com",
   
+  // Google AI Configuration
+  googleAIApiKey: process.env.GOOGLE_AI_API_KEY || "",
+  
   // Environment
   nodeEnv: process.env.NODE_ENV || "development",
   isProduction: process.env.NODE_ENV === "production",
