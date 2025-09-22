@@ -34,14 +34,13 @@ export default function HomePage() {
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 flex items-center justify-center">
+                <div className="w-40 p-2 flex items-center justify-center">
                   <img 
                     src="/logo_nexly.png" 
                     alt="Nexly Logo" 
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <span className="text-xl font-bold">Nexly</span>
               </Link>
             </div>
 
@@ -175,14 +174,13 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-6 h-6 flex items-center justify-center">
+              <div className="w-40 p-2 flex items-center justify-center">
                 <img 
                   src="/logo_nexly.png" 
                   alt="Nexly Logo" 
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-lg font-semibold">Nexly</span>
             </div>
             <div className="text-neutral-400 text-sm">
               © 2024 Nexly. Todos los derechos reservados.
