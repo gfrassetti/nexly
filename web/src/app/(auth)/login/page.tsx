@@ -1,113 +1,15 @@
-"use client";
-import Link from "next/link";
-import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { API_URL } from "@/lib/api";
+import { Suspense } from "react";
 import AuthGuard from "@/components/AuthGuard";
-
-function LoginForm() {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { setAuth } = useAuth();
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
-      });
-      if (!res.ok) throw new Error("Credenciales inválidas");
-      const data = await res.json();
-      localStorage.setItem("token", data.token); // 👈 obligatorio
-      document.cookie = `token=${data.token}; Path=/; SameSite=Lax`;
-      setAuth(data.token, data.user);
-      
-      // Redirigir según el contexto
-      const plan = searchParams.get('plan');
-      if (plan) {
-        // Si vino con un plan, redirigir a pricing para completar el pago
-        router.replace(`/pricing?plan=${plan}`);
-      } else {
-        // Si no vino con plan, redirigir al dashboard normal
-        router.replace("/dashboard");
-      }
-    } catch (e: any) {
-      setError(e.message || "Error de login");
-    } finally {
-      setLoading(false);
-    }
-  }
-  return (
-    <AuthGuard requireAuth={false}>
-      <div className="min-h-svh grid place-items-center p-6 bg-neutral-900">
-        <div className="w-full max-w-md">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-white">Iniciar sesión</h1>
-            <p className="text-neutral-400 mt-2">Bienvenido de vuelta</p>
-          </div>
-          
-          <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
-          {error && <p className="text-sm text-red-500">{error}</p>}
-            <div>
-              <input
-                className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
-                placeholder="Email o teléfono"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-              />
-            </div>
-            <div>
-              <input
-                className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
-                placeholder="Contraseña"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <button
-              disabled={loading}
-              className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors"
-            >
-              {loading ? "Entrando..." : "Entrar"}
-            </button>
-          
-            <div className="text-center space-y-3">
-              <div>
-                <Link href="/forgot-password" className="text-nexly-azul hover:text-nexly-light-blue text-sm transition-colors">
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
-              <div>
-                <span className="text-neutral-400 text-sm">
-                  ¿No estás registrado?{" "}
-                </span>
-                <Link href="/register" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors">
-                  Regístrate aquí
-                </Link>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </AuthGuard>
-  );
-}
+import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-svh grid place-items-center"><div className="animate-spin h-8 w-8 border-4 border-black border-t-transparent rounded-full"></div></div>}>
-      <LoginForm />
-    </Suspense>
+    <AuthGuard requireAuth={false}>
+      <div className="min-h-svh grid place-items-center p-6 bg-neutral-900">
+        <Suspense fallback={<div className="text-white">Cargando...</div>}>
+          <LoginForm />
+        </Suspense>
+      </div>
+    </AuthGuard>
   );
 }
