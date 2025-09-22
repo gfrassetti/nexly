@@ -71,10 +71,20 @@ function LoginForm() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
           
-          <div className="text-center">
-            <Link href="/forgot-password" className="text-blue-600 hover:underline text-sm">
-              ¿Olvidaste tu contraseña?
-            </Link>
+          <div className="text-center space-y-3">
+            <div>
+              <Link href="/forgot-password" className="text-blue-600 hover:underline text-sm">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+            <div>
+              <span className="text-neutral-600 text-sm">
+                ¿No estás registrado?{" "}
+              </span>
+              <Link href="/register" className="text-green-600 hover:underline text-sm font-medium">
+                Regístrate aquí
+              </Link>
+            </div>
           </div>
         </form>
       </div>

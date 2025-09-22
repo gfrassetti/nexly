@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { registerApi } from "@/lib/api";
@@ -89,16 +90,14 @@ function RegisterForm() {
             {loading ? "Creando cuenta..." : success ? "¡Cuenta creada!" : "Registrarse"}
           </button>
           
-          <p className="text-center text-sm text-gray-600">
-            ¿Ya tienes cuenta?{" "}
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="text-blue-600 hover:underline"
-            >
-              Iniciar sesión
-            </button>
-          </p>
+          <div className="text-center">
+            <span className="text-neutral-600 text-sm">
+              ¿Ya tienes cuenta?{" "}
+            </span>
+            <Link href="/login" className="text-green-600 hover:underline text-sm font-medium">
+              Inicia sesión aquí
+            </Link>
+          </div>
         </form>
       </div>
     </AuthGuard>

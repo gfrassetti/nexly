@@ -128,10 +128,20 @@ function ResetPasswordForm() {
             </button>
           </form>
 
-          <div className="text-center">
-            <Link href="/login" className="text-blue-600 hover:underline text-sm">
-              ← Volver al login
-            </Link>
+          <div className="text-center space-y-2">
+            <div>
+              <Link href="/login" className="text-blue-600 hover:underline text-sm">
+                ← Volver al login
+              </Link>
+            </div>
+            <div>
+              <span className="text-neutral-600 text-sm">
+                ¿Recordaste tu contraseña?{" "}
+              </span>
+              <Link href="/login" className="text-green-600 hover:underline text-sm font-medium">
+                Inicia sesión aquí
+              </Link>
+            </div>
           </div>
         </div>
       </div>
