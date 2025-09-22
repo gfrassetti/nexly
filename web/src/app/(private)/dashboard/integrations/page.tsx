@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 function IntegrationsContent() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
+  const { subscription, getMaxIntegrations, isTrialActive, isActive } = useSubscription();
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -18,9 +20,73 @@ function IntegrationsContent() {
     }
   }, [searchParams]);
 
+  // Función para determinar si una integración está disponible
+  const isIntegrationAvailable = (integrationName: string): boolean => {
+    const maxIntegrations = getMaxIntegrations();
+    
+    // WhatsApp siempre está disponible
+    if (integrationName === 'whatsapp') return true;
+    
+    // Para otras integraciones, verificar límite
+    if (isTrialActive()) return true; // Durante trial, todo disponible
+    
+    return maxIntegrations >= 999; // Solo premium tiene acceso ilimitado
+  };
+
+  // Función para obtener el texto del botón
+  const getButtonText = (integrationName: string): string => {
+    if (integrationName === 'whatsapp') return 'Conectar WhatsApp';
+    if (isIntegrationAvailable(integrationName)) return 'Conectar';
+    return 'Upgrade para habilitar';
+  };
+
+  // Función para obtener el estilo del botón
+  const getButtonStyle = (integrationName: string): string => {
+    if (integrationName === 'whatsapp') return 'w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors';
+    if (isIntegrationAvailable(integrationName)) return 'w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors';
+    return 'w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed';
+  };
+
+  // Función para manejar el click del botón
+  const handleButtonClick = (integrationName: string) => {
+    if (integrationName === 'whatsapp') {
+      window.location.href = '/dashboard/integrations/connect/whatsapp';
+    } else if (isIntegrationAvailable(integrationName)) {
+      // Aquí iría la lógica para conectar otras plataformas
+      setError(`${integrationName} aún no está implementado`);
+    } else {
+      // Redirigir a pricing
+      window.location.href = '/pricing';
+    }
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Integraciones</h1>
+      
+      {/* Información del plan actual */}
+      {subscription?.subscription && (
+        <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white font-medium">
+                Plan actual: {subscription.subscription.planType === 'basic' ? 'Básico' : 'Premium'}
+              </p>
+              <p className="text-neutral-400 text-sm">
+                Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Ilimitadas' : `${getMaxIntegrations()}`}
+              </p>
+            </div>
+            {!isActive() && !isTrialActive() && (
+              <button
+                onClick={() => window.location.href = '/pricing'}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Actualizar Plan
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       
       {message && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -47,10 +113,10 @@ function IntegrationsContent() {
             Conecta tu cuenta de WhatsApp Business para enviar y recibir mensajes.
           </p>
           <button 
-            className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-            onClick={() => window.location.href = '/dashboard/integrations/connect/whatsapp'}
+            className={getButtonStyle('whatsapp')}
+            onClick={() => handleButtonClick('whatsapp')}
           >
-            Conectar WhatsApp
+            {getButtonText('whatsapp')}
           </button>
         </div>
 
@@ -66,10 +132,11 @@ function IntegrationsContent() {
             Conecta tu cuenta de Instagram para gestionar mensajes directos.
           </p>
           <button 
-            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-            disabled
+            className={getButtonStyle('instagram')}
+            onClick={() => handleButtonClick('instagram')}
+            disabled={!isIntegrationAvailable('instagram')}
           >
-            Próximamente
+            {getButtonText('instagram')}
           </button>
         </div>
 
@@ -85,10 +152,11 @@ function IntegrationsContent() {
             Conecta Facebook Messenger para gestionar conversaciones.
           </p>
           <button 
-            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-            disabled
+            className={getButtonStyle('messenger')}
+            onClick={() => handleButtonClick('messenger')}
+            disabled={!isIntegrationAvailable('messenger')}
           >
-            Próximamente
+            {getButtonText('messenger')}
           </button>
         </div>
 
@@ -104,10 +172,11 @@ function IntegrationsContent() {
             Conecta TikTok para gestionar mensajes y comentarios.
           </p>
           <button 
-            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-            disabled
+            className={getButtonStyle('tiktok')}
+            onClick={() => handleButtonClick('tiktok')}
+            disabled={!isIntegrationAvailable('tiktok')}
           >
-            Próximamente
+            {getButtonText('tiktok')}
           </button>
         </div>
 
@@ -123,10 +192,11 @@ function IntegrationsContent() {
             Conecta Telegram para gestionar bots y mensajes.
           </p>
           <button 
-            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-            disabled
+            className={getButtonStyle('telegram')}
+            onClick={() => handleButtonClick('telegram')}
+            disabled={!isIntegrationAvailable('telegram')}
           >
-            Próximamente
+            {getButtonText('telegram')}
           </button>
         </div>
 

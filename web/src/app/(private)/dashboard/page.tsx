@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getContacts, getMessages } from "@/lib/api";
 import useSWR from "swr";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface DashboardStats {
   totalContacts: number;
@@ -18,6 +19,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { token } = useAuth();
+  const { subscription } = useSubscription();
   const [stats, setStats] = useState<DashboardStats>({
     totalContacts: 0,
     totalMessages: 0,
@@ -289,7 +291,7 @@ export default function DashboardPage() {
         {/* Acciones rápidas */}
         <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
           <h3 className="text-lg font-semibold text-white mb-4">Acciones Rápidas</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <button 
               onClick={() => window.location.href = '/dashboard/contacts'}
               className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
@@ -328,6 +330,22 @@ export default function DashboardPage() {
                 <p className="text-sm opacity-90">Gestionar conversaciones</p>
               </div>
             </button>
+            
+            {/* Botón de pago - solo mostrar si no está en trial activo o activo */}
+            {subscription?.subscription && (!subscription.subscription.isTrialActive && !subscription.subscription.isActive) && (
+              <button 
+                onClick={() => window.location.href = '/pricing'}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <div className="text-left">
+                  <p className="font-medium">Actualizar Plan</p>
+                  <p className="text-sm opacity-90">Desbloquear más funciones</p>
+                </div>
+              </button>
+            )}
           </div>
         </div>
       </div>
