@@ -88,14 +88,14 @@ export default function SubscriptionStatus() {
       <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white mb-2">Sin suscripción activa</h3>
-            <p className="text-neutral-400">Comienza tu prueba gratuita de 15 días</p>
+            <h3 className="text-lg font-semibold text-white mb-2">¡Comienza tu prueba gratuita!</h3>
+            <p className="text-neutral-400">7 días gratis para probar todas las funciones</p>
           </div>
           <a
             href="/pricing"
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
           >
-            Ver planes
+            Elegir Plan
           </a>
         </div>
       </div>
@@ -119,7 +119,7 @@ export default function SubscriptionStatus() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-lg font-semibold text-white">
-              {sub.planType === 'basic' ? 'Plan Básico' : 'Plan Premium'}
+{sub.planType === 'basic' ? 'Plan Básico' : 'Plan Premium'}
             </h3>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
               sub.status === 'active' ? 'bg-green-600 text-white' :
@@ -129,7 +129,8 @@ export default function SubscriptionStatus() {
               sub.status === 'cancelled' ? 'bg-red-600 text-white' :
               'bg-gray-600 text-white'
             }`}>
-              {sub.status === 'active' ? 'Activo' :
+              {
+               sub.status === 'active' ? 'Activo' :
                sub.status === 'trial' ? 'Prueba' :
                sub.status === 'paused' ? 'Pausada' :
                sub.status === 'grace_period' ? 'Período de gracia' :

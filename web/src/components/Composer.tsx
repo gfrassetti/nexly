@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import AIAssistant from "./AIAssistant";
+import { useMessageLimits } from "@/hooks/useMessageLimits";
 
 type ComposerProps = {
   threadId: string | null;
@@ -28,6 +29,7 @@ export default function Composer({
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const { canSendMessage, getRemainingMessages, getUsedMessages, getMaxMessages } = useMessageLimits(token);
   const [error, setError] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -276,13 +278,19 @@ export default function Composer({
           {/* Botón de enviar */}
           <button
             onClick={handleSend}
-            disabled={!text.trim() || isLoading || disabled || text.length > maxLength}
+            disabled={!text.trim() || isLoading || disabled || text.length > maxLength || !canSendMessage(channel)}
             className={`flex-shrink-0 p-3 rounded-lg transition-colors ${
-              text.trim() && !isLoading && !disabled && text.length <= maxLength
+              text.trim() && !isLoading && !disabled && text.length <= maxLength && canSendMessage(channel)
                 ? 'bg-green-600 text-white hover:bg-green-700'
                 : 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
             }`}
-            title={text.length > maxLength ? `Mensaje demasiado largo (${text.length}/${maxLength})` : "Enviar mensaje"}
+            title={
+              text.length > maxLength 
+                ? `Mensaje demasiado largo (${text.length}/${maxLength})`
+                : !canSendMessage(channel)
+                ? `Límite de mensajes alcanzado (${getUsedMessages(channel)}/${getMaxMessages(channel)})`
+                : "Enviar mensaje"
+            }
           >
             {isLoading ? (
               <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -325,6 +333,12 @@ export default function Composer({
                   <circle cx="12" cy="12" r="2"/>
                 </svg>
                 Escribiendo...
+              </span>
+            )}
+            {/* Indicador de límites de mensajes */}
+            {getMaxMessages(channel) < 999 && (
+              <span className={`${getRemainingMessages(channel) <= 2 ? 'text-red-400' : 'text-neutral-500'}`}>
+                {getUsedMessages(channel)}/{getMaxMessages(channel)} mensajes hoy
               </span>
             )}
           </div>

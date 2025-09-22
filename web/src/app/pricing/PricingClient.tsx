@@ -31,7 +31,8 @@ function PricingContent() {
         'WhatsApp',
         'Instagram',
         'Hasta 2 integraciones',
-        'Período de prueba de 15 días',
+        'Mensajes ilimitados',
+        '7 días gratis, luego $2.999/mes',
       ],
       popular: false,
     },
@@ -49,7 +50,8 @@ function PricingContent() {
         'Telegram',
         'Twitter/X',
         'Todas las integraciones disponibles',
-        'Período de prueba de 15 días',
+        'Mensajes ilimitados',
+        '7 días gratis, luego $5.999/mes',
       ],
       popular: true,
     },
@@ -61,6 +63,7 @@ function PricingContent() {
       window.location.href = `/register?plan=${planType}`;
       return;
     }
+
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
@@ -114,7 +117,7 @@ function PricingContent() {
               <svg className="w-6 h-6 text-nexly-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-lg font-semibold text-nexly-teal">15 días de prueba gratis</h3>
+                <h3 className="text-lg font-semibold text-nexly-teal">7 días de prueba gratis</h3>
             </div>
             <p className="text-neutral-300">
               Acceso completo a todas las funciones durante tu período de prueba
@@ -174,10 +177,10 @@ function PricingContent() {
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
                     }`}
                   >
-                    Registrarse y Probar Gratis
+                    Comenzar Prueba Gratis
                   </button>
                   <p className="text-center text-xs text-neutral-400">
-                    15 días gratis • Sin tarjeta requerida
+                    7 días gratis • Tarjeta requerida
                   </p>
                 </div>
               ) : (
@@ -191,10 +194,10 @@ function PricingContent() {
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
                     }`}
                   >
-                    Comprar {plan.name}
+                    Comenzar Prueba Gratis
                   </button>
                   <p className="text-center text-xs text-neutral-400">
-                    Pago seguro con Mercado Pago
+                    7 días gratis • Tarjeta requerida
                   </p>
                 </div>
               )}

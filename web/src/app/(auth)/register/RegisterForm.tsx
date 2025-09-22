@@ -33,7 +33,7 @@ export default function RegisterForm() {
         } else {
           router.push("/login");
         }
-      }, 2000);
+      }, 1500); // Reducir tiempo de espera
     } catch (err: any) {
       setError(err.message || "Error al crear la cuenta");
     } finally {
@@ -56,7 +56,7 @@ export default function RegisterForm() {
         
         {success && (
           <div className="p-3 bg-green-900/50 border border-green-700 text-green-300 rounded">
-            ✅ ¡Cuenta creada exitosamente! Redirigiendo al login...
+            ✅ ¡Cuenta creada exitosamente! Redirigiendo...
           </div>
         )}
         

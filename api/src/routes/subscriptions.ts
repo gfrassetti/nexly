@@ -10,6 +10,69 @@ import { validateSubscriptionData } from '../middleware/security';
 const router = express.Router();
 
 /**
+ * Iniciar trial gratuito (sin pago)
+ */
+router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res: any) => {
+  try {
+    const { planType } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new CustomError('Usuario no encontrado', 401);
+    }
+
+    if (!planType || !['basic', 'premium'].includes(planType)) {
+      throw new CustomError('Tipo de plan inválido', 400);
+    }
+
+    // Verificar si ya tiene una suscripción activa
+    const existingSubscription = await Subscription.findOne({ userId });
+    
+    if (existingSubscription && (existingSubscription.status === 'trial' || existingSubscription.status === 'active')) {
+      return res.json({
+        success: true,
+        message: 'Ya tienes una suscripción activa',
+        subscription: existingSubscription
+      });
+    }
+
+    // Crear nueva suscripción con trial
+    const trialStartDate = new Date();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de trial
+
+    const subscription = new Subscription({
+      userId,
+      planType,
+      status: 'trial',
+      startDate: trialStartDate,
+      endDate: trialEndDate,
+      isActive: true,
+      trialStartDate,
+      trialEndDate
+    });
+
+    await subscription.save();
+
+    res.json({
+      success: true,
+      message: 'Trial iniciado exitosamente',
+      subscription: {
+        id: subscription._id,
+        planType: subscription.planType,
+        status: subscription.status,
+        trialEndDate: subscription.trialEndDate,
+        isTrialActive: subscription.status === 'trial'
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Error iniciando trial:', error);
+    throw new CustomError(error.message || 'Error iniciando trial', 500);
+  }
+}));
+
+/**
  * Crear una nueva suscripción (iniciar trial)
  */
 router.post('/create', authenticateToken, validateSubscriptionData, asyncHandler(async (req: any, res: any) => {

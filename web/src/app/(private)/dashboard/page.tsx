@@ -5,6 +5,7 @@ import { getContacts, getMessages } from "@/lib/api";
 import useSWR from "swr";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useSearchParams } from "next/navigation";
 
 interface DashboardStats {
   totalContacts: number;
@@ -20,6 +21,7 @@ interface DashboardStats {
 export default function DashboardPage() {
   const { token } = useAuth();
   const { subscription } = useSubscription();
+  const searchParams = useSearchParams();
   const [stats, setStats] = useState<DashboardStats>({
     totalContacts: 0,
     totalMessages: 0,
@@ -30,6 +32,17 @@ export default function DashboardPage() {
     recentMessages: [],
     unreadConversations: 0,
   });
+  const [showTrialNotification, setShowTrialNotification] = useState(false);
+
+  // Mostrar notificación si se inició el trial
+  useEffect(() => {
+    const trialStarted = searchParams.get('trial_started');
+    if (trialStarted === 'true') {
+      setShowTrialNotification(true);
+      // Ocultar después de 5 segundos
+      setTimeout(() => setShowTrialNotification(false), 5000);
+    }
+  }, [searchParams]);
 
   // Fetch analytics del dashboard
   const { data: analytics } = useSWR(
@@ -102,6 +115,21 @@ export default function DashboardPage() {
 
       {/* Contenido principal */}
       <div className="flex-1 p-6 space-y-6">
+        {/* Notificación de trial iniciado */}
+        {showTrialNotification && (
+          <div className="bg-nexly-green/20 border border-nexly-green/30 rounded-lg p-4 flex items-center space-x-3">
+            <div className="w-8 h-8 bg-nexly-green rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-nexly-green font-semibold">¡Trial iniciado exitosamente!</h3>
+              <p className="text-neutral-300 text-sm">Ya puedes usar todas las funciones durante 7 días gratis</p>
+            </div>
+          </div>
+        )}
+
         {/* Estado de suscripción */}
         <SubscriptionStatus />
 

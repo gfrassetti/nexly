@@ -132,6 +132,7 @@ SubscriptionSchema.methods.getMaxIntegrations = function(): number {
     return 2; // Solo WhatsApp e Instagram
   }
   
+  
   return this.planType === 'basic' ? 2 : 999; // Básico: 2 integraciones, Premium: ilimitadas
 };
 

@@ -40,10 +40,10 @@ export default function a() {
               Unifica WhatsApp, Instagram y{" "}
               <span className="text-nexly-teal bg-gradient-to-r from-nexly-teal to-nexly-light-blue bg-clip-text text-transparent">Messenger</span>
             </h1>
-            <p className="text-xl text-neutral-300 mb-8 max-w-3xl mx-auto">
-              Conecta WhatsApp, Instagram y Messenger. Gestiona todas tus conversaciones, 
-              automatiza respuestas y convierte más clientes.
-            </p>
+                <p className="text-xl text-neutral-300 mb-8 max-w-3xl mx-auto">
+                  Conecta WhatsApp, Instagram y Messenger. Gestiona todas tus conversaciones, 
+                  automatiza respuestas y convierte más clientes.
+                </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link
@@ -71,13 +71,13 @@ export default function a() {
                 <svg className="w-5 h-5 text-nexly-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-nexly-green font-medium">15 días gratis</span>
+                <span className="text-nexly-green font-medium">7 días gratis</span>
               </div>
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-nexly-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <span className="text-nexly-green font-medium">Sin tarjeta requerida</span>
+                <span className="text-nexly-green font-medium">Tarjeta requerida</span>
               </div>
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-nexly-light-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">

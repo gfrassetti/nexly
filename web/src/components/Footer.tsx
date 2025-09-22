@@ -47,7 +47,7 @@ export default function Footer({
                 Política de Privacidad
               </Link>
               <span>•</span>
-              <Link href="/terms" className="hover:text-white transition-colors duration-300">
+              <Link href="/terms-and-conditions" className="hover:text-white transition-colors duration-300">
                 Términos y Condiciones
               </Link>
               <span>•</span>
