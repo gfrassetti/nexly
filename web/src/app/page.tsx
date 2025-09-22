@@ -34,8 +34,12 @@ export default function HomePage() {
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">N</span>
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <img 
+                    src="/logo_nexly.png" 
+                    alt="Nexly Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <span className="text-xl font-bold">Nexly</span>
               </Link>
@@ -72,13 +76,22 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Link
                 href="/register"
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-green-500/25"
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-green-500/25 flex items-center gap-2"
               >
-                Comenzar prueba gratis
+                <span>Registrarse y Probar Gratis</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </Link>
-              <button className="border border-neutral-600 hover:border-neutral-500 text-neutral-300 hover:text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors">
-                Ver demo
-              </button>
+              <Link
+                href="/pricing"
+                className="border border-neutral-600 hover:border-neutral-500 text-neutral-300 hover:text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors flex items-center gap-2"
+              >
+                <span>Ver Planes y Precios</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </Link>
             </div>
 
             {/* Trust Indicators */}
@@ -106,7 +119,7 @@ export default function HomePage() {
         </div>
 
         {/* Features Preview */}
-        <div className="relative bg-neutral-800/50 border-t border-neutral-700">
+        <div id="features" className="relative bg-neutral-800/50 border-t border-neutral-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4">Todo lo que necesitas en un lugar</h2>
@@ -158,12 +171,16 @@ export default function HomePage() {
     </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-800 bg-neutral-900">
+      <footer id="contact" className="border-t border-neutral-800 bg-neutral-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center">
-                <span className="text-white font-bold text-xs">N</span>
+              <div className="w-6 h-6 flex items-center justify-center">
+                <img 
+                  src="/logo_nexly.png" 
+                  alt="Nexly Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="text-lg font-semibold">Nexly</span>
             </div>

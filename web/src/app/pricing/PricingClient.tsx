@@ -1,11 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useSearchParams } from "next/navigation";
 
 export default function PricingClient() {
   const { token } = useAuth();
+  const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
+
+  // Detectar plan desde query parameters
+  useEffect(() => {
+    const plan = searchParams.get('plan');
+    if (plan === 'basic' || plan === 'premium') {
+      setSelectedPlan(plan);
+    }
+  }, [searchParams]);
 
   const plans = [
     {
@@ -44,13 +54,13 @@ export default function PricingClient() {
 
   const handleStartTrial = async (planType: 'basic' | 'premium') => {
     if (!token) {
-      // Redirigir al registro si no está autenticado
+      // Para usuarios no autenticados, redirigir al registro
       window.location.href = `/register?plan=${planType}`;
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -61,15 +71,15 @@ export default function PricingClient() {
 
       const data = await response.json();
 
-      if (data.success) {
-        // Redirigir al dashboard con mensaje de éxito
-        window.location.href = '/dashboard?trial_started=true';
+      if (data.success && data.paymentUrl) {
+        // Abrir enlace de pago en nueva ventana
+        window.open(data.paymentUrl, '_blank');
       } else {
-        alert('Error al iniciar la prueba: ' + (data.error || 'Error desconocido'));
+        alert('Error al crear el enlace de pago: ' + (data.error || 'Error desconocido'));
       }
     } catch (error) {
       console.error('Error starting trial:', error);
-      alert('Error al iniciar la prueba gratuita');
+      alert('Error al crear el enlace de pago');
     }
   };
 
@@ -181,16 +191,41 @@ export default function PricingClient() {
                 ))}
               </ul>
 
-              <button
-                onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
-                className={`w-full py-4 rounded-lg font-semibold transition-colors ${
-                  plan.popular
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-neutral-700 hover:bg-neutral-600 text-white'
-                }`}
-              >
-                {token ? 'Comenzar prueba gratis' : 'Probar gratis'}
-              </button>
+              {!token ? (
+                // Usuario no autenticado - Botón de registro
+                <div className="space-y-3">
+                  <button
+                    onClick={() => window.location.href = `/register?plan=${plan.id}`}
+                    className={`w-full py-4 rounded-lg font-semibold transition-colors ${
+                      plan.popular
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-neutral-700 hover:bg-neutral-600 text-white'
+                    }`}
+                  >
+                    Registrarse y Probar Gratis
+                  </button>
+                  <p className="text-center text-xs text-neutral-400">
+                    15 días gratis • Sin tarjeta requerida
+                  </p>
+                </div>
+              ) : (
+                // Usuario autenticado - Botón de compra
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
+                    className={`w-full py-4 rounded-lg font-semibold transition-colors ${
+                      plan.popular
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-neutral-700 hover:bg-neutral-600 text-white'
+                    }`}
+                  >
+                    Comprar Plan {plan.name}
+                  </button>
+                  <p className="text-center text-xs text-neutral-400">
+                    Pago seguro con Mercado Pago
+                  </p>
+                </div>
+              )}
 
               <p className="text-center text-sm text-neutral-400 mt-4">
                 Sin compromiso • Cancela cuando quieras
@@ -198,6 +233,42 @@ export default function PricingClient() {
             </div>
           ))}
         </div>
+
+        {/* Información adicional para usuarios no autenticados */}
+        {!token && (
+          <div className="mt-16 bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-4">¿Cómo funciona?</h2>
+              <p className="text-neutral-400 text-lg">Proceso simple y seguro en 3 pasos</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-lg">1</span>
+                </div>
+                <h3 className="font-semibold mb-2">Regístrate gratis</h3>
+                <p className="text-neutral-400 text-sm">Crea tu cuenta en menos de 2 minutos</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-lg">2</span>
+                </div>
+                <h3 className="font-semibold mb-2">Elige tu plan</h3>
+                <p className="text-neutral-400 text-sm">Selecciona el plan que mejor se adapte a tu negocio</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-lg">3</span>
+                </div>
+                <h3 className="font-semibold mb-2">Paga con seguridad</h3>
+                <p className="text-neutral-400 text-sm">Procesamiento seguro con Mercado Pago</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* FAQ Section */}
         <div className="mt-20 max-w-3xl mx-auto">

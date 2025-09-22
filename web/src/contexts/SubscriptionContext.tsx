@@ -161,7 +161,21 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       const data = await response.json();
 
       if (data.success) {
-        await fetchSubscriptionStatus(); // Refrescar datos
+        // Actualizar estado local inmediatamente
+        if (subscription?.subscription) {
+          setSubscription({
+            ...subscription,
+            subscription: {
+              ...subscription.subscription,
+              status: 'paused',
+              pausedAt: new Date().toISOString(),
+              isPaused: true,
+              isActive: false,
+            }
+          });
+        }
+        // También refrescar desde el servidor
+        await fetchSubscriptionStatus();
       } else {
         throw new Error(data.error || 'Error al pausar la suscripción');
       }

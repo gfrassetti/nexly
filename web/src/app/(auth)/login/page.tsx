@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { API_URL } from "@/lib/api";
 import AuthGuard from "@/components/AuthGuard";
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAuth } = useAuth();
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,7 +28,16 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token); // 👈 obligatorio
       document.cookie = `token=${data.token}; Path=/; SameSite=Lax`;
       setAuth(data.token, data.user);
-      router.replace("/dashboard");
+      
+      // Redirigir según el contexto
+      const plan = searchParams.get('plan');
+      if (plan) {
+        // Si vino con un plan, redirigir a pricing para completar el pago
+        router.replace(`/pricing?plan=${plan}`);
+      } else {
+        // Si no vino con plan, redirigir al dashboard normal
+        router.replace("/dashboard");
+      }
     } catch (e: any) {
       setError(e.message || "Error de login");
     } finally {

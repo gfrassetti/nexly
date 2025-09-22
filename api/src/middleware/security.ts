@@ -83,6 +83,15 @@ export const validateSubscriptionData = (req: Request, res: Response, next: Next
     throw new CustomError('Tipo de plan inválido', 400);
   }
   
+  // Validar que no haya campos adicionales sospechosos
+  const allowedFields = ['planType'];
+  const requestFields = Object.keys(req.body);
+  const hasInvalidFields = requestFields.some(field => !allowedFields.includes(field));
+  
+  if (hasInvalidFields) {
+    throw new CustomError('Campos no permitidos en la solicitud', 400);
+  }
+  
   next();
 };
 

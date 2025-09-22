@@ -4,7 +4,12 @@ dotenv.config();
 export const config = {
   port: process.env.PORT || "4000",
   mongoUri: process.env.MONGO_URI || "",
-  jwtSecret: process.env.JWT_SECRET || "changeme",
+  jwtSecret: process.env.JWT_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET must be set in production');
+    }
+    return "dev-secret-change-in-production";
+  })(),
   webhookVerifyToken: process.env.WEBHOOK_VERIFY_TOKEN || "verifytoken",
   
   // Meta App Configuration (usando los nombres de Railway)

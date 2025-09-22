@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { registerApi } from "@/lib/api";
 import AuthGuard from "@/components/AuthGuard";
 
@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,10 +25,18 @@ export default function RegisterPage() {
       // Solo registrar
       await registerApi({ username, email, password });
       
-      // Mostrar éxito y redirigir al login
+      // Mostrar éxito y redirigir según el contexto
       setSuccess(true);
+      const plan = searchParams.get('plan');
+      
       setTimeout(() => {
-        router.replace("/login");
+        if (plan) {
+          // Si vino con un plan, redirigir a login con el plan para que después vaya a pricing
+          router.replace(`/login?plan=${plan}`);
+        } else {
+          // Si no vino con plan, redirigir al login normal
+          router.replace("/login");
+        }
       }, 2000);
       
     } catch (e: any) {

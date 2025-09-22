@@ -47,6 +47,12 @@ router.post('/create', authenticateToken, validateSubscriptionData, asyncHandler
 
     await subscription.save();
 
+    // Verificar que se guardó correctamente
+    const savedSubscription = await Subscription.findById(subscription._id);
+    if (!savedSubscription) {
+      throw new CustomError('Error al guardar la suscripción en la base de datos', 500);
+    }
+
     res.json({
       success: true,
       subscription: {
@@ -188,6 +194,18 @@ router.post('/create-payment-link', authenticateToken, asyncHandler(async (req: 
  */
 router.post('/webhook', async (req, res) => {
   try {
+    // Validar origen del webhook
+    const origin = req.headers.origin || req.headers.referer;
+    const allowedOrigins = [
+      'https://api.mercadopago.com',
+      'https://www.mercadopago.com.ar'
+    ];
+    
+    if (!allowedOrigins.some(allowed => origin?.includes(allowed))) {
+      console.error('Webhook origin not authorized:', origin);
+      return res.status(403).json({ error: 'Origin not authorized' });
+    }
+
     const { type, data } = req.body;
 
     if (type === 'subscription_preapproval') {
