@@ -33,9 +33,8 @@ export const config = {
   // Google AI Configuration
   googleAIApiKey: process.env.GOOGLE_AI_API_KEY || "",
   
-  // Email Configuration
-  emailUser: process.env.EMAIL_USER || "",
-  emailPass: process.env.EMAIL_PASS || "",
+  // Email Configuration (SendGrid)
+  sendGridApiKey: process.env.SENDGRID_API_KEY || "",
   
   // Environment
   nodeEnv: process.env.NODE_ENV || "development",

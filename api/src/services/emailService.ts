@@ -1,48 +1,43 @@
 // api/src/services/emailService.ts
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 class EmailService {
-  private transporter: nodemailer.Transporter | null = null;
   private isConfigured = false;
 
   constructor() {
-    this.initializeTransporter();
+    this.initializeClient();
   }
 
-  private initializeTransporter() {
-    const user = process.env.EMAIL_USER;
-    const pass = process.env.EMAIL_PASS;
+  private initializeClient() {
+    const apiKey = process.env.SENDGRID_API_KEY;
 
-    if (!user || !pass) {
-      console.warn('⚠️ Email service not configured. Password recovery emails will not be sent.');
-      console.log('Required variables: EMAIL_USER, EMAIL_PASS');
+    if (!apiKey) {
+      console.warn('⚠️ SendGrid API key not configured. Password recovery emails will not be sent.');
+      console.log('Required variable: SENDGRID_API_KEY');
       return;
     }
 
     try {
-      this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user, pass }
-      });
+      sgMail.setApiKey(apiKey);
       this.isConfigured = true;
-      console.log('✅ Email service initialized successfully');
+      console.log('✅ SendGrid service initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize email service:', error);
+      console.error('❌ Failed to initialize SendGrid service:', error);
     }
   }
 
   async sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
-      console.warn('Email service not configured. Cannot send password reset email.');
+    if (!this.isConfigured) {
+      console.warn('SendGrid service not configured. Cannot send password reset email.');
       // Para desarrollo, mostrar enlace en consola
       console.log(`📧 [DEV] Reset URL for ${email}: ${resetUrl}`);
       return false;
     }
 
     try {
-      const mailOptions = {
-        from: `"Nexly" <${process.env.EMAIL_USER}>`,
+      const msg = {
         to: email,
+        from: 'noreply@nexly.com.ar', // Tu dominio verificado en SendGrid
         subject: '🔐 Recuperación de contraseña - Nexly',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -79,8 +74,8 @@ class EmailService {
         `
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log(`✅ Password reset email sent to ${email}:`, result.messageId);
+      await sgMail.send(msg);
+      console.log(`✅ Password reset email sent to ${email}`);
       return true;
     } catch (error) {
       console.error('❌ Failed to send password reset email:', error);
