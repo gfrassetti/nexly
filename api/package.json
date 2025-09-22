@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@types/nodemailer": "^7.0.1",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
@@ -22,7 +23,9 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.19.0",
-    "mongoose": "^8.18.0"
+    "mongoose": "^8.18.0",
+    "nodemailer": "^7.0.6",
+    "twilio": "^5.9.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
