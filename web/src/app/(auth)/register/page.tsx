@@ -48,9 +48,16 @@ function RegisterForm() {
 
   return (
     <AuthGuard requireAuth={false}>
-      <div className="min-h-svh grid place-items-center p-6">
-        <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-2xl font-semibold">Crear cuenta</h1>
+      <div className="min-h-svh grid place-items-center p-6 bg-neutral-900">
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-white">Crear cuenta</h1>
+            <p className="text-neutral-400 mt-2">Únete a Nexly hoy</p>
+          </div>
+          
+          <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
           
           {success && (
             <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded">
@@ -60,45 +67,52 @@ function RegisterForm() {
           
           {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <input
-            className="w-full border rounded-md px-3 py-2 text-black"
-            placeholder="Nombre de usuario"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
+            <div>
+              <input
+                className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+                placeholder="Nombre de usuario"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
 
-          <input
-            className="w-full border rounded-md px-3 py-2 text-black"
-            placeholder="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            <div>
+              <input
+                className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-          <input
-            className="w-full border rounded-md px-3 py-2 text-black"
-            placeholder="Contraseña"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+            <div>
+              <input
+                className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+                placeholder="Contraseña"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
 
-          <button
-            disabled={loading || success}
-            className="w-full bg-black text-white rounded-md py-2 disabled:opacity-50"
-          >
-            {loading ? "Creando cuenta..." : success ? "¡Cuenta creada!" : "Registrarse"}
-          </button>
+            <button
+              disabled={loading || success}
+              className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {loading ? "Creando cuenta..." : success ? "¡Cuenta creada!" : "Registrarse"}
+            </button>
           
-          <div className="text-center">
-            <span className="text-neutral-600 text-sm">
-              ¿Ya tienes cuenta?{" "}
-            </span>
-            <Link href="/login" className="text-green-600 hover:underline text-sm font-medium">
-              Inicia sesión aquí
-            </Link>
-          </div>
-        </form>
+            <div className="text-center">
+              <span className="text-neutral-400 text-sm">
+                ¿Ya tienes cuenta?{" "}
+              </span>
+              <Link href="/login" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors">
+                Inicia sesión aquí
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </AuthGuard>
   );

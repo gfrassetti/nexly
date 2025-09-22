@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import ContactForm from "./ContactForm";
 
 export default function a() {
   const { token, user } = useAuth();
@@ -166,7 +167,12 @@ export default function a() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="py-12 px-4 sm:px-6 lg:px-8 border-t border-neutral-800">
+      {/* Contact Section */}
+      <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8">
+        <ContactForm />
+      </section>
+
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-neutral-800">
         <div className="max-w-7xl mx-auto text-center">
           <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
             <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />

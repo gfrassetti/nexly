@@ -47,46 +47,58 @@ function LoginForm() {
   }
   return (
     <AuthGuard requireAuth={false}>
-      <div className="min-h-svh grid place-items-center p-6">
-        <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4">
-          <h1 className="text-2xl font-semibold">Iniciar sesión</h1>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <input
-            className="w-full border rounded-md px-3 py-2 text-black"
-            placeholder="Email o teléfono"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-          />
-          <input
-            className="w-full border rounded-md px-3 py-2 text-black"
-            placeholder="Contraseña"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
-            disabled={loading}
-            className="w-full bg-black text-white rounded-md py-2 disabled:opacity-50"
-          >
-            {loading ? "Entrando..." : "Entrar"}
-          </button>
-          
-          <div className="text-center space-y-3">
-            <div>
-              <Link href="/forgot-password" className="text-blue-600 hover:underline text-sm">
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </div>
-            <div>
-              <span className="text-neutral-600 text-sm">
-                ¿No estás registrado?{" "}
-              </span>
-              <Link href="/register" className="text-green-600 hover:underline text-sm font-medium">
-                Regístrate aquí
-              </Link>
-            </div>
+      <div className="min-h-svh grid place-items-center p-6 bg-neutral-900">
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-white">Iniciar sesión</h1>
+            <p className="text-neutral-400 mt-2">Bienvenido de vuelta</p>
           </div>
-        </form>
+          
+          <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
+          {error && <p className="text-sm text-red-500">{error}</p>}
+            <div>
+              <input
+                className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+                placeholder="Email o teléfono"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+              />
+            </div>
+            <div>
+              <input
+                className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+                placeholder="Contraseña"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <button
+              disabled={loading}
+              className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+          
+            <div className="text-center space-y-3">
+              <div>
+                <Link href="/forgot-password" className="text-nexly-azul hover:text-nexly-light-blue text-sm transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+              <div>
+                <span className="text-neutral-400 text-sm">
+                  ¿No estás registrado?{" "}
+                </span>
+                <Link href="/register" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors">
+                  Regístrate aquí
+                </Link>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
     </AuthGuard>
   );

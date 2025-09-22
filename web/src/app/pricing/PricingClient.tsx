@@ -105,7 +105,7 @@ function PricingContent() {
               {token ? (
                 <Link
                   href="/dashboard"
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -120,7 +120,7 @@ function PricingContent() {
                   <Link
                     href="/register"
           
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors"
                   >
                     Registrarse
                   </Link>
@@ -189,7 +189,7 @@ function PricingContent() {
               <ul className="space-y-4 mb-8">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start">
-                    <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-nexly-teal mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span className="text-neutral-300">{feature}</span>
@@ -204,8 +204,8 @@ function PricingContent() {
                     onClick={() => window.location.href = `/register?plan=${plan.id}`}
                     className={`w-full py-4 rounded-lg font-semibold transition-colors ${
                       plan.popular
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-neutral-700 hover:bg-neutral-600 text-white'
+                        ? 'bg-nexly-teal hover:bg-nexly-green text-white'
+                        : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
                     }`}
                   >
                     Registrarse y Probar Gratis
@@ -221,8 +221,8 @@ function PricingContent() {
                     onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
                     className={`w-full py-4 rounded-lg font-semibold transition-colors ${
                       plan.popular
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-neutral-700 hover:bg-neutral-600 text-white'
+                        ? 'bg-nexly-teal hover:bg-nexly-green text-white'
+                        : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
                     }`}
                   >
                     Comprar {plan.name}
