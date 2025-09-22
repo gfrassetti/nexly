@@ -30,13 +30,14 @@ class EmailService {
   async sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
     if (!this.isConfigured || !this.client) {
       console.warn('Twilio service not configured. Cannot send password reset email.');
+      // Para desarrollo, mostrar enlace en consola
+      console.log(`📧 [DEV] Reset URL for ${email}: ${resetUrl}`);
       return false;
     }
 
     try {
       // Para desarrollo, mostrar enlace en consola
-      console.log(`📧 Password reset email would be sent to ${email}:`);
-      console.log(`📧 Reset URL: ${resetUrl}`);
+      console.log(`📧 [DEV] Reset URL for ${email}: ${resetUrl}`);
       
       // En producción, aquí usarías Twilio SendGrid para enviar emails
       // Por ahora, solo loggeamos para desarrollo
