@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { useContacts } from "@/hooks/useContacts";
 import ContactList, { ContactItem } from "@/components/ContactList";
-import { createContact, deleteContact } from "@/lib/api";
+import { deleteContact } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 const INTEGRATIONS = [
@@ -16,8 +16,6 @@ export default function ContactsPage() {
   const { token } = useAuth();
   const [integrationId, setIntegrationId] = useState("whatsapp");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedContact, setSelectedContact] = useState<ContactItem | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'info';
@@ -50,25 +48,6 @@ export default function ContactsPage() {
     showNotification('error', message);
   };
 
-  async function handleSaveContact(data: any) {
-    if (!token) {
-      showNotification('error', 'No tienes permisos para realizar esta acción');
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      const payload = { ...data, integrationId: integrationId === 'all' ? undefined : integrationId };
-      await createContact(payload, token);
-      setSelectedContact(null);
-      showNotification('success', 'Contacto creado exitosamente');
-      refetch();
-    } catch (error) {
-      handleError(error, 'crear contacto');
-    } finally {
-      setIsCreating(false);
-    }
-  }
 
   async function handleDeleteContact(id: string) {
     if (!token) {
@@ -105,13 +84,13 @@ export default function ContactsPage() {
           </div>
           
           <button
-            onClick={() => setSelectedContact({ id: '', name: '', phone: '', email: '', integrationId: integrationId === 'all' ? undefined : integrationId })}
+            onClick={() => window.location.href = '/dashboard/integrations'}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
-            Nuevo Contacto
+            Conectar Apps
           </button>
         </div>
 
@@ -217,13 +196,8 @@ export default function ContactsPage() {
               email: c.email,
               integrationId: c.integrationId,
             }))}
-            onEdit={(c) => setSelectedContact(c)}
             onDelete={handleDeleteContact}
-            onSave={handleSaveContact}
-            selectedContact={selectedContact}
-            isCreating={isCreating}
             isDeleting={isDeleting}
-            onClose={() => setSelectedContact(null)}
           />
         )}
       </div>

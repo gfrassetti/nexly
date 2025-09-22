@@ -9,10 +9,25 @@ import contactsRouter from "./routes/contacts";
 import integrationsRouter from "./routes/integrations";
 import { verifyMetaSignature } from "./middleware/verifyMetaSignature";
 import messageRoutes from "./routes/messages";
+import subscriptionsRouter from "./routes/subscriptions";
+import { 
+  generalRateLimit, 
+  paymentRateLimit, 
+  securityHeaders, 
+  validateWebhookOrigin,
+  sanitizePaymentData 
+} from "./middleware/security";
+import { errorHandler } from "./utils/errorHandler";
 
 dotenv.config();
 
 const app = express();
+
+// Security headers
+app.use(securityHeaders);
+
+// Rate limiting general
+app.use(generalRateLimit);
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
@@ -34,6 +49,12 @@ app.use(cors({
 
 app.options(/.*/, cors());
 
+// Validate webhook origins
+app.use(validateWebhookOrigin);
+
+// Sanitize payment data
+app.use(sanitizePaymentData);
+
 app.use(
   express.json({
     verify: (req: any, _res, buf) => {
@@ -50,6 +71,10 @@ app.use("/webhook", verifyMetaSignature, webhookRouter);
 app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
+app.use("/subscriptions", paymentRateLimit, subscriptionsRouter);
+
+// Error handler (debe ir al final)
+app.use(errorHandler);
 
 // 👇 conectar DB primero, después arrancar server
 connectDB()

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { getContacts, getMessages } from "@/lib/api";
 import useSWR from "swr";
+import SubscriptionStatus from "@/components/SubscriptionStatus";
 
 interface DashboardStats {
   totalContacts: number;
@@ -142,6 +143,9 @@ export default function DashboardPage() {
 
       {/* Contenido principal */}
       <div className="flex-1 p-6 space-y-6">
+        {/* Estado de suscripción */}
+        <SubscriptionStatus />
+
         {/* Métricas principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total de contactos */}
@@ -286,17 +290,23 @@ export default function DashboardPage() {
         <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
           <h3 className="text-lg font-semibold text-white mb-4">Acciones Rápidas</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors">
+            <button 
+              onClick={() => window.location.href = '/dashboard/contacts'}
+              className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               <div className="text-left">
-                <p className="font-medium">Nuevo Contacto</p>
-                <p className="text-sm opacity-90">Agregar contacto manualmente</p>
+                <p className="font-medium">Ver Contactos</p>
+                <p className="text-sm opacity-90">Gestionar contactos existentes</p>
               </div>
             </button>
             
-            <button className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors">
+            <button 
+              onClick={() => window.location.href = '/dashboard/integrations'}
+              className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
@@ -306,13 +316,16 @@ export default function DashboardPage() {
               </div>
             </button>
             
-            <button className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors">
+            <button 
+              onClick={() => window.location.href = '/dashboard/inbox'}
+              className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
               <div className="text-left">
-                <p className="font-medium">Ver Reportes</p>
-                <p className="text-sm opacity-90">Analizar métricas detalladas</p>
+                <p className="font-medium">Ver Inbox</p>
+                <p className="text-sm opacity-90">Gestionar conversaciones</p>
               </div>
             </button>
           </div>
