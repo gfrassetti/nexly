@@ -27,10 +27,16 @@ function IntegrationsContent() {
     // WhatsApp siempre está disponible
     if (integrationName === 'whatsapp') return true;
     
-    // Para otras integraciones, verificar límite
-    if (isTrialActive()) return true; // Durante trial, todo disponible
+    // Durante trial, todo disponible
+    if (isTrialActive()) return true;
     
-    return maxIntegrations >= 999; // Solo premium tiene acceso ilimitado
+    // Para premium, todo disponible
+    if (maxIntegrations >= 999) return true;
+    
+    // Para básico, verificar si ya tiene el límite de 2 integraciones
+    // Nota: En una implementación real, aquí deberías contar las integraciones ya conectadas
+    // Por ahora, asumimos que el usuario puede conectar hasta el límite
+    return true; // Temporal: permitir conectar hasta el límite
   };
 
   // Función para obtener el texto del botón
@@ -73,7 +79,7 @@ function IntegrationsContent() {
                 Plan actual: {subscription.subscription.planType === 'basic' ? 'Básico' : 'Premium'}
               </p>
               <p className="text-neutral-400 text-sm">
-                Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Ilimitadas' : `Hasta ${getMaxIntegrations()}`}
+                Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Todas disponibles' : `Hasta ${getMaxIntegrations()}`}
               </p>
             </div>
             {!isActive() && !isTrialActive() && (

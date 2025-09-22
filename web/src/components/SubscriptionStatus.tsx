@@ -183,7 +183,7 @@ export default function SubscriptionStatus() {
           <div className="mt-2">
             <p className="text-sm text-neutral-300">
               {getMaxIntegrations() === 999 ? (
-                'Integraciones: Ilimitadas'
+                'Integraciones: Todas disponibles'
               ) : (
                 `Integraciones: Hasta ${getMaxIntegrations()} plataformas`
               )}

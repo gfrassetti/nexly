@@ -44,7 +44,9 @@ export default function RegisterForm() {
     <div className="w-full max-w-md">
       {/* Logo */}
       <div className="text-center mb-8">
-        <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4" />
+        <Link href="/" className="inline-block">
+          <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4 hover:opacity-80 transition-opacity cursor-pointer" />
+        </Link>
         <h1 className="text-3xl font-bold text-white">Crear cuenta</h1>
         <p className="text-neutral-400 mt-2">Únete a Nexly hoy</p>
       </div>

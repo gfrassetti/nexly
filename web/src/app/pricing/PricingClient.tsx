@@ -46,7 +46,7 @@ function PricingContent() {
         'TikTok',
         'Telegram',
         'Twitter/X',
-        'Integraciones ilimitadas',
+        'Todas las integraciones disponibles',
         'Período de prueba de 15 días',
       ],
       popular: true,

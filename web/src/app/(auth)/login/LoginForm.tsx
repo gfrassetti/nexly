@@ -48,7 +48,9 @@ export default function LoginForm() {
     <div className="w-full max-w-md">
       {/* Logo */}
       <div className="text-center mb-8">
-        <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4" />
+        <Link href="/" className="inline-block">
+          <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4 hover:opacity-80 transition-opacity cursor-pointer" />
+        </Link>
         <h1 className="text-3xl font-bold text-white">Iniciar sesión</h1>
         <p className="text-neutral-400 mt-2">Bienvenido de vuelta</p>
       </div>
@@ -58,7 +60,7 @@ export default function LoginForm() {
         <div>
           <input
             className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
-            placeholder="Email o teléfono"
+            placeholder="Email o Username"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
           />
