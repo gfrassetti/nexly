@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Forzar SSR para páginas de pago (requieren autenticación)
+export const dynamic = 'force-dynamic';
+
 export default function CheckoutPage() {
   return <CheckoutClient />;
 }

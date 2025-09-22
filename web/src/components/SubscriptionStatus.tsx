@@ -13,6 +13,7 @@ export default function SubscriptionStatus() {
     isPaused,
     isCancelled,
     isInGracePeriod,
+    isPendingPaymentMethod,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription
@@ -83,19 +84,42 @@ export default function SubscriptionStatus() {
     );
   }
 
+  // Estado pendiente de método de pago
+  if (isPendingPaymentMethod()) {
+    return (
+      <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-6">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-yellow-400">Pago Pendiente</h3>
+          </div>
+          <p className="text-yellow-300 mb-4">
+            Tu cuenta está registrada pero necesitas completar el método de pago para comenzar tu prueba gratuita.
+          </p>
+          <a
+            href="/checkout"
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-300"
+          >
+            Completar Pago
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (!subscription?.hasSubscription) {
     return (
       <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-2">¡Comienza tu prueba gratuita!</h3>
-            <p className="text-neutral-400">7 días gratis para probar todas las funciones</p>
-          </div>
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-white mb-2">Sin suscripción activa</h3>
+          <p className="text-neutral-400 mb-4">Para usar todas las funciones, elige un plan</p>
           <a
             href="/pricing"
             className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
           >
-            Elegir Plan
+            Ver Planes
           </a>
         </div>
       </div>

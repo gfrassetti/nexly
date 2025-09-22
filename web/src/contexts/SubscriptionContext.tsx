@@ -4,6 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface SubscriptionData {
   hasSubscription: boolean;
+  status?: 'none' | 'trial_pending_payment_method' | 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period';
+  userSubscriptionStatus?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
   subscription?: {
     id: string;
     planType: 'basic' | 'premium';
@@ -35,6 +37,7 @@ interface SubscriptionContextType {
   isPaused: () => boolean;
   isCancelled: () => boolean;
   isInGracePeriod: () => boolean;
+  isPendingPaymentMethod: () => boolean;
   pauseSubscription: () => Promise<void>;
   reactivateSubscription: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
@@ -88,6 +91,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }, [token]);
 
   const canUseFeature = (feature: string): boolean => {
+    // Si está pendiente de método de pago, no puede usar features
+    if (subscription?.userSubscriptionStatus === 'trial_pending_payment_method') {
+      return false;
+    }
+
     if (!subscription?.hasSubscription || !subscription.subscription) {
       return false;
     }
@@ -113,6 +121,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   };
 
   const getMaxIntegrations = (): number => {
+    // Si está pendiente de método de pago, no puede usar integraciones
+    if (subscription?.userSubscriptionStatus === 'trial_pending_payment_method') {
+      return 0;
+    }
+
     if (!subscription?.hasSubscription || !subscription.subscription) {
       return 0;
     }
@@ -144,6 +157,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   const isInGracePeriod = (): boolean => {
     return subscription?.subscription?.isInGracePeriod || false;
+  };
+
+  const isPendingPaymentMethod = (): boolean => {
+    return subscription?.userSubscriptionStatus === 'trial_pending_payment_method';
   };
 
   const pauseSubscription = async (): Promise<void> => {
@@ -248,6 +265,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     isPaused,
     isCancelled,
     isInGracePeriod,
+    isPendingPaymentMethod,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription,

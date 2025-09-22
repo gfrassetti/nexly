@@ -47,8 +47,12 @@ router.post("/register", async (req, res) => {
 
     await user.save();
 
-    // Si hay un plan válido, crear el token para auto-login
+    // Si hay un plan válido, establecer estado pendiente de pago y crear el token para auto-login
     if (plan && (plan === 'basic' || plan === 'premium')) {
+      // Establecer estado pendiente de método de pago
+      user.subscription_status = 'trial_pending_payment_method';
+      await user.save();
+
       const token = jwt.sign(
         { id: user._id.toString() },
         config.jwtSecret,
@@ -61,7 +65,8 @@ router.post("/register", async (req, res) => {
         user: {
           id: user._id.toString(),
           email: user.email,
-          username: user.username
+          username: user.username,
+          subscription_status: user.subscription_status
         },
         plan
       });
@@ -151,6 +156,7 @@ router.get("/verify", async (req, res) => {
         id: user._id.toString(),
         username: user.username,
         email: user.email,
+        subscription_status: user.subscription_status || 'none',
       },
     });
   } catch (err: any) {

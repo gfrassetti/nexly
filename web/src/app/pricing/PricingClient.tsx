@@ -65,34 +65,8 @@ function PricingContent() {
     }
 
 
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ planType }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
-        throw new Error(errorData.error || `Error ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.paymentUrl) {
-        // Abrir enlace de pago en nueva ventana
-        window.open(data.paymentUrl, '_blank');
-      } else {
-        throw new Error(data.error || 'Error al crear el enlace de pago');
-      }
-    } catch (error: any) {
-      console.error('Error starting trial:', error);
-      // Mostrar error en consola y redirigir al dashboard para que el usuario vea su estado
-      window.location.href = '/dashboard';
-    }
+    // Para usuarios autenticados, ir directo a checkout
+    window.location.href = `/checkout?plan=${planType}`;
   };
 
   return (

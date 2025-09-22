@@ -360,18 +360,18 @@ export default function DashboardPage() {
               </div>
             </button>
             
-            {/* Botón de pago - solo mostrar si no está en trial activo o activo */}
-            {subscription?.subscription && (!subscription.subscription.isTrialActive && !subscription.subscription.isActive) && (
+            {/* Botón de pago - solo mostrar si está en estado pendiente de pago */}
+            {subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && (
               <button 
-                onClick={() => window.location.href = '/pricing'}
+                onClick={() => window.location.href = '/checkout'}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
                 <div className="text-left">
-                  <p className="font-medium">Actualizar Plan</p>
-                  <p className="text-sm opacity-90">Desbloquear más funciones</p>
+                  <p className="font-medium">Completar Pago</p>
+                  <p className="text-sm opacity-90">Activar tu prueba gratuita</p>
                 </div>
               </button>
             )}

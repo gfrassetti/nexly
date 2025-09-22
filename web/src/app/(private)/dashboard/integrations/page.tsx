@@ -7,7 +7,7 @@ function IntegrationsContent() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
-  const { subscription, getMaxIntegrations, isTrialActive, isActive } = useSubscription();
+  const { subscription, getMaxIntegrations, isTrialActive, isActive, isPendingPaymentMethod } = useSubscription();
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -22,9 +22,12 @@ function IntegrationsContent() {
 
   // Función para determinar si una integración está disponible
   const isIntegrationAvailable = (integrationName: string): boolean => {
+    // Si está pendiente de método de pago, no puede usar integraciones
+    if (isPendingPaymentMethod()) return false;
+    
     const maxIntegrations = getMaxIntegrations();
     
-    // WhatsApp siempre está disponible
+    // WhatsApp siempre está disponible (primera integración)
     if (integrationName === 'whatsapp') return true;
     
     // Durante trial, todo disponible
@@ -33,10 +36,10 @@ function IntegrationsContent() {
     // Para premium, todo disponible
     if (maxIntegrations >= 999) return true;
     
-    // Para básico, verificar si ya tiene el límite de 2 integraciones
+    // Para plan básico (maxIntegrations = 2), solo permitir WhatsApp + 1 más
     // Nota: En una implementación real, aquí deberías contar las integraciones ya conectadas
-    // Por ahora, asumimos que el usuario puede conectar hasta el límite
-    return true; // Temporal: permitir conectar hasta el límite
+    // Por simplicidad, asumimos que el usuario puede conectar hasta el límite
+    return maxIntegrations > 1; // Si tiene más de 1 integración permitida
   };
 
   // Función para obtener el texto del botón
@@ -70,6 +73,31 @@ function IntegrationsContent() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Integraciones</h1>
       
+      {/* Estado pendiente de método de pago */}
+      {isPendingPaymentMethod() && (
+        <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-yellow-400 font-medium">Método de Pago Pendiente</p>
+              </div>
+              <p className="text-yellow-300 text-sm">
+                Completa tu método de pago para comenzar tu prueba gratuita de 7 días
+              </p>
+            </div>
+            <a
+              href="/checkout"
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            >
+              Completar Pago
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Información del plan actual */}
       {subscription?.subscription && (
         <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 mb-6">
@@ -82,7 +110,15 @@ function IntegrationsContent() {
                 Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Todas disponibles' : `Hasta ${getMaxIntegrations()}`}
               </p>
             </div>
-            {!isActive() && !isTrialActive() && (
+            {isPendingPaymentMethod() && (
+              <button
+                onClick={() => window.location.href = '/checkout'}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                Completar Pago
+              </button>
+            )}
+            {!isActive() && !isTrialActive() && !isPendingPaymentMethod() && (
               <button
                 onClick={() => window.location.href = '/pricing'}
                 className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-200"

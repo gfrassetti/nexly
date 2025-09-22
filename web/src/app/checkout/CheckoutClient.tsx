@@ -47,17 +47,38 @@ function CheckoutContent() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
-        throw new Error(errorData.error || `Error ${response.status}`);
+        
+        // Manejo específico de errores
+        if (response.status === 429) {
+          throw new Error('Demasiados intentos de pago. Espera 15 minutos antes de intentar nuevamente.');
+        } else if (response.status === 400) {
+          throw new Error(errorData.error || 'Datos de pago inválidos');
+        } else if (response.status === 401) {
+          throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        } else if (response.status === 500) {
+          throw new Error('Error interno del servidor. Intenta nuevamente en unos minutos.');
+        } else {
+          throw new Error(errorData.error || `Error ${response.status}`);
+        }
       }
 
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
+        // Agregar timeout de seguridad para la redirección
+        const timeoutId = setTimeout(() => {
+          setError('La redirección a MercadoPago está tardando. Intenta nuevamente.');
+          setLoading(false);
+        }, 10000); // 10 segundos
+
+        // Limpiar timeout cuando se complete la redirección
         window.location.href = data.paymentUrl;
+        clearTimeout(timeoutId);
       } else {
         throw new Error('Error al crear el link de pago');
       }
     } catch (e: any) {
+      console.error('Error creating payment link:', e);
       setError(e.message || 'Error al iniciar el proceso de pago');
     } finally {
       setLoading(false);

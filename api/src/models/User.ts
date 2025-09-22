@@ -7,6 +7,7 @@ export interface IUser {
   password: string; // hash bcrypt
   resetPasswordToken?: string;
   resetPasswordExpiry?: Date;
+  subscription_status?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
 }
 
 // Documento “vivo” que retorna Mongoose al hacer .create/.find
@@ -19,6 +20,11 @@ const userSchema = new Schema<IUser>(
     password: String,
     resetPasswordToken: String,
     resetPasswordExpiry: Date,
+    subscription_status: {
+      type: String,
+      enum: ['none', 'trial_pending_payment_method', 'active_trial', 'active_paid', 'cancelled'],
+      default: 'none'
+    },
   },
   { timestamps: true }
 );

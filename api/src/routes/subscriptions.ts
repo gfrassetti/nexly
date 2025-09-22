@@ -5,7 +5,8 @@ import { mercadoPagoService } from '../services/mercadopago';
 import Subscription from '../models/Subscription';
 import { User } from '../models/User';
 import { asyncHandler, CustomError } from '../utils/errorHandler';
-import { validateSubscriptionData } from '../middleware/security';
+import { validateSubscriptionData, paymentRateLimit } from '../middleware/security';
+import { mercadoPagoWebhookVerification } from '../middleware/verifyMercadoPagoSignature';
 
 const router = express.Router();
 
@@ -143,12 +144,28 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
+    // Obtener información del usuario
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
     const subscription = await Subscription.findOne({ userId });
+
+    // Si el usuario está en trial_pending_payment_method pero no tiene suscripción, es normal
+    if (!subscription && user.subscription_status === 'trial_pending_payment_method') {
+      return res.json({
+        hasSubscription: false,
+        status: 'trial_pending_payment_method',
+        userSubscriptionStatus: user.subscription_status
+      });
+    }
 
     if (!subscription) {
       return res.json({
         hasSubscription: false,
-        status: 'none'
+        status: 'none',
+        userSubscriptionStatus: user.subscription_status
       });
     }
 
@@ -189,7 +206,8 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
         gracePeriodEndDate: subscription.gracePeriodEndDate,
         maxIntegrations: (subscription as any).getMaxIntegrations(),
         canUseFeature: (subscription as any).canUseFeature.bind(subscription),
-      }
+      },
+      userSubscriptionStatus: user.subscription_status
     });
 
   } catch (error) {
@@ -201,7 +219,7 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
 /**
  * Crear enlace de pago para activar suscripción
  */
-router.post('/create-payment-link', authenticateToken, asyncHandler(async (req: any, res: any) => {
+router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHandler(async (req: any, res: any) => {
   try {
     const { planType } = req.body;
     const userId = req.user?.id;
@@ -210,52 +228,53 @@ router.post('/create-payment-link', authenticateToken, asyncHandler(async (req: 
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    // Buscar la suscripción en trial o crear una nueva si no existe
-    let subscription = await Subscription.findOne({
-      userId,
-      status: 'trial'
-    });
-
-    // Si no tiene suscripción en trial, crear una nueva
-    if (!subscription) {
-      // Verificar si ya tiene una suscripción activa
-      const existingActive = await Subscription.findOne({
-        userId,
-        status: { $in: ['active', 'paused'] }
-      });
-
-      if (existingActive) {
-        return res.status(400).json({ error: 'Ya tienes una suscripción activa' });
-      }
-
-      // Crear nueva suscripción en trial
-      const startDate = new Date();
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
-
-      subscription = new Subscription({
-        userId,
-        planType,
-        status: 'trial',
-        startDate,
-        trialEndDate,
-        autoRenew: false,
-      });
-
-      await subscription.save();
-
-      // Verificar que se guardó correctamente
-      const savedSubscription = await Subscription.findById(subscription._id);
-      if (!savedSubscription) {
-        throw new CustomError('Error al guardar la suscripción en la base de datos', 500);
-      }
-    }
-
-    // Obtener email del usuario
+    // Verificar el estado del usuario
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
+
+    // Verificar que el usuario esté en estado pendiente de pago
+    if (user.subscription_status !== 'trial_pending_payment_method') {
+      return res.status(400).json({ 
+        error: 'El usuario no está en estado pendiente de pago',
+        currentStatus: user.subscription_status
+      });
+    }
+
+    // Verificar si ya tiene una suscripción activa
+    const existingActive = await Subscription.findOne({
+      userId,
+      status: { $in: ['active', 'paused'] }
+    });
+
+    if (existingActive) {
+      return res.status(400).json({ error: 'Ya tienes una suscripción activa' });
+    }
+
+    // Crear nueva suscripción en estado trial (pero el usuario sigue en trial_pending_payment_method)
+    const startDate = new Date();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
+
+    const subscription = new Subscription({
+      userId,
+      planType,
+      status: 'trial',
+      startDate,
+      trialEndDate,
+      autoRenew: false,
+    });
+
+    await subscription.save();
+
+    // Verificar que se guardó correctamente
+    const savedSubscription = await Subscription.findById(subscription._id);
+    if (!savedSubscription) {
+      throw new CustomError('Error al guardar la suscripción en la base de datos', 500);
+    }
+
+    // Usar el usuario ya obtenido anteriormente
 
     // Crear enlace de pago en Mercado Pago
     const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
@@ -286,7 +305,7 @@ router.post('/create-payment-link', authenticateToken, asyncHandler(async (req: 
 /**
  * Webhook de Mercado Pago para actualizar estado de suscripciones
  */
-router.post('/webhook', async (req, res) => {
+router.post('/webhook', mercadoPagoWebhookVerification, async (req, res) => {
   try {
     // Validar origen del webhook
     const origin = req.headers.origin || req.headers.referer;
@@ -333,6 +352,21 @@ router.post('/webhook', async (req, res) => {
 
         subscription.status = newStatus;
         await subscription.save();
+
+        // Actualizar el estado del usuario en la tabla User
+        const user = await User.findById(subscription.userId);
+        if (user) {
+          if (mpStatus === 'authorized') {
+            // Si MercadoPago confirma el método de pago, cambiar a active_trial
+            user.subscription_status = 'active_trial';
+          } else if (mpStatus === 'cancelled') {
+            // Si se cancela, volver a none
+            user.subscription_status = 'none';
+          }
+          await user.save();
+          
+          console.log(`User ${user._id} subscription_status updated to: ${user.subscription_status}`);
+        }
 
         console.log(`Subscription ${subscriptionId} updated to status: ${newStatus}`);
       }
