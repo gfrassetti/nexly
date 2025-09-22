@@ -10,6 +10,14 @@ export interface IMessageLimit extends Document {
   maxMessages: number; // Límite máximo para este plan
   createdAt: Date;
   updatedAt: Date;
+  // Métodos de instancia
+  canSendMessage(): boolean;
+  getRemainingMessages(): number;
+}
+
+export interface IMessageLimitModel extends mongoose.Model<IMessageLimit> {
+  getTodayLimit(userId: string, integrationId: string): Promise<IMessageLimit | null>;
+  incrementMessageCount(userId: string, integrationId: string, provider: string, maxMessages: number): Promise<IMessageLimit>;
 }
 
 const MessageLimitSchema: Schema = new Schema({
@@ -109,4 +117,4 @@ MessageLimitSchema.methods.getRemainingMessages = function(): number {
   return Math.max(0, this.maxMessages - this.messageCount);
 };
 
-export default mongoose.model<IMessageLimit>('MessageLimit', MessageLimitSchema);
+export default mongoose.model<IMessageLimit, IMessageLimitModel>('MessageLimit', MessageLimitSchema);

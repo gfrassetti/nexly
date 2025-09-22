@@ -55,8 +55,9 @@ router.post("/send", async (req: AuthRequest, res: Response) => {
     if (!integration) return res.status(400).json({ error: "no_integration_found" });
 
     // Verificar límites de mensajes
-    const maxMessages = await getIntegrationMessageLimit(rawUserId, integration._id.toString());
-    const todayLimit = await MessageLimit.getTodayLimit(rawUserId, integration._id.toString());
+    const integrationId = (integration._id as mongoose.Types.ObjectId).toString();
+    const maxMessages = await getIntegrationMessageLimit(rawUserId, integrationId);
+    const todayLimit = await MessageLimit.getTodayLimit(rawUserId, integrationId);
     
     if (todayLimit && !todayLimit.canSendMessage()) {
       return res.status(429).json({ 
@@ -94,7 +95,7 @@ router.post("/send", async (req: AuthRequest, res: Response) => {
     // Incrementar contador de mensajes
     await MessageLimit.incrementMessageCount(
       rawUserId, 
-      integration._id.toString(), 
+      integrationId, 
       provider, 
       maxMessages
     );
@@ -125,8 +126,9 @@ router.get("/limits", async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ error: "integration_not_found" });
       }
 
-      const maxMessages = await getIntegrationMessageLimit(rawUserId, integration._id.toString());
-      const todayLimit = await MessageLimit.getTodayLimit(rawUserId, integration._id.toString());
+      const integrationId = (integration._id as mongoose.Types.ObjectId).toString();
+      const maxMessages = await getIntegrationMessageLimit(rawUserId, integrationId);
+      const todayLimit = await MessageLimit.getTodayLimit(rawUserId, integrationId);
 
       return res.json({
         provider,
@@ -141,8 +143,9 @@ router.get("/limits", async (req: AuthRequest, res: Response) => {
       const limits = [];
 
       for (const integration of integrations) {
-        const maxMessages = await getIntegrationMessageLimit(rawUserId, integration._id.toString());
-        const todayLimit = await MessageLimit.getTodayLimit(rawUserId, integration._id.toString());
+        const integrationId = (integration._id as mongoose.Types.ObjectId).toString();
+        const maxMessages = await getIntegrationMessageLimit(rawUserId, integrationId);
+        const todayLimit = await MessageLimit.getTodayLimit(rawUserId, integrationId);
 
         limits.push({
           provider: integration.provider,
