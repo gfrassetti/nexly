@@ -3,17 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const NexlyLogo = () => (
-  <div className="h-[4rem] flex items-center gap-3">
-    <div className="w-[7rem] flex items-center justify-center">
-      <img 
-        src="/logo_nexly.png" 
-        alt="Nexly Logo" 
-        className="w-full h-full object-contain"
-      />
-    </div>
-  </div>
-);
+import Logo from "./Logo";
 
 const items = [
   { id: "resumen", label: "Resumen", href: "/dashboard" },
@@ -29,7 +19,7 @@ export default function Sidebar() {
   return (
     <aside className="h-screen sticky top-0 border-r border-neutral-800 p-4 flex flex-col gap-4">
       <div className="px-2 py-2">
-        <NexlyLogo />
+        <Logo size="md" className="h-[4rem]" />
       </div>
       {items.map((i) => (
         <Link

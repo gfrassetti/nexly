@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { registerApi } from "@/lib/api";
+import Logo from "@/components/Logo";
 
 export default function RegisterForm() {
   const [username, setUsername] = useState("");
@@ -42,14 +43,14 @@ export default function RegisterForm() {
 
   return (
     <div className="w-full max-w-md">
-      {/* Logo */}
-      <div className="text-center mb-8">
-        <Link href="/" className="inline-block">
-          <img src="/logo_nexly.png" alt="Nexly" className="w-32 mx-auto mb-4 hover:opacity-80 transition-opacity cursor-pointer" />
-        </Link>
-        <h1 className="text-3xl font-bold text-white">Crear cuenta</h1>
-        <p className="text-neutral-400 mt-2">Únete a Nexly hoy</p>
-      </div>
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <Logo size="md" />
+            </div>
+            <h1 className="text-3xl font-bold text-white">Crear cuenta</h1>
+            <p className="text-neutral-400 mt-2">Únete a Nexly hoy</p>
+          </div>
       
       <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
         

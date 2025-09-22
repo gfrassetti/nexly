@@ -2,6 +2,7 @@
 import Link from "next/link";
 import ClientNavigation from "./ClientNavigation";
 import { useAuth } from "@/hooks/useAuth";
+import Logo from "./Logo";
 
 interface HeaderProps {
   variant?: 'default' | 'auth' | 'simple';
@@ -27,7 +28,6 @@ export default function Header({
               <div className="w-8 h-8 bg-nexly-teal rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">N</span>
               </div>
-              <span className="text-xl font-bold">Nexly</span>
             </Link>
             <Link
               href="/"
@@ -46,12 +46,7 @@ export default function Header({
       <header className={`border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-sm sticky top-0 z-50 ${className}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-nexly-teal rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">N</span>
-              </div>
-              <span className="text-xl font-bold">Nexly</span>
-            </Link>
+            <Logo size="lg" showText={false} textClassName="text-xl font-bold" />
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <Link
@@ -89,17 +84,7 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-40 p-2 flex items-center justify-center">
-                <img 
-                  src="/logo_nexly.png" 
-                  alt="Nexly Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </Link>
-          </div>
+          <Logo size="lg" />
 
           {/* Navigation */}
           {isAuthenticated ? (

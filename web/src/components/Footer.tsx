@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Logo from "./Logo";
 
 interface FooterProps {
   variant?: 'default' | 'minimal';
@@ -33,9 +34,9 @@ export default function Footer({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           {showLogo && (
-            <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
-              <img src="/logo_nexly.png" alt="Nexly" className="w-40 p-2" />
-            </Link>
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" />
+            </div>
           )}
           <p className="text-nexly-green font-medium mb-4">
             Unifica tus mensajerías y convierte más clientes.
