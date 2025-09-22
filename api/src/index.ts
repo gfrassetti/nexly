@@ -25,6 +25,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy for Railway (fixes X-Forwarded-For header issue)
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(securityHeaders);
 
