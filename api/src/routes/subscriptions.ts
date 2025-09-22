@@ -147,14 +147,45 @@ router.post('/create-payment-link', authenticateToken, asyncHandler(async (req: 
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    // Buscar la suscripción en trial
-    const subscription = await Subscription.findOne({
+    // Buscar la suscripción en trial o crear una nueva si no existe
+    let subscription = await Subscription.findOne({
       userId,
       status: 'trial'
     });
 
+    // Si no tiene suscripción en trial, crear una nueva
     if (!subscription) {
-      return res.status(400).json({ error: 'No tienes una suscripción en período de prueba' });
+      // Verificar si ya tiene una suscripción activa
+      const existingActive = await Subscription.findOne({
+        userId,
+        status: { $in: ['active', 'paused'] }
+      });
+
+      if (existingActive) {
+        return res.status(400).json({ error: 'Ya tienes una suscripción activa' });
+      }
+
+      // Crear nueva suscripción en trial
+      const startDate = new Date();
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 15); // 15 días de prueba
+
+      subscription = new Subscription({
+        userId,
+        planType,
+        status: 'trial',
+        startDate,
+        trialEndDate,
+        autoRenew: false,
+      });
+
+      await subscription.save();
+
+      // Verificar que se guardó correctamente
+      const savedSubscription = await Subscription.findById(subscription._id);
+      if (!savedSubscription) {
+        throw new CustomError('Error al guardar la suscripción en la base de datos', 500);
+      }
     }
 
     // Obtener email del usuario
