@@ -155,7 +155,7 @@ class MercadoPagoService {
    */
   async createBasicPlan(userEmail: string, backUrl: string) {
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() + 15); // Período de prueba de 15 días
+    startDate.setDate(startDate.getDate() + 7); // Período de prueba de 7 días
 
     return this.createSubscription({
       payer_email: userEmail,
@@ -177,7 +177,7 @@ class MercadoPagoService {
    */
   async createPremiumPlan(userEmail: string, backUrl: string) {
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() + 15); // Período de prueba de 15 días
+    startDate.setDate(startDate.getDate() + 7); // Período de prueba de 7 días
 
     return this.createSubscription({
       payer_email: userEmail,

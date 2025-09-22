@@ -97,7 +97,7 @@ router.post('/create', authenticateToken, validateSubscriptionData, asyncHandler
     // Crear suscripción con período de prueba
     const startDate = new Date();
     const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 15); // 15 días de prueba
+    trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
 
     const subscription = new Subscription({
       userId,
@@ -231,7 +231,7 @@ router.post('/create-payment-link', authenticateToken, asyncHandler(async (req: 
       // Crear nueva suscripción en trial
       const startDate = new Date();
       const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 15); // 15 días de prueba
+      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
 
       subscription = new Subscription({
         userId,

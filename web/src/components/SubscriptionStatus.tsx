@@ -250,14 +250,14 @@ export default function SubscriptionStatus() {
         <div className="mt-4">
           <div className="flex justify-between text-sm text-neutral-400 mb-1">
             <span>Progreso de prueba</span>
-            <span>{sub.daysRemaining} de 15 días</span>
+            <span>{sub.daysRemaining} de 7 días</span>
           </div>
           <div className="w-full bg-neutral-700 rounded-full h-2">
             <div 
               className={`h-2 rounded-full transition-all duration-300 ${
                 isTrialExpiring ? 'bg-yellow-500' : 'bg-blue-500'
               }`}
-              style={{ width: `${Math.max(0, ((15 - sub.daysRemaining) / 15) * 100)}%` }}
+              style={{ width: `${Math.max(0, ((7 - sub.daysRemaining) / 7) * 100)}%` }}
             ></div>
           </div>
         </div>

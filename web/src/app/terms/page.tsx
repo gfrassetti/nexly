@@ -64,7 +64,7 @@ export default function TermsPage() {
               <div className="space-y-4">
                 <h3 className="text-xl font-medium mb-2 text-nexly-light-blue">4.1 Período de Prueba</h3>
                 <p className="text-neutral-300 leading-relaxed">
-                  Ofrecemos un período de prueba gratuito de 15 días sin requerir tarjeta de crédito. 
+                  Ofrecemos un período de prueba gratuito de 7 días requiriendo tarjeta de crédito. 
                   Durante este período, tendrá acceso completo a todas las funcionalidades.
                 </p>
 

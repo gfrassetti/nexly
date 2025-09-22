@@ -107,7 +107,7 @@ function PricingContent() {
             Elige tu plan perfecto
           </h1>
           <p className="text-xl text-neutral-300 max-w-2xl mx-auto mb-8">
-            Comienza con 15 días gratis. Sin tarjeta de crédito requerida.
+            Comienza con 7 días gratis. Tarjeta de crédito requerida.
             Cancela cuando quieras.
           </p>
 
@@ -255,7 +255,7 @@ function PricingContent() {
                 title: "¿Qué incluye la prueba gratuita?",
                 content: (
                   <p>
-                    Acceso completo a todas las funciones de Nexly durante 15 días. No se requiere tarjeta de crédito.
+                    Acceso completo a todas las funciones de Nexly durante 7 días. Se requiere tarjeta de crédito.
                   </p>
                 )
               },
