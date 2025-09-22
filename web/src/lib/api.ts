@@ -102,8 +102,8 @@ export function loginApi(body: {
 
 export type Provider = "whatsapp" | "instagram" | "messenger";
 
-export function getContacts() {
-  return apiFetch<any[]>("/contacts", { method: "GET" });
+export function getContacts(token?: string) {
+  return apiFetch<any[]>("/contacts", { method: "GET" }, token);
 }
 
 /**
@@ -116,11 +116,21 @@ export function createContact(body: {
   email?: string;
   tags?: string[];
   provider?: Provider;
-}) {
+  integrationId?: string;
+}, token?: string) {
   return apiFetch("/contacts", {
     method: "POST",
     body: JSON.stringify(body),
-  });
+  }, token);
+}
+
+/**
+ * Eliminar contacto
+ */
+export function deleteContact(contactId: string, token?: string) {
+  return apiFetch(`/contacts/${contactId}`, {
+    method: "DELETE",
+  }, token);
 }
 
 export function getMessages(params: { contactId?: string; provider?: Provider; integrationId?: string } = {}) {

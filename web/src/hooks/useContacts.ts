@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getContacts } from "@/lib/api";
 
 export function useContacts(integrationId: string) {
@@ -13,37 +13,51 @@ export function useContacts(integrationId: string) {
     setToken(t);
   }, []);
 
-  useEffect(() => {
+  const fetchContacts = useCallback(async () => {
     if (!token) {
       setLoading(false);
-      setError("No token en localStorage");
+      setError("No hay token de autenticación");
       return;
     }
 
-    let mounted = true;
     setLoading(true);
     setError(null);
 
-    getContacts()
-      .then((data) => {
-        if (!mounted) return;
-        console.log("[useContacts] contactos recibidos:", data);
-        const filtered = integrationId
-          ? data.filter((c: any) => c.integrationId === integrationId)
-          : data;
-        setItems(filtered);
-      })
-      .catch((err) => {
-        if (mounted) setError(err.message || "No se pudieron cargar los contactos");
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
+    try {
+      console.log("[useContacts] Cargando contactos...");
+      const data = await getContacts(token);
+      console.log("[useContacts] Contactos recibidos:", data);
+      
+      // Filtrar por integración si no es "all"
+      const filtered = integrationId && integrationId !== "all"
+        ? data.filter((c: any) => c.integrationId === integrationId)
+        : data;
+      
+      setItems(filtered);
+    } catch (err: any) {
+      console.error("[useContacts] Error cargando contactos:", err);
+      const errorMessage = err?.response?.data?.message || 
+                          err?.message || 
+                          "No se pudieron cargar los contactos";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   }, [integrationId, token]);
 
-  return { items, loading, error };
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
+
+  // Función para refrescar manualmente
+  const refetch = useCallback(() => {
+    fetchContacts();
+  }, [fetchContacts]);
+
+  return { 
+    items, 
+    loading, 
+    error, 
+    refetch 
+  };
 }
