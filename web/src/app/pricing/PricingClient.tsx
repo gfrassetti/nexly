@@ -168,7 +168,7 @@ function PricingContent() {
                 <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => window.location.href = `/register?plan=${plan.id}`}
-                    className={`w-full py-4 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
+                    className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
                       plan.popular
                         ? 'bg-nexly-teal hover:bg-nexly-green text-white'
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
@@ -185,7 +185,7 @@ function PricingContent() {
                 <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
-                    className={`w-full py-4 rounded-lg font-semibold transition-all duration-300 hover:scale-105 ${
+                    className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
                       plan.popular
                         ? 'bg-nexly-teal hover:bg-nexly-green text-white'
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'

@@ -48,7 +48,7 @@ export default function a() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link
                 href="/register"
-                className="bg-nexly-teal hover:bg-nexly-green text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-nexly-teal/25 hover:shadow-nexly-green/25 hover:scale-105"
+                className="bg-nexly-teal hover:bg-nexly-green text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-nexly-teal/25 hover:shadow-nexly-green/25"
               >
                 <span>Registrarse y Probar Gratis</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ export default function a() {
               </Link>
               <Link
                 href="/pricing"
-                className="bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-nexly-azul/30 hover:border-nexly-azul/50 hover:scale-105"
+                className="bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-300 flex items-center justify-center space-x-2 border border-nexly-azul/30 hover:border-nexly-azul/50"
               >
                 <span>Ver Planes y Precios</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

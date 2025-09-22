@@ -10,9 +10,9 @@ export default {
       colors: {
         'nexly': {
           'azul': '#2596be',
-          'teal': '#2596be', 
-          'green': '#2596be',
-          'light-blue': '#2596be',
+          'teal': '#14b8a6', 
+          'green': '#10b981',
+          'light-blue': '#0ea5e9',
         }
       }
     } 
