@@ -196,12 +196,33 @@ export default function SubscriptionInfo() {
   }
 
   // Verificar si realmente no hay suscripción activa
+  console.log("🔍 Stripe page - Full subscription object:", subscription);
+  console.log("🔍 Stripe page - Subscription debug:", {
+    hasSubscription: subscription?.hasSubscription,
+    subscription: subscription?.subscription,
+    status: subscription?.subscription?.status,
+    stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId,
+    userSubscriptionStatus: subscription?.userSubscriptionStatus
+  });
+
   const hasActiveSubscription = subscription?.hasSubscription && 
     subscription?.subscription && 
     (subscription.subscription.status === 'active' || 
      subscription.subscription.status === 'trialing' ||
      subscription.subscription.status === 'paused' ||
-     subscription.subscription.stripeSubscriptionId);
+     (subscription.subscription.status as any) === 'trial' || // Compatibilidad temporal
+     subscription.subscription.stripeSubscriptionId ||
+     subscription?.userSubscriptionStatus === 'active_trial' ||
+     subscription?.userSubscriptionStatus === 'active_paid');
+
+  console.log("🔍 Stripe page - Has active subscription:", hasActiveSubscription);
+  console.log("🔍 Stripe page - Detailed check:", {
+    hasSubscription: subscription?.hasSubscription,
+    hasSubscriptionObject: !!subscription?.subscription,
+    statusCheck: subscription?.subscription?.status,
+    stripeIdCheck: !!subscription?.subscription?.stripeSubscriptionId,
+    userStatusCheck: subscription?.userSubscriptionStatus
+  });
 
   if (!hasActiveSubscription) {
     return (

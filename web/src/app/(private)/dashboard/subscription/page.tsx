@@ -11,23 +11,37 @@ export default function SubscriptionPage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("🔍 useEffect triggered:", { loading, subscription: !!subscription });
+    
     if (!loading) {
+      console.log("🔍 Full subscription object:", subscription);
       console.log("🔍 Subscription debug:", {
         hasSubscription: subscription?.hasSubscription,
         subscription: subscription?.subscription,
         status: subscription?.subscription?.status,
-        stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId
+        stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId,
+        userSubscriptionStatus: subscription?.userSubscriptionStatus
       });
 
-      // Verificar si hay una suscripción activa
+      // Verificar si hay una suscripción activa - lógica más permisiva
       const hasActiveSubscription = subscription?.hasSubscription && 
         subscription?.subscription && 
         (subscription.subscription.status === 'active' || 
          subscription.subscription.status === 'trialing' ||
          subscription.subscription.status === 'paused' ||
-         subscription.subscription.stripeSubscriptionId);
+         (subscription.subscription.status as any) === 'trial' || // Compatibilidad temporal
+         subscription.subscription.stripeSubscriptionId ||
+         subscription?.userSubscriptionStatus === 'active_trial' ||
+         subscription?.userSubscriptionStatus === 'active_paid');
 
       console.log("🔍 Has active subscription:", hasActiveSubscription);
+      console.log("🔍 Detailed check:", {
+        hasSubscription: subscription?.hasSubscription,
+        hasSubscriptionObject: !!subscription?.subscription,
+        statusCheck: subscription?.subscription?.status,
+        stripeIdCheck: !!subscription?.subscription?.stripeSubscriptionId,
+        userStatusCheck: subscription?.userSubscriptionStatus
+      });
 
       if (hasActiveSubscription) {
         // Redirigir a la página específica del proveedor
@@ -36,9 +50,17 @@ export default function SubscriptionPage() {
         router.push(`/dashboard/subscription/${provider}`);
       } else {
         console.log("🔍 No active subscription, redirecting to pricing");
+        console.log("🔍 Reasons for no subscription:", {
+          hasSubscription: subscription?.hasSubscription,
+          hasSubscriptionObject: !!subscription?.subscription,
+          status: subscription?.subscription?.status,
+          userStatus: subscription?.userSubscriptionStatus
+        });
         // Si no hay suscripción, redirigir a pricing
         router.push("/pricing");
       }
+    } else {
+      console.log("🔍 Still loading subscription data...");
     }
   }, [subscription, loading, router]);
 
