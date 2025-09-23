@@ -46,12 +46,14 @@ export default function ContactForm() {
     }
 
     try {
-      // Configuración de EmailJS usando variables de entorno
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'service_pfgehki';
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'template_XXXXXXX';
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '3-6tL7sWTn0JliyVV';
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
       
-      // Parámetros del email
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error('EmailJS configuration missing');
+      }
+      
       const templateParams = {
         from_name: formData.name,
         from_email: formData.email,
@@ -60,7 +62,6 @@ export default function ContactForm() {
         to_email: 'guidofrassetti@gmail.com'
       };
 
-      // Enviar email usando EmailJS
       await emailjs.send(serviceId, templateId, templateParams, publicKey);
       
       setToast({ 
