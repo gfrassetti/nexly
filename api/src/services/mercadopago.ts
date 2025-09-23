@@ -145,9 +145,9 @@ class MercadoPagoService {
    * Crear un plan de suscripción básico
    */
   async createBasicPlan(userEmail: string, backUrl: string) {
-    const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
-    const currency = isArgentina ? 'ARS' : 'USD';
-    const amount = isArgentina ? 1000 : 1;
+    // Forzar uso de ARS para todos los usuarios
+    const currency = 'ARS';
+    const amount = 1000;
 
     return this.createSubscription({
       payer_email: userEmail,
@@ -171,9 +171,9 @@ class MercadoPagoService {
    * Crear un plan de suscripción premium
    */
   async createPremiumPlan(userEmail: string, backUrl: string) {
-    const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
-    const currency = isArgentina ? 'ARS' : 'USD';
-    const amount = isArgentina ? 1500 : 2;
+    // Forzar uso de ARS para todos los usuarios
+    const currency = 'ARS';
+    const amount = 1500;
 
     return this.createSubscription({
       payer_email: userEmail,

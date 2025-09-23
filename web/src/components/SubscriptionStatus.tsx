@@ -1,6 +1,7 @@
 "use client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
+import { useStripePayment } from "@/hooks/useStripePayment";
 
 export default function SubscriptionStatus() {
   const { 
@@ -21,6 +22,7 @@ export default function SubscriptionStatus() {
   } = useSubscription();
 
   const { createPaymentLink } = usePaymentLink();
+  const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
 
   if (loading) {
     return (
@@ -112,16 +114,42 @@ export default function SubscriptionStatus() {
             </svg>
             <h3 className="text-lg font-semibold text-yellow-400">Pago Pendiente</h3>
           </div>
-          <p className="text-yellow-300 mb-4">
+          <p className="text-yellow-300 mb-6">
             Tu cuenta está registrada pero necesitas completar el método de pago para comenzar tu prueba gratuita.
           </p>
-          <button
-            onClick={() => createPaymentLink()}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2"
-          >
-            <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
-            Completar Pago
-          </button>
+          
+          {/* Botones de método de pago */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            {/* Botón MercadoPago */}
+            <button
+              onClick={() => createPaymentLink()}
+              disabled={loading}
+              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+            >
+              <img src="/mp_logo.png" alt="Mercado Pago" className="h-5 w-auto" />
+              <div className="text-left">
+                <p className="font-medium">Completar Pago</p>
+                <p className="text-xs opacity-90">Activar tu prueba gratuita</p>
+              </div>
+            </button>
+
+            {/* Botón Stripe */}
+            <button
+              onClick={() => {
+                // Obtener el plan del usuario desde localStorage o usar 'basic' por defecto
+                const selectedPlan = localStorage.getItem('selectedPlan') || 'basic';
+                createStripePaymentLink(selectedPlan as 'basic' | 'premium');
+              }}
+              disabled={stripeLoading}
+              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+            >
+              <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
+              <div className="text-left">
+                <p className="font-medium">Completar Pago</p>
+                <p className="text-xs opacity-90">Activar tu prueba gratuita</p>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     );
