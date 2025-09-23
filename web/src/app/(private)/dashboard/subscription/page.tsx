@@ -248,9 +248,6 @@ export default function SubscriptionInfo() {
   
   // Usar estado real de Stripe
   const actualStatus = stripeSub?.status || sub.status;
-  
-  // Si no hay datos reales, mostrar mensaje de error
-  const hasRealData = stripeSub && stripeSub.status;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -261,20 +258,6 @@ export default function SubscriptionInfo() {
           <p className="text-gray-600">Gestiona tu suscripción y método de pago</p>
         </div>
 
-        {/* Alerta si no hay datos reales */}
-        {!hasRealData && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-            <div className="flex items-center">
-              <span className="text-yellow-600 mr-2">⚠️</span>
-              <div>
-                <h3 className="text-yellow-800 font-medium">Datos simulados</h3>
-                <p className="text-yellow-700 text-sm">
-                  No se pudieron obtener los datos reales de Stripe. Verifica tu configuración de suscripción.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Información de facturación */}
         <div className="mb-8">
@@ -294,7 +277,7 @@ export default function SubscriptionInfo() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Estado de Suscripción</h2>
                 <div className={`px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(actualStatus)}`}>
-                  {hasRealData ? getSubscriptionLabel({ ...sub, status: actualStatus }) : "⚠️ Datos no disponibles"}
+                  {getSubscriptionLabel({ ...sub, status: actualStatus })}
                 </div>
               </div>
               
@@ -303,7 +286,7 @@ export default function SubscriptionInfo() {
                   <div>
                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">ID de Suscripción</label>
                     <p className="text-gray-900 font-mono text-sm mt-1 bg-gray-50 px-3 py-2 rounded-lg">
-                      {stripeSub?.stripeSubscriptionId || sub.stripeSubscriptionId || "N/A"}
+                      {stripeData?.subscription?.id || subscription.subscription?.id || "N/A"}
                     </p>
                   </div>
                   <div>

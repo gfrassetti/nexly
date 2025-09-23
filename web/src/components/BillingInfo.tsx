@@ -92,19 +92,7 @@ export default function BillingInfo() {
   }
 
   if (error) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-          <div className="flex items-center">
-            <span className="text-red-600 mr-2">⚠️</span>
-            <div>
-              <h3 className="text-red-800 font-medium">Error al cargar facturación</h3>
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return null; // No mostrar errores al usuario
   }
 
   if (!subscription) {

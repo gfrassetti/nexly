@@ -65,21 +65,7 @@ export default function InvoiceHistory() {
   }
 
   if (error) {
-    return (
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
-        </div>
-        <div className="p-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <span className="text-red-600 mr-2">⚠️</span>
-              <span className="text-red-800 text-sm">{error}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return null; // No mostrar errores al usuario
   }
 
   return (

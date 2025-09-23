@@ -9,9 +9,8 @@ const items = [
   { id: "resumen", label: "Resumen", href: "/dashboard" },
   { id: "inbox", label: "Inbox", href: "/dashboard/inbox" },
   { id: "contacts", label: "Contactos", href: "/dashboard/contacts" },
-  { id: "integrations", label: "Integraciones", href: "/dashboard/integrations" },
-  { id: "meta-config", label: "Configuración Meta", href: "/dashboard/integrations/config" },
-  { id: "subscription", label: "Mi Suscripción", href: "/dashboard/subscription" },
+        { id: "integrations", label: "Integraciones", href: "/dashboard/integrations" },
+        { id: "subscription", label: "Mi Suscripción", href: "/dashboard/subscription" },
 ];
 
 

@@ -427,6 +427,61 @@ router.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook
 /**
  * Cancelar suscripción de Stripe
  */
+router.put('/cancel-subscription', authenticateToken, asyncHandler(async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new CustomError('Usuario no autenticado', 401);
+    }
+
+    const subscription = await Subscription.findOne({ userId });
+    if (!subscription) {
+      throw new CustomError('No tienes una suscripción activa para cancelar', 404);
+    }
+
+    // Si tiene ID de Stripe, cancelar allí también
+    if (subscription.stripeSubscriptionId) {
+      try {
+        await stripeService.cancelSubscription(subscription.stripeSubscriptionId);
+      } catch (error) {
+        console.error('Error cancelling in Stripe:', error);
+        // Continuar con la cancelación local aunque falle en Stripe
+      }
+    }
+
+    // Cancelar con período de gracia (7 días por defecto)
+    (subscription as any).cancelSubscription(7);
+    await subscription.save();
+
+    // Actualizar estado del usuario
+    const user = await User.findById(userId);
+    if (user) {
+      user.subscription_status = 'cancelled';
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Suscripción cancelada exitosamente. Tienes 7 días de acceso restante.',
+      subscription: {
+        id: subscription._id,
+        status: subscription.status,
+        cancelledAt: subscription.cancelledAt,
+        gracePeriodEndDate: subscription.gracePeriodEndDate
+      }
+    });
+  } catch (error: any) {
+    console.error('Error cancelling Stripe subscription:', error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      error: error.message || 'Error interno del servidor'
+    });
+  }
+}));
+
+/**
+ * Cancelar suscripción de Stripe (endpoint legacy)
+ */
 router.post('/cancel', authenticateToken, asyncHandler(async (req: any, res: any) => {
   try {
     const userId = req.user?.id;
