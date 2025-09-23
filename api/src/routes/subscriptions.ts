@@ -503,47 +503,6 @@ router.post('/reactivate', authenticateToken, asyncHandler(async (req: any, res:
   }
 }));
 
-/**
- * Endpoint de diagnóstico para MercadoPago
- */
-router.get('/diagnose-mercadopago', authenticateToken, asyncHandler(async (req: any, res: any) => {
-  try {
-    const userId = req.user?.id;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Usuario no autenticado' });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-
-    // Información de diagnóstico
-    const diagnosis = {
-      userEmail: user.email,
-      userCountry: user.email.includes('.ar') ? 'Argentina' : 'Otro',
-      mercadoPagoConfig: {
-        accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN ? 'Configurado' : 'No configurado',
-        baseUrl: process.env.MERCADOPAGO_BASE_URL || 'https://api.mercadopago.com',
-        country: process.env.MERCADOPAGO_COUNTRY || 'No especificado'
-      },
-      environment: {
-        nodeEnv: process.env.NODE_ENV,
-        isDevelopment: process.env.NODE_ENV === 'development'
-      }
-    };
-
-    res.json({
-      success: true,
-      diagnosis
-    });
-
-  } catch (error) {
-    console.error('Error in diagnosis:', error);
-    res.status(500).json({ error: 'Error en diagnóstico' });
-  }
-}));
 
 /**
  * Resetear rate limiting para pagos (solo para desarrollo o casos especiales)

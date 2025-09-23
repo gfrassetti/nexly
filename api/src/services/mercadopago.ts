@@ -20,21 +20,8 @@ class MercadoPagoService {
 
   private validateConfig() {
     if (!this.config.accessToken) {
-      console.warn('⚠️ MERCADOPAGO_ACCESS_TOKEN no configurado. Usando modo desarrollo.');
-      if (config.isProduction) {
-        throw new CustomError('MERCADOPAGO_ACCESS_TOKEN es requerido en producción', 500, false);
-      }
-      // En desarrollo, usar un token mock
-      this.config.accessToken = 'TEST_TOKEN_FOR_DEVELOPMENT';
+      throw new CustomError('MERCADOPAGO_ACCESS_TOKEN es requerido', 500);
     }
-
-    // Log de configuración para debug
-    console.log('🔧 Configuración MercadoPago:', {
-      hasToken: !!this.config.accessToken,
-      baseUrl: this.config.baseURL,
-      isDevelopment: config.isDevelopment,
-      country: process.env.MERCADOPAGO_COUNTRY || 'No especificado'
-    });
   }
 
   private getHeaders() {
@@ -78,21 +65,6 @@ class MercadoPagoService {
         throw new CustomError('El monto debe ser mayor a 0', 400);
       }
 
-      // Modo mock para desarrollo
-      if (config.isDevelopment && this.config.accessToken === 'TEST_TOKEN_FOR_DEVELOPMENT') {
-        console.log('🧪 Modo desarrollo: Simulando creación de suscripción en Mercado Pago');
-        console.log('📧 Email:', data.payer_email);
-        console.log('💰 Monto:', data.auto_recurring.transaction_amount, data.auto_recurring.currency_id);
-        return {
-          id: `mock_subscription_${Date.now()}`,
-          init_point: `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock_pref_${Date.now()}`,
-          status: 'pending'
-        };
-      }
-
-      // Si hay un error de países, usar modo de fallback
-      console.log('🌍 Intentando crear suscripción con configuración actual...');
-      console.log('📋 Datos enviados:', JSON.stringify(data, null, 2));
 
 
       const response = await axios.post(
@@ -117,23 +89,6 @@ class MercadoPagoService {
       }
       
       if (error.response?.status === 400) {
-        const errorData = error.response?.data;
-        if (errorData?.message?.includes('different countries')) {
-          // Intentar con configuración alternativa
-          console.log('🔄 Error de países detectado, intentando con configuración alternativa...');
-          
-          // Crear un mock más realista para evitar el error
-          if (config.isDevelopment) {
-            console.log('🧪 Usando mock de desarrollo debido a error de países');
-            return {
-              id: `fallback_subscription_${Date.now()}`,
-              init_point: `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=fallback_${Date.now()}`,
-              status: 'pending'
-            };
-          }
-          
-          throw new CustomError('Error de configuración regional. Tu cuenta de MercadoPago no está configurada para el país correcto. Contacta soporte.', 400);
-        }
         throw new CustomError('Datos de suscripción inválidos', 400);
       }
 
@@ -190,10 +145,9 @@ class MercadoPagoService {
    * Crear un plan de suscripción básico
    */
   async createBasicPlan(userEmail: string, backUrl: string) {
-    // Detectar país basado en el dominio del email o usar configuración por defecto
     const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
     const currency = isArgentina ? 'ARS' : 'USD';
-    const amount = isArgentina ? 1000 : 1; // Precio mínimo: $100 ARS / $1 USD
+    const amount = isArgentina ? 1000 : 1;
 
     return this.createSubscription({
       payer_email: userEmail,
@@ -217,10 +171,9 @@ class MercadoPagoService {
    * Crear un plan de suscripción premium
    */
   async createPremiumPlan(userEmail: string, backUrl: string) {
-    // Detectar país basado en el dominio del email o usar configuración por defecto
     const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
     const currency = isArgentina ? 'ARS' : 'USD';
-    const amount = isArgentina ? 200 : 2; // Precio mínimo: $200 ARS / $2 USD
+    const amount = isArgentina ? 1500 : 2;
 
     return this.createSubscription({
       payer_email: userEmail,
