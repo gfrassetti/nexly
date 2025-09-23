@@ -4,12 +4,12 @@ import { useContacts } from "@/hooks/useContacts";
 import ContactList, { ContactItem } from "@/components/ContactList";
 import { deleteContact } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotificationHelpers } from "@/hooks/useNotification";
+import { INTEGRATIONS } from "@/lib/constants";
 
-const INTEGRATIONS = [
-  { id: "whatsapp", label: "WhatsApp", color: "bg-green-500" },
-  { id: "instagram", label: "Instagram", color: "bg-pink-500" },
-  { id: "messenger", label: "Messenger", color: "bg-blue-500" },
-  { id: "all", label: "Todos", color: "bg-neutral-500" },
+const ALL_INTEGRATIONS = [
+  ...INTEGRATIONS,
+  { id: "all", label: "Todos", color: "bg-neutral-500", description: "Mostrar todos los contactos" },
 ];
 
 export default function ContactsPage() {
@@ -17,10 +17,7 @@ export default function ContactsPage() {
   const [integrationId, setIntegrationId] = useState("whatsapp");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [notification, setNotification] = useState<{
-    type: 'success' | 'error' | 'info';
-    message: string;
-  } | null>(null);
+  const { showSuccess, showError } = useNotificationHelpers();
 
   const { items: contacts, loading, error, refetch } = useContacts(integrationId);
 
@@ -35,23 +32,17 @@ export default function ContactsPage() {
     );
   }, [contacts, searchQuery]);
 
-  // Función para mostrar notificaciones
-  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 5000);
-  };
-
   // Manejo de errores mejorado
   const handleError = (error: any, context: string) => {
     console.error(`Error en ${context}:`, error);
     const message = error?.response?.data?.message || error?.message || `Error en ${context}`;
-    showNotification('error', message);
+    showError("Error", message);
   };
 
 
   async function handleDeleteContact(id: string) {
     if (!token) {
-      showNotification('error', 'No tienes permisos para realizar esta acción');
+      showError("Error", "No tienes permisos para realizar esta acción");
       return;
     }
 
@@ -62,7 +53,7 @@ export default function ContactsPage() {
     setIsDeleting(id);
     try {
       await deleteContact(id, token);
-      showNotification('success', 'Contacto eliminado exitosamente');
+      showSuccess("Contacto eliminado", "Contacto eliminado exitosamente");
       refetch();
     } catch (error) {
       handleError(error, 'eliminar contacto');
@@ -98,7 +89,7 @@ export default function ContactsPage() {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Filtro por plataforma */}
           <div className="flex gap-2">
-            {INTEGRATIONS.map((integration) => (
+            {ALL_INTEGRATIONS.map((integration) => (
               <button
                 key={integration.id}
                 onClick={() => setIntegrationId(integration.id)}
@@ -140,26 +131,6 @@ export default function ContactsPage() {
         </div>
       </div>
 
-      {/* Notificaciones */}
-      {notification && (
-        <div className={`p-4 mx-6 mt-4 rounded-lg ${
-          notification.type === 'success' ? 'bg-green-900 text-green-100 border border-green-700' :
-          notification.type === 'error' ? 'bg-red-900 text-red-100 border border-red-700' :
-          'bg-blue-900 text-blue-100 border border-blue-700'
-        }`}>
-          <div className="flex items-center justify-between">
-            <span>{notification.message}</span>
-            <button
-              onClick={() => setNotification(null)}
-              className="text-current opacity-70 hover:opacity-100"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Contenido principal */}
       <div className="flex-1 p-6">

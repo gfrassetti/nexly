@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { useAuth } from "@/store/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import apiFetch from "@/lib/api";
 import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
 import { sendMessage } from "@/hooks/sendMessage";
-
-const channels = ["whatsapp", "instagram", "messenger"] as const;
+import { CHANNELS } from "@/lib/constants";
 
 export default function InboxPage() {
-  const token = useAuth((s) => s.token);
-  const [channel, setChannel] = useState<(typeof channels)[number]>("whatsapp");
+  const { token } = useAuth();
+  const [channel, setChannel] = useState<(typeof CHANNELS)[number]>("whatsapp");
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const { data: threads } = useSWR(
@@ -33,7 +32,7 @@ export default function InboxPage() {
   return (
     <div className="h-full grid grid-rows-[auto_1fr_auto]">
       <div className="flex gap-2 p-3 border-b">
-        {channels.map((c) => (
+        {CHANNELS.map((c) => (
           <button
             key={c}
             onClick={() => setChannel(c)}

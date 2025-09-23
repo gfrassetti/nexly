@@ -6,12 +6,11 @@ import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
 import { useState } from "react";
 import { sendMessage } from "@/hooks/sendMessage";
-
-const channels = ["whatsapp", "instagram", "messenger"] as const;
+import { CHANNELS } from "@/lib/constants";
 
 export default function InboxPage() {
   const { token } = useAuth();
-  const [channel, setChannel] = useState<(typeof channels)[number]>("whatsapp");
+  const [channel, setChannel] = useState<(typeof CHANNELS)[number]>("whatsapp");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -55,7 +54,7 @@ export default function InboxPage() {
       <div className="border-b border-neutral-700 bg-neutral-800">
         <div className="flex items-center justify-between p-4">
           <div className="flex gap-2">
-            {channels.map((c) => (
+            {CHANNELS.map((c) => (
               <button
                 key={c}
                 onClick={() => setChannel(c)}
