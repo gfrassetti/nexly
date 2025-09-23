@@ -80,7 +80,7 @@ export default function ContactForm() {
       console.error('Error sending email:', error);
       setToast({ 
         type: 'error', 
-        message: 'Error al enviar el mensaje. Intenta nuevamente o escribe directamente a guidofrassetti@gmail.com' 
+        message: 'Error al enviar el mensaje. Intenta nuevamente más tarde.' 
       });
     } finally {
       setLoading(false);
