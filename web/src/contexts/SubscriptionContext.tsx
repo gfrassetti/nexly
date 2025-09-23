@@ -156,12 +156,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
     const sub = subscription.subscription;
     
-    // Durante trial activo, acceso completo
+    // Durante trial activo, respetar límites del plan
     if (isTrialActive()) {
-      return 999;
+      return sub.planType === 'basic' ? 2 : 999;
     }
 
-    // Si está activo, acceso completo también
+    // Si está activo, respetar límites del plan
     if (isActive()) {
       return sub.planType === 'basic' ? 2 : 999;
     }
