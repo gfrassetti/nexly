@@ -193,7 +193,7 @@ class MercadoPagoService {
     // Detectar país basado en el dominio del email o usar configuración por defecto
     const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
     const currency = isArgentina ? 'ARS' : 'USD';
-    const amount = isArgentina ? 2999 : 9.99; // Precio en ARS para Argentina, USD para otros países
+    const amount = isArgentina ? 1000 : 1; // Precio mínimo: $100 ARS / $1 USD
 
     return this.createSubscription({
       payer_email: userEmail,
@@ -220,7 +220,7 @@ class MercadoPagoService {
     // Detectar país basado en el dominio del email o usar configuración por defecto
     const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
     const currency = isArgentina ? 'ARS' : 'USD';
-    const amount = isArgentina ? 5999 : 19.99; // Precio en ARS para Argentina, USD para otros países
+    const amount = isArgentina ? 200 : 2; // Precio mínimo: $200 ARS / $2 USD
 
     return this.createSubscription({
       payer_email: userEmail,

@@ -26,7 +26,7 @@ function PricingContent() {
     {
       id: 'basic',
       name: 'Plan Básico',
-      price: '$2.999',
+      price: '$1000',
       period: '/mes',
       description: 'Perfecto para emprendedores y pequeñas empresas',
       features: [
@@ -34,14 +34,14 @@ function PricingContent() {
         'Instagram',
         'Hasta 2 integraciones',
         'Mensajes ilimitados',
-        '7 días gratis, luego $2.999/mes',
+        '7 días gratis, luego $100/mes',
       ],
       popular: false,
     },
     {
       id: 'premium',
       name: 'Plan Premium',
-      price: '$5.999',
+      price: '$1500',
       period: '/mes',
       description: 'Para empresas que necesitan más integraciones',
       features: [
@@ -53,7 +53,7 @@ function PricingContent() {
         'Twitter/X',
         'Todas las integraciones disponibles',
         'Mensajes ilimitados',
-        '7 días gratis, luego $5.999/mes',
+        '7 días gratis, luego $200/mes',
       ],
       popular: true,
     },
