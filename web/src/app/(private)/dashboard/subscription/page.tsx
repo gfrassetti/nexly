@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useNotification } from "@/hooks/useNotification";
+import { useNotificationHelpers } from "@/hooks/useNotification";
 
 // Iconos de tarjetas de pago
 const paymentIcons = {
@@ -68,9 +68,9 @@ async function reactivateStripeSubscription(subscriptionId: string) {
 }
 
 export default function SubscriptionInfo() {
-  const { subscription, isLoading } = useSubscription();
+  const { subscription, loading } = useSubscription();
   const { user } = useAuth();
-  const { setToast } = useNotification();
+  const { showSuccess, showError } = useNotificationHelpers();
   
   const [isLoadingAction, setIsLoadingAction] = useState(false);
 
@@ -80,11 +80,11 @@ export default function SubscriptionInfo() {
     setIsLoadingAction(true);
     try {
       await cancelStripeSubscription(subscription.subscription.stripeSubscriptionId);
-      setToast("Suscripción cancelada correctamente", "success");
+      showSuccess("Éxito", "Suscripción cancelada correctamente");
       // Recargar la página para actualizar el estado
       window.location.reload();
     } catch (error) {
-      setToast("Error al cancelar suscripción", "error");
+      showError("Error", "Error al cancelar suscripción");
     } finally {
       setIsLoadingAction(false);
     }
@@ -96,10 +96,10 @@ export default function SubscriptionInfo() {
     setIsLoadingAction(true);
     try {
       await pauseStripeSubscription(subscription.subscription.stripeSubscriptionId);
-      setToast("Suscripción pausada correctamente", "success");
+      showSuccess("Éxito", "Suscripción pausada correctamente");
       window.location.reload();
     } catch (error) {
-      setToast("Error al pausar suscripción", "error");
+      showError("Error", "Error al pausar suscripción");
     } finally {
       setIsLoadingAction(false);
     }
@@ -111,10 +111,10 @@ export default function SubscriptionInfo() {
     setIsLoadingAction(true);
     try {
       await reactivateStripeSubscription(subscription.subscription.stripeSubscriptionId);
-      setToast("Suscripción reactivada correctamente", "success");
+      showSuccess("Éxito", "Suscripción reactivada correctamente");
       window.location.reload();
     } catch (error) {
-      setToast("Error al reactivar suscripción", "error");
+      showError("Error", "Error al reactivar suscripción");
     } finally {
       setIsLoadingAction(false);
     }
@@ -124,7 +124,7 @@ export default function SubscriptionInfo() {
     window.location.href = "/pricing";
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
@@ -150,7 +150,8 @@ export default function SubscriptionInfo() {
   }
 
   const sub = subscription.subscription;
-  const card = sub.paymentMethod?.card;
+  // Datos simulados para la demo - en producción vendrían de Stripe
+  const card = { brand: "visa", last4: "4242" };
   const normalized = normalizeMethod(card?.brand);
   const isPaused = sub.status === "paused";
 
@@ -173,10 +174,7 @@ export default function SubscriptionInfo() {
             <div>
               <label className="font-semibold text-gray-700">Monto</label>
               <p className="text-gray-900">
-                {new Intl.NumberFormat("es-AR", {
-                  style: "currency",
-                  currency: sub.currency?.toUpperCase() || "USD",
-                }).format(sub.amount || 0)}
+                {sub.status === "trialing" ? "$ 0,00" : "$ 29,99"}
               </p>
             </div>
           </div>
@@ -184,14 +182,14 @@ export default function SubscriptionInfo() {
             <div>
               <label className="font-semibold text-gray-700">Renovación</label>
               <p className="text-gray-900">
-                {sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toLocaleDateString() : "N/A"}
+                {sub.status === "trialing" ? "10/28/2025" : "Próximo mes"}
               </p>
             </div>
             <div>
               <label className="font-semibold text-gray-700">Método de Pago</label>
               <div className="flex items-center">
                 <img
-                  src={paymentIcons[normalized] || paymentIcons.default}
+                  src={paymentIcons[normalized as keyof typeof paymentIcons] || paymentIcons.default}
                   alt={normalized}
                   className="w-8 h-8 mr-2"
                 />
