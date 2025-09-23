@@ -8,6 +8,7 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@emailjs/browser": "^4.4.1",
         "clsx": "2.1.1",
         "framer-motion": "^12.23.18",
         "jsonwebtoken": "^9.0.2",

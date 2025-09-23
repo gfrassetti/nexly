@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import emailjs from '@emailjs/browser';
 
 interface ContactFormData {
   name: string;
@@ -45,8 +46,22 @@ export default function ContactForm() {
     }
 
     try {
-      // Simular envío (aquí conectarías con tu backend)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Configuración de EmailJS (necesitarás crear una cuenta en emailjs.com)
+      const serviceId = 'service_nexly'; // Cambiar por tu Service ID
+      const templateId = 'template_contact'; // Cambiar por tu Template ID
+      const publicKey = 'YOUR_PUBLIC_KEY'; // Cambiar por tu Public Key
+      
+      // Parámetros del email
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        company: formData.company || 'No especificado',
+        message: formData.message,
+        to_email: 'guidofrassetti@gmail.com'
+      };
+
+      // Enviar email usando EmailJS
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
       
       setToast({ 
         type: 'success', 
@@ -62,9 +77,10 @@ export default function ContactForm() {
       });
 
     } catch (error) {
+      console.error('Error sending email:', error);
       setToast({ 
         type: 'error', 
-        message: 'Error al enviar el mensaje. Intenta nuevamente.' 
+        message: 'Error al enviar el mensaje. Intenta nuevamente o escribe directamente a guidofrassetti@gmail.com' 
       });
     } finally {
       setLoading(false);
