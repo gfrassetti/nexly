@@ -150,7 +150,7 @@ function PricingContent() {
                 : 'border-neutral-700 bg-neutral-800/30 hover:border-neutral-600'
             }`}
           >
-            <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-6 w-auto" />
+            <img src="/strapi_logo.png" alt="Stripe" className="h-6 w-auto" />
             <span className="font-medium">Stripe</span>
           </button>
         </div>
@@ -215,7 +215,7 @@ function PricingContent() {
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
                     {selectedPaymentMethod === 'stripe' ? (
-                      <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-4 w-auto" />
+                      <img src="/strapi_logo.png" alt="Stripe" className="h-4 w-auto" />
                     ) : (
                       <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
                     )}
@@ -241,7 +241,7 @@ function PricingContent() {
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
                     {selectedPaymentMethod === 'stripe' ? (
-                      <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-4 w-auto" />
+                      <img src="/strapi_logo.png" alt="Stripe" className="h-4 w-auto" />
                     ) : (
                       <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
                     )}
@@ -289,7 +289,7 @@ function PricingContent() {
                 <p className="text-neutral-400 text-sm mb-2">Procesamiento seguro con</p>
                 <div className="flex justify-center gap-4">
                   <img src="/mp_logo.png" alt="Mercado Pago" className="h-5 w-auto" />
-                  <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-5 w-auto" />
+                  <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
                 </div>
               </div>
             </div>
@@ -331,7 +331,7 @@ function PricingContent() {
                         <span className="text-sm text-neutral-400">MercadoPago</span>
                       </div>
                       <div className="text-center">
-                        <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-6 w-auto mx-auto mb-2" />
+                        <img src="/strapi_logo.png" alt="Stripe" className="h-6 w-auto mx-auto mb-2" />
                         <span className="text-sm text-neutral-400">Stripe</span>
                       </div>
                     </div>
