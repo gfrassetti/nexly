@@ -12,6 +12,13 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     if (!loading) {
+      console.log("🔍 Subscription debug:", {
+        hasSubscription: subscription?.hasSubscription,
+        subscription: subscription?.subscription,
+        status: subscription?.subscription?.status,
+        stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId
+      });
+
       // Verificar si hay una suscripción activa
       const hasActiveSubscription = subscription?.hasSubscription && 
         subscription?.subscription && 
@@ -20,11 +27,15 @@ export default function SubscriptionPage() {
          subscription.subscription.status === 'paused' ||
          subscription.subscription.stripeSubscriptionId);
 
+      console.log("🔍 Has active subscription:", hasActiveSubscription);
+
       if (hasActiveSubscription) {
         // Redirigir a la página específica del proveedor
         const provider = getProviderFromSubscription(subscription.subscription);
+        console.log("🔍 Redirecting to provider:", provider);
         router.push(`/dashboard/subscription/${provider}`);
       } else {
+        console.log("🔍 No active subscription, redirecting to pricing");
         // Si no hay suscripción, redirigir a pricing
         router.push("/pricing");
       }

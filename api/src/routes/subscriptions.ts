@@ -45,7 +45,7 @@ router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res
     const subscription = new Subscription({
       userId,
       planType,
-      status: 'trial',
+      status: 'trialing',
       startDate: trialStartDate,
       endDate: trialEndDate,
       // Estados se calculan dinámicamente con métodos
@@ -88,7 +88,7 @@ router.post('/create', authenticateToken, validateSubscriptionData, asyncHandler
     // Verificar si ya tiene una suscripción activa
     const existingSubscription = await Subscription.findOne({
       userId,
-      status: { $in: ['trial', 'active'] }
+      status: { $in: ['trialing', 'active'] }
     });
 
     if (existingSubscription) {
@@ -103,7 +103,7 @@ router.post('/create', authenticateToken, validateSubscriptionData, asyncHandler
     const subscription = new Subscription({
       userId,
       planType,
-      status: 'trial',
+      status: 'trialing',
       startDate,
       trialEndDate,
       autoRenew: false, // No auto-renovar hasta que confirme el pago
@@ -297,7 +297,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       const subscription = new Subscription({
         userId,
         planType: finalPlanType,
-        status: 'trial',
+        status: 'trialing',
         startDate,
         trialEndDate,
         autoRenew: false,
@@ -550,7 +550,7 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: any, res: any
 
     const subscription = await Subscription.findOne({
       userId,
-      status: { $in: ['trial', 'active', 'paused'] }
+      status: { $in: ['trialing', 'active', 'paused'] }
     });
 
     if (!subscription) {

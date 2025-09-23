@@ -10,7 +10,7 @@ export const config = {
     }
     return "dev-secret-change-in-production";
   })(),
-  webhookVerifyToken: process.env.WEBHOOK_VERIFY_TOKEN || "verifytoken",
+  webhookVerifyToken: process.env.WEBHOOK_VERIFY_TOKEN,
   
   // Meta App Configuration (usando los nombres de Railway)
   metaAppId: process.env.META_APP_ID || "", // Necesitas agregar esta en Railway
