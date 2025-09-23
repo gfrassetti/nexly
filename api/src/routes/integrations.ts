@@ -592,4 +592,85 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * GET /integrations/verify-meta-config
+ * Verificar configuración de Meta WhatsApp
+ */
+router.get("/verify-meta-config", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const verification = {
+      environment: {
+        metaAppId: !!config.metaAppId,
+        metaAppSecret: !!config.metaAppSecret,
+        metaAccessToken: !!config.metaAccessToken,
+        metaPhoneNumberId: !!config.metaPhoneNumberId,
+        metaWabaId: !!config.metaWabaId,
+        webhookVerifyToken: !!config.webhookVerifyToken,
+        apiUrl: !!config.apiUrl,
+      },
+      webhook: {
+        url: `${config.apiUrl}/webhook`,
+        token: config.webhookVerifyToken
+      },
+      metaApi: {
+        connected: false,
+        phoneNumber: null,
+        verifiedName: null,
+        error: null
+      }
+    };
+
+    // Probar conexión con Meta API
+    if (config.metaAccessToken && config.metaPhoneNumberId) {
+      try {
+        const phoneResponse = await axios.get(
+          `https://graph.facebook.com/v19.0/${config.metaPhoneNumberId}`,
+          {
+            params: {
+              access_token: config.metaAccessToken,
+              fields: 'display_phone_number,verified_name'
+            }
+          }
+        );
+        
+        verification.metaApi.connected = true;
+        verification.metaApi.phoneNumber = phoneResponse.data.display_phone_number;
+        verification.metaApi.verifiedName = phoneResponse.data.verified_name;
+      } catch (error: any) {
+        verification.metaApi.error = error.response?.data?.error?.message || error.message;
+      }
+    }
+
+    res.json(verification);
+  } catch (err) {
+    console.error("verify_meta_config_failed:", err);
+    res.status(500).json({ error: "verify_meta_config_failed" });
+  }
+});
+
+/**
+ * GET /integrations/webhook-token
+ * Obtener el token de verificación del webhook
+ */
+router.get("/webhook-token", async (req: Request, res: Response) => {
+  try {
+    res.json({
+      webhookVerifyToken: config.webhookVerifyToken,
+      webhookUrl: `${config.apiUrl}/webhook`,
+      instructions: {
+        metaConsole: "Ve a Meta Developer Console → WhatsApp → Configuración",
+        webhookSection: "En la sección Webhook, usa estos valores:",
+        callbackUrl: `${config.apiUrl}/webhook`,
+        verifyToken: config.webhookVerifyToken
+      }
+    });
+  } catch (err) {
+    console.error("webhook_token_failed:", err);
+    res.status(500).json({ error: "webhook_token_failed" });
+  }
+});
+
 export default router;

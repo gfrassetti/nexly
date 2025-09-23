@@ -9,9 +9,17 @@ const router = Router();
 
 // GET verify (Meta)
 router.get("/", (req, res) => {
+  console.log("🔍 Webhook verification attempt:");
+  console.log("  - Received token:", req.query["hub.verify_token"]);
+  console.log("  - Expected token:", config.webhookVerifyToken);
+  console.log("  - Challenge:", req.query["hub.challenge"]);
+  
   if (req.query["hub.verify_token"] === config.webhookVerifyToken) {
+    console.log("✅ Webhook verification successful");
     return res.status(200).send(req.query["hub.challenge"]);
   }
+  
+  console.log("❌ Webhook verification failed");
   res.sendStatus(403);
 });
 
@@ -65,6 +73,27 @@ router.post("/", verifyMetaSignature, async (req, res) => {
     console.error("POST /webhook error:", err);
     res.sendStatus(500);
   }
+});
+
+// Endpoint para probar manualmente el webhook
+router.get("/test", (req, res) => {
+  const testChallenge = "test_challenge_" + Date.now();
+  console.log("🧪 Testing webhook endpoint");
+  console.log("  - Current verify token:", config.webhookVerifyToken);
+  console.log("  - Test challenge:", testChallenge);
+  
+  res.json({
+    message: "Webhook endpoint is working",
+    webhookUrl: `${config.apiUrl}/webhook`,
+    verifyToken: config.webhookVerifyToken,
+    testUrl: `${config.apiUrl}/webhook?hub.verify_token=${config.webhookVerifyToken}&hub.challenge=${testChallenge}`,
+    instructions: [
+      "1. Copy the testUrl above",
+      "2. Paste it in your browser",
+      "3. You should see the challenge string returned",
+      "4. Use the same verifyToken in Meta Developer Console"
+    ]
+  });
 });
 
 export default router;

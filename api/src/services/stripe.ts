@@ -245,6 +245,19 @@ class StripeService {
     }
   }
 
+  async getInvoices(subscriptionId: string) {
+    try {
+      const invoices = await this.stripe.invoices.list({
+        subscription: subscriptionId,
+        limit: 10, // Obtener las últimas 10 facturas
+      });
+      return invoices.data;
+    } catch (error: any) {
+      console.error('Error getting Stripe invoices:', error);
+      throw new CustomError('Error al obtener las facturas', 500);
+    }
+  }
+
   /**
    * Cancelar una suscripción
    */

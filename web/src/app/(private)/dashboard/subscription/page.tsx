@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationHelpers } from "@/hooks/useNotification";
+import BillingInfo from "@/components/BillingInfo";
+import InvoiceHistory from "@/components/InvoiceHistory";
 
 // Iconos de tarjetas de pago
 const paymentIcons = {
@@ -226,8 +228,18 @@ export default function SubscriptionInfo() {
   
   // Formatear fecha de renovación
   const renewalDate = stripeSub?.currentPeriodEnd 
-    ? new Date(stripeSub.currentPeriodEnd).toLocaleDateString()
-    : sub.status === "trialing" ? "10/28/2025" : "Próximo mes";
+    ? new Date(stripeSub.currentPeriodEnd).toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      })
+    : sub.trialEndDate 
+    ? new Date(sub.trialEndDate).toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      })
+    : "Fecha no disponible";
   
   // Formatear monto
   const amount = stripeSub?.amount 
@@ -236,6 +248,9 @@ export default function SubscriptionInfo() {
   
   // Usar estado real de Stripe
   const actualStatus = stripeSub?.status || sub.status;
+  
+  // Si no hay datos reales, mostrar mensaje de error
+  const hasRealData = stripeSub && stripeSub.status;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -246,6 +261,31 @@ export default function SubscriptionInfo() {
           <p className="text-gray-600">Gestiona tu suscripción y método de pago</p>
         </div>
 
+        {/* Alerta si no hay datos reales */}
+        {!hasRealData && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <div className="flex items-center">
+              <span className="text-yellow-600 mr-2">⚠️</span>
+              <div>
+                <h3 className="text-yellow-800 font-medium">Datos simulados</h3>
+                <p className="text-yellow-700 text-sm">
+                  No se pudieron obtener los datos reales de Stripe. Verifica tu configuración de suscripción.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Información de facturación */}
+        <div className="mb-8">
+          <BillingInfo />
+        </div>
+
+        {/* Historial de facturas */}
+        <div className="mb-8">
+          <InvoiceHistory />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Panel principal de suscripción */}
           <div className="lg:col-span-2 space-y-6">
@@ -254,7 +294,7 @@ export default function SubscriptionInfo() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Estado de Suscripción</h2>
                 <div className={`px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(actualStatus)}`}>
-                  {getSubscriptionLabel({ ...sub, status: actualStatus })}
+                  {hasRealData ? getSubscriptionLabel({ ...sub, status: actualStatus }) : "⚠️ Datos no disponibles"}
                 </div>
               </div>
               

@@ -36,7 +36,7 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any
           status: subscription.status,
           planType: subscription.planType,
           trialEndDate: subscription.trialEndDate,
-          currentPeriodEnd: subscription.currentPeriodEnd,
+          currentPeriodEnd: subscription.endDate || null,
           amount: subscription.planType === 'basic' ? 2999 : 4999, // en centavos
           currency: 'usd'
         },
@@ -49,13 +49,13 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any
     
     // Obtener información del customer
     let customer = null;
-    if (stripeSubscription.customer) {
+    if (stripeSubscription.customer && typeof stripeSubscription.customer === 'string') {
       customer = await stripeService.getCustomer(stripeSubscription.customer);
     }
 
     // Obtener información del método de pago por defecto
     let paymentMethod = null;
-    if (customer?.invoice_settings?.default_payment_method) {
+    if (customer && !customer.deleted && customer.invoice_settings?.default_payment_method && typeof customer.invoice_settings.default_payment_method === 'string') {
       paymentMethod = await stripeService.getPaymentMethod(
         customer.invoice_settings.default_payment_method
       );
@@ -69,18 +69,18 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any
         status: stripeSubscription.status,
         planType: subscription.planType,
         trialEndDate: subscription.trialEndDate,
-        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
-        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+        currentPeriodEnd: (stripeSubscription as any).current_period_end ? new Date((stripeSubscription as any).current_period_end * 1000).toISOString() : null,
+        currentPeriodStart: (stripeSubscription as any).current_period_start ? new Date((stripeSubscription as any).current_period_start * 1000).toISOString() : null,
         amount: stripeSubscription.items?.data?.[0]?.price?.unit_amount || 0,
         currency: stripeSubscription.currency || 'usd',
         cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
         canceledAt: stripeSubscription.canceled_at ? new Date(stripeSubscription.canceled_at * 1000).toISOString() : null,
         pauseCollection: stripeSubscription.pause_collection
       },
-      customer: customer ? {
+      customer: customer && !customer.deleted ? {
         id: customer.id,
-        email: customer.email,
-        name: customer.name
+        email: customer.email || null,
+        name: customer.name || null
       } : null,
       paymentMethod: paymentMethod ? {
         id: paymentMethod.id,
@@ -98,6 +98,27 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any
   } catch (error) {
     console.error('Error getting subscription info:', error);
     res.status(500).json({ error: 'Error al obtener información de la suscripción' });
+  }
+}));
+
+// GET /api/stripe/invoices - Obtener facturas del usuario
+router.get('/invoices', authenticateToken, asyncHandler(async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
+
+    const subscription = await Subscription.findOne({ userId });
+    if (!subscription || !subscription.stripeSubscriptionId) {
+      return res.json({ invoices: [] });
+    }
+
+    // Obtener facturas desde Stripe
+    const invoices = await stripeService.getInvoices(subscription.stripeSubscriptionId);
+    
+    res.json({ invoices });
+  } catch (error) {
+    console.error('Error getting invoices:', error);
+    res.status(500).json({ error: 'Error al obtener facturas' });
   }
 }));
 
