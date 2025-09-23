@@ -242,6 +242,9 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       });
     }
 
+    // Usar el plan del usuario si no se proporciona uno en el body
+    const finalPlanType = planType || user.selectedPlan || 'basic';
+
     // Verificar si ya tiene una suscripción activa
     const existingActive = await Subscription.findOne({
       userId,
@@ -252,18 +255,34 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       return res.status(400).json({ error: 'Ya tienes una suscripción activa' });
     }
 
-    // Crear nueva suscripción en estado trial (pero el usuario sigue en trial_pending_payment_method)
+    // Crear enlace de pago en Mercado Pago PRIMERO
+    const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
+    
+    let mercadoPagoSubscription;
+    if (finalPlanType === 'basic') {
+      mercadoPagoSubscription = await mercadoPagoService.createBasicPlan(user.email, backUrl);
+    } else {
+      mercadoPagoSubscription = await mercadoPagoService.createPremiumPlan(user.email, backUrl);
+    }
+
+    // Verificar que MercadoPago creó la suscripción exitosamente
+    if (!mercadoPagoSubscription || !mercadoPagoSubscription.id) {
+      throw new CustomError('Error al crear la suscripción en MercadoPago', 500);
+    }
+
+    // Ahora crear la suscripción en nuestra base de datos con el ID de MercadoPago
     const startDate = new Date();
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
 
     const subscription = new Subscription({
       userId,
-      planType,
+      planType: finalPlanType,
       status: 'trial',
       startDate,
       trialEndDate,
       autoRenew: false,
+      mercadoPagoSubscriptionId: mercadoPagoSubscription.id, // Guardar el ID de MercadoPago
     });
 
     await subscription.save();
@@ -273,22 +292,6 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     if (!savedSubscription) {
       throw new CustomError('Error al guardar la suscripción en la base de datos', 500);
     }
-
-    // Usar el usuario ya obtenido anteriormente
-
-    // Crear enlace de pago en Mercado Pago
-    const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
-    
-    let mercadoPagoSubscription;
-    if (planType === 'basic') {
-      mercadoPagoSubscription = await mercadoPagoService.createBasicPlan(user.email, backUrl);
-    } else {
-      mercadoPagoSubscription = await mercadoPagoService.createPremiumPlan(user.email, backUrl);
-    }
-
-    // Actualizar la suscripción con el ID de Mercado Pago
-    subscription.mercadoPagoSubscriptionId = mercadoPagoSubscription.id;
-    await subscription.save();
 
     res.json({
       success: true,

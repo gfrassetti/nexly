@@ -43,6 +43,7 @@ router.post("/register", async (req, res) => {
       password: hashedPassword,
       role: "user",
       tenantId: email.toLowerCase(),
+      selectedPlan: plan && (plan === 'basic' || plan === 'premium') ? plan : 'basic',
     });
 
     await user.save();

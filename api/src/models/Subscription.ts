@@ -37,6 +37,7 @@ const SubscriptionSchema: Schema = new Schema({
   },
   mercadoPagoSubscriptionId: {
     type: String,
+    unique: true,
     sparse: true, // Permite valores únicos pero también null/undefined
   },
   startDate: {
@@ -74,7 +75,7 @@ const SubscriptionSchema: Schema = new Schema({
 
 // Índices para optimizar consultas
 SubscriptionSchema.index({ userId: 1 });
-SubscriptionSchema.index({ mercadoPagoSubscriptionId: 1 });
+// mercadoPagoSubscriptionId ya tiene índice único sparse en la definición del campo
 SubscriptionSchema.index({ status: 1 });
 SubscriptionSchema.index({ trialEndDate: 1 });
 

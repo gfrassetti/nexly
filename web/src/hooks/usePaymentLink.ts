@@ -7,8 +7,9 @@ export function usePaymentLink() {
   const { subscription } = useSubscription();
 
   const createPaymentLink = async (): Promise<boolean> => {
-    if (!subscription?.subscription) {
-      alert('No hay información de suscripción disponible');
+    // Verificar que el usuario esté en estado pendiente de pago
+    if (!subscription?.userSubscriptionStatus || subscription.userSubscriptionStatus !== 'trial_pending_payment_method') {
+      alert('No estás en estado pendiente de pago');
       return false;
     }
 
@@ -22,6 +23,9 @@ export function usePaymentLink() {
         return false;
       }
 
+      // El planType se puede obtener de la suscripción si existe, o el backend usará el plan del usuario
+      const planType = subscription.subscription?.planType;
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
         method: 'POST',
         headers: {
@@ -29,7 +33,7 @@ export function usePaymentLink() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          planType: subscription.subscription.planType 
+          ...(planType && { planType })
         }),
       });
 
@@ -39,7 +43,7 @@ export function usePaymentLink() {
         window.location.href = data.paymentUrl;
         return true;
       } else {
-        alert('Error al crear el enlace de pago');
+        alert(data.error || 'Error al crear el enlace de pago');
         return false;
       }
     } catch (error) {
@@ -54,6 +58,6 @@ export function usePaymentLink() {
   return {
     createPaymentLink,
     loading,
-    canCreatePayment: !!subscription?.subscription
+    canCreatePayment: subscription?.userSubscriptionStatus === 'trial_pending_payment_method'
   };
 }

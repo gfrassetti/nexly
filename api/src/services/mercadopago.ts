@@ -49,6 +49,10 @@ class MercadoPagoService {
       currency_id: string;
       start_date?: string;
       end_date?: string;
+      free_trial?: {
+        frequency: number;
+        frequency_type: 'months' | 'days';
+      };
     };
     back_url?: string;
     status?: string;
@@ -154,9 +158,6 @@ class MercadoPagoService {
    * Crear un plan de suscripción básico
    */
   async createBasicPlan(userEmail: string, backUrl: string) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() + 7); // Período de prueba de 7 días
-
     return this.createSubscription({
       payer_email: userEmail,
       reason: 'Suscripción Nexly - Plan Básico',
@@ -165,7 +166,10 @@ class MercadoPagoService {
         frequency_type: 'months',
         transaction_amount: 2999, // Precio en ARS (ajustar según necesidad)
         currency_id: 'ARS',
-        start_date: startDate.toISOString(),
+        free_trial: {
+          frequency: 7,
+          frequency_type: 'days',
+        },
       },
       back_url: backUrl,
       status: 'pending',
@@ -176,9 +180,6 @@ class MercadoPagoService {
    * Crear un plan de suscripción premium
    */
   async createPremiumPlan(userEmail: string, backUrl: string) {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() + 7); // Período de prueba de 7 días
-
     return this.createSubscription({
       payer_email: userEmail,
       reason: 'Suscripción Nexly - Plan Premium',
@@ -187,7 +188,10 @@ class MercadoPagoService {
         frequency_type: 'months',
         transaction_amount: 5999, // Precio en ARS (ajustar según necesidad)
         currency_id: 'ARS',
-        start_date: startDate.toISOString(),
+        free_trial: {
+          frequency: 7,
+          frequency_type: 'days',
+        },
       },
       back_url: backUrl,
       status: 'pending',
