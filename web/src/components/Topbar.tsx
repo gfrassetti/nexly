@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function Topbar() {
   const { user, clear } = useAuth();
-  const { subscription } = useSubscription();
+  const { subscription, isTrialActive, isActive, isPaused, isInGracePeriod } = useSubscription();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -26,28 +26,25 @@ export default function Topbar() {
     if (!subscription?.subscription) return null;
     
     const sub = subscription.subscription;
-    const isTrialActive = sub.isTrialActive;
-    const isActive = sub.isActive;
-    const isPaused = sub.isPaused;
-    const isInGracePeriod = sub.isInGracePeriod;
     
     let planText = '';
     let badgeColor = '';
     
-    if (isTrialActive) {
-      planText = 'Free Trial';
+    if (isTrialActive()) {
+      planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} Trial`;
       badgeColor = 'bg-blue-600 text-white';
-    } else if (isActive) {
+    } else if (isActive()) {
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
       badgeColor = sub.planType === 'basic' ? 'bg-green-600 text-white' : 'bg-purple-600 text-white';
-    } else if (isPaused) {
+    } else if (isPaused()) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Pausado)`;
       badgeColor = 'bg-orange-600 text-white';
-    } else if (isInGracePeriod) {
+    } else if (isInGracePeriod()) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Gracia)`;
       badgeColor = 'bg-yellow-600 text-white';
     } else {
-      planText = 'Free';
+      // Si no está en ningún estado activo, mostrar el plan base
+      planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
       badgeColor = 'bg-gray-600 text-white';
     }
     

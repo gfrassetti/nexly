@@ -262,7 +262,7 @@ export default function SubscriptionStatus() {
             </h3>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
               sub.status === 'active' ? 'bg-green-600 text-white' :
-              sub.status === 'trialing' ? 'bg-blue-600 text-white' :
+              sub.status === 'trialing' || (sub.status as any) === 'trial' ? 'bg-blue-600 text-white' :
               sub.status === 'paused' ? 'bg-orange-600 text-white' :
               sub.status === 'incomplete' ? 'bg-yellow-600 text-white' :
               sub.status === 'past_due' ? 'bg-red-600 text-white' :
@@ -272,7 +272,7 @@ export default function SubscriptionStatus() {
             }`}>
               {
                sub.status === 'active' ? 'Activo' :
-               sub.status === 'trialing' ? 'Prueba' :
+               sub.status === 'trialing' || (sub.status as any) === 'trial' ? 'Prueba' :
                sub.status === 'paused' ? 'Pausada' :
                sub.status === 'incomplete' ? 'Incompleto' :
                sub.status === 'past_due' ? 'Vencido' :
