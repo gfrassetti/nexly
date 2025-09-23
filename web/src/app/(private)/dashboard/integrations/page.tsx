@@ -3,11 +3,8 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
-import { useLanguage } from "@/contexts/LanguageContext";
-import LanguageToggle from "@/components/LanguageToggle";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useNotificationHelpers } from "@/hooks/useNotification";
-import { INTEGRATIONS } from "@/lib/constants";
 
 function IntegrationsContent() {
   const [message, setMessage] = useState("");
@@ -17,7 +14,6 @@ function IntegrationsContent() {
   const { createPaymentLink } = usePaymentLink();
   const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick } = useIntegrations();
   const { showSuccess, showError } = useNotificationHelpers();
-  const { t, language } = useLanguage();
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -36,8 +32,7 @@ function IntegrationsContent() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">{t('integrations.title')}</h1>
-        <LanguageToggle />
+        <h1 className="text-2xl font-bold text-white">Integraciones</h1>
       </div>
       
       {/* Estado pendiente de método de pago - SOLO si realmente está pendiente */}
@@ -71,10 +66,10 @@ function IntegrationsContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-white font-medium">
-                {t('dashboard.plan')}: {subscription.subscription.planType === 'basic' ? 'Basic' : 'Premium'}
+                Plan actual: {subscription.subscription.planType === 'basic' ? 'Basic' : 'Premium'}
               </p>
               <p className="text-neutral-400 text-sm">
-                {t('dashboard.integrationsAvailable')}: {getMaxIntegrations() === 999 ? t('dashboard.allAvailable') : `${t('dashboard.upTo')} ${getMaxIntegrations()}`}
+                Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Todas disponibles' : `Hasta ${getMaxIntegrations()}`}
                 {/* Debug: {JSON.stringify({maxIntegrations: getMaxIntegrations(), isTrialActive: isTrialActive(), isActive: isActive(), planType: subscription.subscription.planType})} */}
               </p>
             </div>
@@ -83,7 +78,7 @@ function IntegrationsContent() {
                 onClick={() => createPaymentLink()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
-{t('integrations.completePayment')}
+Completar Pago
               </button>
             )}
             {!isActive() && !isTrialActive() && !isPendingPaymentMethod() && (
