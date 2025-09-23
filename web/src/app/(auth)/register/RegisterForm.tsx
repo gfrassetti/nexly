@@ -25,7 +25,7 @@ export default function RegisterForm() {
 
     try {
       const plan = searchParams.get('plan');
-      const paymentMethod = searchParams.get('payment') || 'mercadopago';
+      const paymentMethod = searchParams.get('payment') || 'stripe';
       const response = await registerApi({ username, email, password, plan: plan || undefined });
       setSuccess(true);
       
@@ -55,20 +55,20 @@ export default function RegisterForm() {
               // Ir directo al checkout
               window.location.href = paymentData.paymentUrl;
             } else {
-              // Si falla el checkout, ir a pricing para intentar nuevamente
+              // Si falla el checkout, ir al dashboard para que pueda intentar nuevamente
               console.error('Error creating payment link:', paymentData.error);
-              router.push(`/pricing?plan=${plan}&payment=${paymentMethod}`);
+              router.push('/dashboard?payment_error=true');
             }
           } catch (error) {
             console.error('Error creating payment link:', error);
-            // Si hay error, ir a pricing para intentar nuevamente
-            router.push(`/pricing?plan=${plan}&payment=${paymentMethod}`);
+            // Si hay error, ir al dashboard para que pueda intentar nuevamente
+            router.push('/dashboard?payment_error=true');
           }
         }, 1000);
       } else {
-        // Si no hay plan, ir al login normal
+        // Si no hay plan, ir a pricing para que elija uno
         setTimeout(() => {
-          router.push("/login");
+          router.push("/pricing");
         }, 1500);
       }
     } catch (err: any) {

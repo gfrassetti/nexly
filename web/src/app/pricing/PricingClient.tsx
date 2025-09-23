@@ -13,7 +13,7 @@ function PricingContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'mercadopago' | 'stripe'>('mercadopago');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'mercadopago' | 'stripe'>('stripe');
   const { createPaymentLink, loading } = usePaymentLink();
   const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
 
@@ -120,28 +120,14 @@ function PricingContent() {
         </div>
       </div>
 
-      {/* Payment Method Selector */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+      {/* Payment Method Selector - Hidden for now */}
+      {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold mb-4">Elige tu método de pago preferido</h2>
           <p className="text-neutral-400">Ambos métodos son seguros y confiables</p>
         </div>
         
         <div className="flex justify-center gap-4 max-w-md mx-auto">
-          {/* MercadoPago Option */}
-          <button
-            onClick={() => setSelectedPaymentMethod('mercadopago')}
-            className={`flex items-center gap-3 px-6 py-4 rounded-lg border-2 transition-all duration-300 ${
-              selectedPaymentMethod === 'mercadopago'
-                ? 'border-nexly-teal bg-nexly-teal/10'
-                : 'border-neutral-700 bg-neutral-800/30 hover:border-neutral-600'
-            }`}
-          >
-            <img src="/mp_logo.png" alt="Mercado Pago" className="h-6 w-auto" />
-            <span className="font-medium">MercadoPago</span>
-          </button>
-          
-          {/* Stripe Option */}
           <button
             onClick={() => setSelectedPaymentMethod('stripe')}
             className={`flex items-center gap-3 px-6 py-4 rounded-lg border-2 transition-all duration-300 ${
@@ -154,7 +140,7 @@ function PricingContent() {
             <span className="font-medium">Stripe</span>
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Pricing Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
@@ -214,11 +200,7 @@ function PricingContent() {
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
-                    {selectedPaymentMethod === 'stripe' ? (
-                      <img src="/strapi_logo.png" alt="Stripe" className="h-4 w-auto" />
-                    ) : (
-                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
-                    )}
+                    <img src="/strapi_logo.png" alt="Stripe" className="h-4 w-auto" />
                   </div>
                 </div>
               ) : (
@@ -240,11 +222,7 @@ function PricingContent() {
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
-                    {selectedPaymentMethod === 'stripe' ? (
-                      <img src="/strapi_logo.png" alt="Stripe" className="h-10 w-auto" />
-                    ) : (
-                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-10 w-auto" />
-                    )}
+                    <img src="/strapi_logo.png" alt="Stripe" className="h-10 w-auto" />
                   </div>
                 </div>
               )}
@@ -287,8 +265,7 @@ function PricingContent() {
                 </div>
                 <h3 className="font-semibold mb-2">Paga con seguridad</h3>
                 <p className="text-neutral-400 text-sm mb-2">Procesamiento seguro con</p>
-                <div className="flex justify-cente items-center gap-4">
-                  <img src="/mp_logo.png" alt="Mercado Pago" className="h-8 w-auto" />
+                <div className="flex justify-center items-center gap-4">
                   <img src="/strapi_logo.png" alt="Stripe" className="h-8 w-auto" />
                 </div>
               </div>
@@ -326,10 +303,6 @@ function PricingContent() {
                       Aceptamos todas las tarjetas de crédito y débito a través de:
                     </p>
                     <div className="flex justify-center gap-6">
-                      <div className="text-center">
-                        <img src="/mp_logo.png" alt="Mercado Pago" className="h-6 w-auto mx-auto mb-2" />
-                        <span className="text-sm text-neutral-400">MercadoPago</span>
-                      </div>
                       <div className="text-center">
                         <img src="/strapi_logo.png" alt="Stripe" className="h-6 w-auto mx-auto mb-2" />
                         <span className="text-sm text-neutral-400">Stripe</span>

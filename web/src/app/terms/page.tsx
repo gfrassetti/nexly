@@ -76,7 +76,7 @@ export default function TermsPage() {
 
                 <h3 className="text-xl font-medium mb-2 text-nexly-light-blue">4.3 Facturación</h3>
                 <ul className="list-disc list-inside space-y-2 text-neutral-300">
-                  <li>Los pagos se procesan a través de Mercado Pago Argentina</li>
+                  <li>Los pagos se procesan a través de Stripe</li>
                   <li>Las suscripciones se renuevan automáticamente</li>
                   <li>Los precios están expresados en Pesos Argentinos (ARS)</li>
                   <li>Puede cancelar su suscripción en cualquier momento</li>

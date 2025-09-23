@@ -35,6 +35,7 @@ export default function DashboardPage() {
     unreadConversations: 0,
   });
   const [showTrialNotification, setShowTrialNotification] = useState(false);
+  const [showPaymentError, setShowPaymentError] = useState(false);
 
   // Mostrar notificación si se inició el trial
   useEffect(() => {
@@ -43,6 +44,16 @@ export default function DashboardPage() {
       setShowTrialNotification(true);
       // Ocultar después de 5 segundos
       setTimeout(() => setShowTrialNotification(false), 5000);
+    }
+  }, [searchParams]);
+
+  // Mostrar notificación si hubo error en el pago
+  useEffect(() => {
+    const paymentError = searchParams.get('payment_error');
+    if (paymentError === 'true') {
+      setShowPaymentError(true);
+      // Ocultar después de 8 segundos
+      setTimeout(() => setShowPaymentError(false), 8000);
     }
   }, [searchParams]);
 
@@ -107,11 +118,27 @@ export default function DashboardPage() {
     <div className="h-full flex flex-col bg-neutral-900 text-white">
       {/* Header */}
       <div className="border-b border-neutral-700 bg-neutral-800 p-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-neutral-400 mt-1">
-            Resumen de tu actividad y métricas principales
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+            <p className="text-neutral-400 mt-1">
+              Resumen de tu actividad y métricas principales
+            </p>
+          </div>
+          
+          {/* Plan Indicator */}
+          {subscription?.subscription && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-neutral-400">Plan actual:</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                subscription.subscription.planType === 'premium' 
+                  ? 'bg-nexly-teal text-white' 
+                  : 'bg-neutral-600 text-neutral-200'
+              }`}>
+                {subscription.subscription.planType === 'basic' ? 'Plan Básico' : 'Plan Premium'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -129,6 +156,29 @@ export default function DashboardPage() {
               <h3 className="text-nexly-green font-semibold">¡Trial iniciado exitosamente!</h3>
               <p className="text-neutral-300 text-sm">Ya puedes usar todas las funciones durante 7 días gratis</p>
             </div>
+          </div>
+        )}
+
+        {/* Notificación de error de pago */}
+        {showPaymentError && (
+          <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 flex items-center space-x-3">
+            <div className="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-yellow-400 font-semibold">Error al procesar el pago</h3>
+              <p className="text-neutral-300 text-sm">No pudimos crear tu suscripción. Puedes intentar nuevamente desde el panel de suscripción.</p>
+            </div>
+            <button 
+              onClick={() => setShowPaymentError(false)}
+              className="text-yellow-400 hover:text-yellow-300"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
 
@@ -363,7 +413,8 @@ export default function DashboardPage() {
             </button>
             
             {/* Botón de pago - solo mostrar si está en estado pendiente de pago */}
-            {subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && (
+            {/* Hidden MercadoPago button for now */}
+            {/* {subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && (
               <button 
                 onClick={() => createPaymentLink()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
@@ -374,7 +425,7 @@ export default function DashboardPage() {
                   <p className="text-sm opacity-90">Activar tu prueba gratuita</p>
                 </div>
               </button>
-            )}
+            )} */}
           </div>
         </div>
       </div>

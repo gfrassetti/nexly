@@ -120,19 +120,6 @@ export default function SubscriptionStatus() {
           
           {/* Botones de método de pago */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            {/* Botón MercadoPago */}
-            <button
-              onClick={() => createPaymentLink()}
-              disabled={loading}
-              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
-            >
-              <img src="/mp_logo.png" alt="Mercado Pago" className="h-5 w-auto" />
-              <div className="text-left">
-                <p className="font-medium">Completar Pago</p>
-                <p className="text-xs opacity-90">Activar tu prueba gratuita</p>
-              </div>
-            </button>
-
             {/* Botón Stripe */}
             <button
               onClick={() => {

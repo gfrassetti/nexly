@@ -63,7 +63,7 @@ export default function TermsAndConditionsPage() {
               <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">4. Facturación y Pagos</h2>
               <div className="text-neutral-300 leading-relaxed mb-4">
                 <ul className="list-disc list-inside space-y-2">
-                  <li>Los pagos se procesan a través de Mercado Pago</li>
+                  <li>Los pagos se procesan a través de Stripe</li>
                   <li>Las suscripciones se renuevan automáticamente cada mes</li>
                   <li>Los precios están expresados en pesos argentinos (ARS)</li>
                   <li>No ofrecemos reembolsos por períodos parciales no utilizados</li>

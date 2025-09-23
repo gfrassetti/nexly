@@ -23,7 +23,7 @@ interface SubscriptionData {
     gracePeriodEndDate?: string;
     maxIntegrations: number;
     stripeSubscriptionId?: string;
-    mercadoPagoSubscriptionId?: string;
+    // mercadoPagoSubscriptionId?: string; // Hidden for now
   };
 }
 
@@ -43,6 +43,7 @@ interface SubscriptionContextType {
   pauseSubscription: () => Promise<void>;
   reactivateSubscription: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
+  updateAfterPayment: (newSubscriptionData: any) => void;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -187,7 +188,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       // Determinar si es suscripción de Stripe o MercadoPago
       const endpoint = subscription?.subscription?.stripeSubscriptionId 
         ? '/stripe/pause' 
-        : '/subscriptions/pause';
+        : '/stripe/pause'; // Force Stripe for now
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
@@ -200,7 +201,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       const data = await response.json();
 
       if (data.success) {
-        // Actualizar estado local inmediatamente
+        // Actualizar estado local inmediatamente para UX instantánea
         if (subscription?.subscription) {
           setSubscription({
             ...subscription,
@@ -213,8 +214,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             }
           });
         }
-        // También refrescar desde el servidor
-        await fetchSubscriptionStatus();
+        // Refrescar desde el servidor en background para sincronizar
+        fetchSubscriptionStatus().catch(console.error);
       } else {
         throw new Error(data.error || 'Error al pausar la suscripción');
       }
@@ -231,7 +232,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       // Determinar si es suscripción de Stripe o MercadoPago
       const endpoint = subscription?.subscription?.stripeSubscriptionId 
         ? '/stripe/reactivate' 
-        : '/subscriptions/reactivate';
+        : '/stripe/reactivate'; // Force Stripe for now
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
@@ -244,8 +245,25 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
+        // Abrir el pago en nueva ventana
         window.open(data.paymentUrl, '_blank');
-        await fetchSubscriptionStatus(); // Refrescar datos
+        
+        // Actualizar estado local para mostrar que está en proceso de reactivación
+        if (subscription?.subscription) {
+          setSubscription({
+            ...subscription,
+            subscription: {
+              ...subscription.subscription,
+              status: 'active',
+              isPaused: false,
+              isActive: true,
+              isCancelled: false,
+            }
+          });
+        }
+        
+        // Refrescar desde el servidor en background para sincronizar
+        fetchSubscriptionStatus().catch(console.error);
       } else {
         throw new Error(data.error || 'Error al reactivar la suscripción');
       }
@@ -262,7 +280,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       // Determinar si es suscripción de Stripe o MercadoPago
       const endpoint = subscription?.subscription?.stripeSubscriptionId 
         ? '/stripe/cancel' 
-        : '/subscriptions/cancel';
+        : '/stripe/cancel'; // Force Stripe for now
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
@@ -275,7 +293,22 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       const data = await response.json();
 
       if (data.success) {
-        await fetchSubscriptionStatus(); // Refrescar datos
+        // Actualizar estado local inmediatamente para UX instantánea
+        if (subscription?.subscription) {
+          setSubscription({
+            ...subscription,
+            subscription: {
+              ...subscription.subscription,
+              status: 'cancelled',
+              cancelledAt: new Date().toISOString(),
+              isCancelled: true,
+              isActive: false,
+              isPaused: false,
+            }
+          });
+        }
+        // Refrescar desde el servidor en background para sincronizar
+        fetchSubscriptionStatus().catch(console.error);
       } else {
         throw new Error(data.error || 'Error al cancelar la suscripción');
       }
@@ -283,6 +316,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       console.error('Error cancelling subscription:', error);
       throw error;
     }
+  };
+
+  // Función para actualizar el estado después de un pago exitoso
+  const updateAfterPayment = (newSubscriptionData: any) => {
+    setSubscription(newSubscriptionData);
+    setError(null);
   };
 
   const value: SubscriptionContextType = {
@@ -301,6 +340,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription,
+    updateAfterPayment,
   };
 
   return (

@@ -12,7 +12,7 @@ function SubscriptionSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token, user } = useAuth();
-  const { refetch } = useSubscription();
+  const { refetch, updateAfterPayment } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState("");
@@ -28,6 +28,8 @@ function SubscriptionSuccessContent() {
         // Refrescar el estado de la suscripción para obtener la información actualizada
         await refetch();
         
+        // El estado se actualiza automáticamente en el contexto
+        
         // Simular un pequeño delay para que el usuario vea el mensaje
         setTimeout(() => {
           setStatus('success');
@@ -35,7 +37,7 @@ function SubscriptionSuccessContent() {
           
           // Redirigir al dashboard después de 2 segundos
           setTimeout(() => {
-            router.push('/dashboard');
+            router.push('/dashboard?trial_started=true');
           }, 2000);
         }, 1000);
         
