@@ -92,12 +92,12 @@ export default function RegisterForm() {
       <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
         
         {success && (
-          <div className="p-3 bg-green-900/50 border border-green-700 text-green-300 rounded">
+          <div className="p-3 bg-nexly-green/20 border border-nexly-green/50 text-nexly-green rounded">
             ✅ ¡Cuenta creada exitosamente! Redirigiendo...
           </div>
         )}
         
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-nexly-light-blue">{error}</p>}
 
         <div>
           <input

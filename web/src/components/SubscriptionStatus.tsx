@@ -39,13 +39,13 @@ export default function SubscriptionStatus() {
     const isRateLimited = error.includes('Demasiados intentos') || error.includes('429');
     
     return (
-      <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
+      <div className="bg-nexly-light-blue/20 border border-nexly-light-blue/50 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-red-400 mb-2">Error al cargar suscripción</h3>
-            <p className="text-sm text-red-300">{error}</p>
+            <h3 className="text-lg font-semibold text-nexly-light-blue mb-2">Error al cargar suscripción</h3>
+            <p className="text-sm text-nexly-light-blue/80">{error}</p>
             {isRateLimited && (
-              <p className="text-xs text-red-400 mt-1">
+              <p className="text-xs text-nexly-light-blue/60 mt-1">
                 ⏰ El límite de intentos se resetea automáticamente en 15 minutos
               </p>
             )}
@@ -57,7 +57,7 @@ export default function SubscriptionStatus() {
               className={`px-4 py-2 rounded-lg transition-colors text-sm ${
                 isRateLimited 
                   ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                  : 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-white'
               }`}
             >
               Reintentar
@@ -165,7 +165,7 @@ export default function SubscriptionStatus() {
 
   return (
     <div className={`rounded-lg p-6 border ${
-      isExpired ? 'bg-red-900/20 border-red-700' :
+      isExpired ? 'bg-nexly-light-blue/20 border-nexly-light-blue/50' :
       sub.isPaused ? 'bg-orange-900/20 border-orange-700' :
       sub.isInGracePeriod ? 'bg-yellow-900/20 border-yellow-700' :
       isTrialExpiring ? 'bg-yellow-900/20 border-yellow-700' :
@@ -183,7 +183,7 @@ export default function SubscriptionStatus() {
               sub.status === 'trial' ? 'bg-blue-600 text-white' :
               sub.status === 'paused' ? 'bg-orange-600 text-white' :
               sub.status === 'grace_period' ? 'bg-yellow-600 text-white' :
-              sub.status === 'cancelled' ? 'bg-red-600 text-white' :
+              sub.status === 'cancelled' ? 'bg-nexly-light-blue text-white' :
               'bg-gray-600 text-white'
             }`}>
               {
@@ -232,7 +232,7 @@ export default function SubscriptionStatus() {
           )}
 
           {isExpired && (
-            <p className="text-sm text-red-400">
+            <p className="text-sm text-nexly-light-blue">
               ❌ Suscripción expirada. Actualiza para continuar
             </p>
           )}
@@ -284,7 +284,7 @@ export default function SubscriptionStatus() {
           {(isActive() || isPaused()) && (
             <button
               onClick={cancelSubscription}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              className="bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-white px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cancelar
             </button>
