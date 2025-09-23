@@ -220,6 +220,32 @@ class StripeService {
   }
 
   /**
+   * Obtener información de un customer
+   */
+  async getCustomer(customerId: string) {
+    try {
+      const customer = await this.stripe.customers.retrieve(customerId);
+      return customer;
+    } catch (error: any) {
+      console.error('Error getting Stripe customer:', error);
+      throw new CustomError('Error al obtener el customer', 500);
+    }
+  }
+
+  /**
+   * Obtener información de un método de pago
+   */
+  async getPaymentMethod(paymentMethodId: string) {
+    try {
+      const paymentMethod = await this.stripe.paymentMethods.retrieve(paymentMethodId);
+      return paymentMethod;
+    } catch (error: any) {
+      console.error('Error getting Stripe payment method:', error);
+      throw new CustomError('Error al obtener el método de pago', 500);
+    }
+  }
+
+  /**
    * Cancelar una suscripción
    */
   async cancelSubscription(subscriptionId: string) {

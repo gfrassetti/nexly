@@ -87,7 +87,7 @@ export default function AIAssistant({
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'sales': return '💰';
-      case 'support': return '🛠️';
+      case 'support': return '💬';
       case 'complaint': return '⚠️';
       default: return '💬';
     }

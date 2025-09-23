@@ -61,7 +61,7 @@ export default function PrivacyPolicyPage() {
                 <li>Gestionar integraciones con plataformas de mensajería</li>
                 <li>Procesar y entregar mensajes en su nombre</li>
                 <li>Mejorar nuestros servicios y desarrollar nuevas funcionalidades</li>
-                <li>Comunicarnos con usted sobre actualizaciones y soporte técnico</li>
+                <li>Comunicarnos con usted sobre actualizaciones del servicio</li>
                 <li>Cumplir con obligaciones legales y regulatorias</li>
               </ul>
             </section>
@@ -73,7 +73,7 @@ export default function PrivacyPolicyPage() {
               </p>
               <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
                 <li><strong>Plataformas de Mensajería:</strong> Compartimos tokens de acceso con WhatsApp, Instagram, Facebook Messenger y otras plataformas integradas para facilitar el envío de mensajes</li>
-                <li><strong>Proveedores de Servicios:</strong> Utilizamos servicios de terceros para hosting, análisis y soporte técnico</li>
+                <li><strong>Proveedores de Servicios:</strong> Utilizamos servicios de terceros para hosting y análisis</li>
                 <li><strong>Requisitos Legales:</strong> Cuando sea requerido por ley o para proteger nuestros derechos</li>
               </ul>
             </section>

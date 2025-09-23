@@ -11,6 +11,97 @@ import { stripeWebhookVerification } from '../middleware/verifyStripeSignature';
 const router = express.Router();
 
 /**
+ * Obtener información completa de la suscripción desde Stripe
+ */
+router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    // Buscar la suscripción del usuario en nuestra base de datos
+    const subscription = await Subscription.findOne({ userId });
+
+    if (!subscription) {
+      return res.status(404).json({ subscription: null });
+    }
+
+    // Si no tiene stripeSubscriptionId, devolver datos básicos
+    if (!subscription.stripeSubscriptionId) {
+      return res.json({
+        subscription: {
+          id: subscription._id,
+          status: subscription.status,
+          planType: subscription.planType,
+          trialEndDate: subscription.trialEndDate,
+          currentPeriodEnd: subscription.currentPeriodEnd,
+          amount: subscription.planType === 'basic' ? 2999 : 4999, // en centavos
+          currency: 'usd'
+        },
+        customer: null
+      });
+    }
+
+    // Obtener información completa desde Stripe
+    const stripeSubscription = await stripeService.getSubscription(subscription.stripeSubscriptionId);
+    
+    // Obtener información del customer
+    let customer = null;
+    if (stripeSubscription.customer) {
+      customer = await stripeService.getCustomer(stripeSubscription.customer);
+    }
+
+    // Obtener información del método de pago por defecto
+    let paymentMethod = null;
+    if (customer?.invoice_settings?.default_payment_method) {
+      paymentMethod = await stripeService.getPaymentMethod(
+        customer.invoice_settings.default_payment_method
+      );
+    }
+
+    // Formatear respuesta
+    const response = {
+      subscription: {
+        id: subscription._id,
+        stripeSubscriptionId: stripeSubscription.id,
+        status: stripeSubscription.status,
+        planType: subscription.planType,
+        trialEndDate: subscription.trialEndDate,
+        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+        amount: stripeSubscription.items?.data?.[0]?.price?.unit_amount || 0,
+        currency: stripeSubscription.currency || 'usd',
+        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+        canceledAt: stripeSubscription.canceled_at ? new Date(stripeSubscription.canceled_at * 1000).toISOString() : null,
+        pauseCollection: stripeSubscription.pause_collection
+      },
+      customer: customer ? {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name
+      } : null,
+      paymentMethod: paymentMethod ? {
+        id: paymentMethod.id,
+        type: paymentMethod.type,
+        card: paymentMethod.card ? {
+          brand: paymentMethod.card.brand,
+          last4: paymentMethod.card.last4,
+          exp_month: paymentMethod.card.exp_month,
+          exp_year: paymentMethod.card.exp_year
+        } : null
+      } : null
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Error getting subscription info:', error);
+    res.status(500).json({ error: 'Error al obtener información de la suscripción' });
+  }
+}));
+
+/**
  * Crear enlace de pago para activar suscripción con Stripe
  */
 router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHandler(async (req: any, res: any) => {

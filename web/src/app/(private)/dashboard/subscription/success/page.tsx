@@ -44,7 +44,7 @@ function SubscriptionSuccessContent() {
       } catch (error) {
         console.error('Error processing payment:', error);
         setStatus('error');
-        setMessage('Hubo un error al procesar tu pago. Por favor, contacta soporte.');
+        setMessage('Hubo un error al procesar tu pago. Por favor, intenta de nuevo.');
         
         setTimeout(() => {
           router.push('/dashboard');
@@ -112,7 +112,7 @@ function SubscriptionSuccessContent() {
             <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 mb-6">
               <h3 className="text-red-400 font-semibold mb-2">¿Necesitas ayuda?</h3>
               <p className="text-red-300 text-sm">
-                Contacta a nuestro equipo de soporte para resolver el problema
+                Verifica tu método de pago e intenta nuevamente
               </p>
             </div>
             <p className="text-neutral-400 text-sm">
