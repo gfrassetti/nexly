@@ -255,48 +255,17 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       return res.status(400).json({ error: 'Ya tienes una suscripción activa' });
     }
 
-    // Verificar si ya existe una suscripción pendiente (trial)
-    const existingPending = await Subscription.findOne({
-      userId,
-      status: 'trial'
-    });
-
+    // Para evitar errores 106 y 145, siempre crear una nueva suscripción en MercadoPago
+    // Esto imita el comportamiento exitoso del flujo desde pricing
+    console.log('🔄 Creando nueva suscripción en MercadoPago (evitando errores 106/145)');
+    
+    const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
     let mercadoPagoSubscription;
-
-    if (existingPending && existingPending.mercadoPagoSubscriptionId) {
-      // Si ya existe una suscripción pendiente, intentar obtener el enlace de pago existente
-      console.log('🔄 Reutilizando suscripción existente:', existingPending.mercadoPagoSubscriptionId);
-      
-      try {
-        const mpSubscription = await mercadoPagoService.getSubscription(existingPending.mercadoPagoSubscriptionId);
-        mercadoPagoSubscription = {
-          id: mpSubscription.id,
-          init_point: mpSubscription.init_point || `${process.env.FRONTEND_URL}/dashboard/subscription/success?existing=true`
-        };
-      } catch (error) {
-        console.log('⚠️ No se pudo obtener suscripción existente, creando nueva...');
-        // Si no se puede obtener la existente, crear una nueva
-        const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
-        
-        if (finalPlanType === 'basic') {
-          mercadoPagoSubscription = await mercadoPagoService.createBasicPlan(user.email, backUrl);
-        } else {
-          mercadoPagoSubscription = await mercadoPagoService.createPremiumPlan(user.email, backUrl);
-        }
-        
-        // Actualizar la suscripción existente con el nuevo ID
-        existingPending.mercadoPagoSubscriptionId = mercadoPagoSubscription.id;
-        await existingPending.save();
-      }
+    
+    if (finalPlanType === 'basic') {
+      mercadoPagoSubscription = await mercadoPagoService.createBasicPlan(user.email, backUrl);
     } else {
-      // Crear nueva suscripción en Mercado Pago
-      const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
-      
-      if (finalPlanType === 'basic') {
-        mercadoPagoSubscription = await mercadoPagoService.createBasicPlan(user.email, backUrl);
-      } else {
-        mercadoPagoSubscription = await mercadoPagoService.createPremiumPlan(user.email, backUrl);
-      }
+      mercadoPagoSubscription = await mercadoPagoService.createPremiumPlan(user.email, backUrl);
     }
 
     // Verificar que MercadoPago creó la suscripción exitosamente
@@ -304,10 +273,21 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       throw new CustomError('Error al crear la suscripción en MercadoPago', 500);
     }
 
-    // Solo crear nueva suscripción en la base de datos si no existe una pendiente
+    // Verificar si ya existe una suscripción pendiente
+    const existingPending = await Subscription.findOne({
+      userId,
+      status: 'trial'
+    });
+
     let savedSubscription;
     
-    if (!existingPending) {
+    if (existingPending) {
+      // Actualizar la suscripción existente con el nuevo ID de MercadoPago
+      existingPending.mercadoPagoSubscriptionId = mercadoPagoSubscription.id;
+      await existingPending.save();
+      savedSubscription = existingPending;
+    } else {
+      // Crear nueva suscripción en la base de datos
       const startDate = new Date();
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
@@ -319,19 +299,11 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
         startDate,
         trialEndDate,
         autoRenew: false,
-        mercadoPagoSubscriptionId: mercadoPagoSubscription.id, // Guardar el ID de MercadoPago
+        mercadoPagoSubscriptionId: mercadoPagoSubscription.id,
       });
 
       await subscription.save();
-
-      // Verificar que se guardó correctamente
-      savedSubscription = await Subscription.findById(subscription._id);
-      if (!savedSubscription) {
-        throw new CustomError('Error al guardar la suscripción en la base de datos', 500);
-      }
-    } else {
-      // Usar la suscripción existente
-      savedSubscription = existingPending;
+      savedSubscription = subscription;
     }
 
     res.json({
