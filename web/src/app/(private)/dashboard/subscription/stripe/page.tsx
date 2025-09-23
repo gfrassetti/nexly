@@ -232,7 +232,7 @@ export default function SubscriptionInfo() {
   // Usar datos reales de Stripe si están disponibles
   const card = stripePaymentMethod?.card || { brand: "visa", last4: "4242" };
   const normalized = normalizeMethod(card?.brand);
-  const isPaused = stripeSub?.pauseCollection || sub.status === "paused";
+  const isPaused = stripeSub?.pauseCollection || sub?.status === "paused";
   
   // Formatear fecha de renovación
   const renewalDate = stripeSub?.currentPeriodEnd 
@@ -241,7 +241,7 @@ export default function SubscriptionInfo() {
         month: '2-digit', 
         day: '2-digit' 
       })
-    : sub.trialEndDate 
+    : sub?.trialEndDate 
     ? new Date(sub.trialEndDate).toLocaleDateString('es-ES', { 
         year: 'numeric', 
         month: '2-digit', 
@@ -252,10 +252,10 @@ export default function SubscriptionInfo() {
   // Formatear monto
   const amount = stripeSub?.amount 
     ? (stripeSub.amount / 100).toFixed(2)
-    : sub.status === "trialing" ? "0.00" : sub.planType === "basic" ? "29.99" : "49.99";
+    : sub?.status === "trialing" ? "0.00" : sub?.planType === "basic" ? "29.99" : "49.99";
   
   // Usar estado real de Stripe
-  const actualStatus = stripeSub?.status || sub.status;
+  const actualStatus = stripeSub?.status || sub?.status;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
@@ -300,7 +300,7 @@ export default function SubscriptionInfo() {
                   <div>
                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Plan</label>
                     <p className="text-lg font-semibold text-gray-900 mt-1 capitalize">
-                      {sub.planType === "basic" ? "Básico" : "Premium"}
+                      {sub?.planType === "basic" ? "Básico" : "Premium"}
                     </p>
                   </div>
                 </div>
