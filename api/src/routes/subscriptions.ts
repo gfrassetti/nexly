@@ -234,12 +234,10 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // Verificar que el usuario esté en estado pendiente de pago
+    // Si el usuario no está en estado correcto, resetear a pendiente de pago
     if (user.subscription_status !== 'trial_pending_payment_method') {
-      return res.status(400).json({ 
-        error: 'El usuario no está en estado pendiente de pago',
-        currentStatus: user.subscription_status
-      });
+      user.subscription_status = 'trial_pending_payment_method';
+      await user.save();
     }
 
     // Usar el plan del usuario si no se proporciona uno en el body

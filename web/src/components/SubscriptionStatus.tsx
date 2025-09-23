@@ -41,12 +41,21 @@ export default function SubscriptionStatus() {
             <h3 className="text-lg font-semibold text-red-400 mb-2">Error al cargar suscripción</h3>
             <p className="text-sm text-red-300">{error}</p>
           </div>
-          <button
-            onClick={refetch}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
-          >
-            Reintentar
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={refetch}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              Reintentar
+            </button>
+            <button
+              onClick={createPaymentLink}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              disabled={loading}
+            >
+              {loading ? 'Procesando...' : 'Completar Pago'}
+            </button>
+          </div>
         </div>
       </div>
     );
