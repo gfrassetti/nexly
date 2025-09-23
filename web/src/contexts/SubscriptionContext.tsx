@@ -72,6 +72,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       });
 
       if (!response.ok) {
+        // Si es error 429, mostrar mensaje específico
+        if (response.status === 429) {
+          throw new Error('Demasiados intentos. Intenta nuevamente en 15 minutos.');
+        }
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
@@ -89,6 +93,17 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   useEffect(() => {
     fetchSubscriptionStatus();
   }, [token]);
+
+  // Auto-refresh cada 30 segundos si hay error para intentar recuperarse
+  useEffect(() => {
+    if (error && token) {
+      const interval = setInterval(() => {
+        fetchSubscriptionStatus();
+      }, 30000); // 30 segundos
+
+      return () => clearInterval(interval);
+    }
+  }, [error, token]);
 
   const canUseFeature = (feature: string): boolean => {
     // Si está pendiente de método de pago, no puede usar features

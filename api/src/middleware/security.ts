@@ -7,13 +7,27 @@ import { CustomError } from '../utils/errorHandler';
 // Rate limiting para pagos
 export const paymentRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 intentos por IP
+  max: 10, // máximo 10 intentos por IP (aumentado de 5)
   message: {
     success: false,
     error: 'Demasiados intentos de pago. Intenta nuevamente en 15 minutos.'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Agregar clave personalizada por usuario si está autenticado
+  keyGenerator: (req: any) => {
+    // Si el usuario está autenticado, usar su ID para el rate limiting
+    if (req.user?.id) {
+      return `payment_limit_${req.user.id}`;
+    }
+    // Si no está autenticado, usar IP
+    return req.ip || req.connection.remoteAddress;
+  },
+  // Permitir más intentos si es el mismo usuario
+  skip: (req: any) => {
+    // En desarrollo, permitir más intentos
+    return process.env.NODE_ENV === 'development';
+  }
 });
 
 // Rate limiting general

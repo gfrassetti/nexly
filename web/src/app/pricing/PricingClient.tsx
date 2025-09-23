@@ -61,13 +61,22 @@ function PricingContent() {
 
   const handleStartTrial = async (planType: 'basic' | 'premium') => {
     if (!token) {
-      // Para usuarios no autenticados, redirigir al registro
+      // Para usuarios no autenticados, redirigir al registro con el plan
+      // El plan se guardará en el registro y después del registro irá directo al checkout
       window.location.href = `/register?plan=${planType}`;
       return;
     }
 
-    // Para usuarios autenticados, crear DIRECTAMENTE la suscripción
-    await createPaymentLink(planType);
+    // Para usuarios autenticados que ya tienen cuenta, crear DIRECTAMENTE la suscripción
+    try {
+      const success = await createPaymentLink(planType);
+      if (!success) {
+        // Si falla, mostrar mensaje más específico
+        console.error('Failed to create payment link');
+      }
+    } catch (error) {
+      console.error('Error in handleStartTrial:', error);
+    }
   };
 
   return (

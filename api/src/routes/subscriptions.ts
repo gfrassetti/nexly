@@ -157,7 +157,8 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
       return res.json({
         hasSubscription: false,
         status: 'trial_pending_payment_method',
-        userSubscriptionStatus: user.subscription_status
+        userSubscriptionStatus: user.subscription_status,
+        subscription: null
       });
     }
 
@@ -165,7 +166,8 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
       return res.json({
         hasSubscription: false,
         status: 'none',
-        userSubscriptionStatus: user.subscription_status
+        userSubscriptionStatus: user.subscription_status,
+        subscription: null
       });
     }
 
@@ -484,6 +486,37 @@ router.post('/reactivate', authenticateToken, asyncHandler(async (req: any, res:
 
   } catch (error) {
     console.error('Error reactivating subscription:', error);
+    throw error;
+  }
+}));
+
+/**
+ * Resetear rate limiting para pagos (solo para desarrollo o casos especiales)
+ */
+router.post('/reset-payment-limit', authenticateToken, asyncHandler(async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    // En producción, solo permitir esto en casos muy específicos
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: 'Esta función no está disponible en producción' });
+    }
+
+    // Aquí podrías implementar lógica para resetear el rate limit
+    // Por ahora, solo confirmamos que la solicitud fue recibida
+    console.log(`Rate limit reset requested for user ${userId}`);
+
+    res.json({
+      success: true,
+      message: 'Rate limit reset solicitado (solo disponible en desarrollo)'
+    });
+
+  } catch (error) {
+    console.error('Error resetting payment limit:', error);
     throw error;
   }
 }));

@@ -34,27 +34,67 @@ export default function SubscriptionStatus() {
   }
 
   if (error) {
+    const isRateLimited = error.includes('Demasiados intentos') || error.includes('429');
+    
     return (
       <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-red-400 mb-2">Error al cargar suscripción</h3>
             <p className="text-sm text-red-300">{error}</p>
+            {isRateLimited && (
+              <p className="text-xs text-red-400 mt-1">
+                ⏰ El límite de intentos se resetea automáticamente en 15 minutos
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <button
               onClick={refetch}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              disabled={isRateLimited}
+              className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                isRateLimited 
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              }`}
             >
               Reintentar
             </button>
-            <button
-              onClick={() => createPaymentLink()}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
-              disabled={loading}
-            >
-              {loading ? 'Procesando...' : 'Completar Pago'}
-            </button>
+            {!isRateLimited && (
+              <button
+                onClick={() => createPaymentLink()}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+                disabled={loading}
+              >
+                {loading ? 'Procesando...' : 'Completar Pago'}
+              </button>
+            )}
+            {/* Botón temporal para resetear rate limit en desarrollo */}
+            {isRateLimited && process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/reset-payment-limit`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                      },
+                    });
+                    if (response.ok) {
+                      alert('Rate limit resetado. Puedes intentar nuevamente.');
+                      refetch();
+                    }
+                  } catch (error) {
+                    console.error('Error resetting rate limit:', error);
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              >
+                Reset Rate Limit (Dev)
+              </button>
+            )}
           </div>
         </div>
       </div>

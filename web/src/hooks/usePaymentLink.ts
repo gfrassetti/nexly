@@ -46,18 +46,28 @@ export function usePaymentLink() {
         window.location.href = data.paymentUrl;
         return true;
       } else {
-        // Si hay error, intentar recargar la página para actualizar el estado
+        // Manejar errores específicos
         console.error('Error creating payment link:', data.error);
-        alert(data.error || 'Error al crear el enlace de pago. Recargando...');
-        // Recargar la página para actualizar el estado
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        
+        // Si es error 429, mostrar mensaje específico
+        if (response.status === 429) {
+          alert('Demasiados intentos de pago. Intenta nuevamente en 15 minutos.');
+          return false;
+        }
+        
+        // Para otros errores, mostrar el mensaje específico
+        alert(data.error || 'Error al crear el enlace de pago');
         return false;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating payment link:', error);
-      alert('Error al crear el enlace de pago');
+      
+      // Si es un error de red o timeout
+      if (error.name === 'TypeError' || error.message.includes('fetch')) {
+        alert('Error de conexión. Verifica tu internet e intenta nuevamente.');
+      } else {
+        alert('Error inesperado al crear el enlace de pago');
+      }
       return false;
     } finally {
       setLoading(false);
