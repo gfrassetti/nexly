@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
+import { usePaymentLink } from "@/hooks/usePaymentLink";
 import Accordion from "@/components/Accordion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,6 +12,7 @@ function PricingContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
+  const { createPaymentLink, loading } = usePaymentLink();
 
   // Detectar plan desde query parameters
   useEffect(() => {
@@ -64,9 +66,8 @@ function PricingContent() {
       return;
     }
 
-
-    // Para usuarios autenticados, ir directo a checkout
-    window.location.href = `/checkout?plan=${planType}`;
+    // Para usuarios autenticados, crear DIRECTAMENTE la suscripción
+    await createPaymentLink(planType);
   };
 
   return (
@@ -162,13 +163,14 @@ function PricingContent() {
                 <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
+                    disabled={loading}
                     className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
                       plan.popular
                         ? 'bg-nexly-teal hover:bg-nexly-green text-white'
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
-                    }`}
+                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Comenzar Prueba Gratis
+                    {loading ? 'Procesando...' : 'Comenzar Prueba Gratis'}
                   </button>
                   <p className="text-center text-xs text-neutral-400">
                     7 días gratis • Tarjeta requerida

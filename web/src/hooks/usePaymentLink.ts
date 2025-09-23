@@ -6,7 +6,7 @@ export function usePaymentLink() {
   const [loading, setLoading] = useState(false);
   const { subscription } = useSubscription();
 
-  const createPaymentLink = async (): Promise<boolean> => {
+  const createPaymentLink = async (planType?: 'basic' | 'premium'): Promise<boolean> => {
     setLoading(true);
 
     try {
@@ -17,8 +17,8 @@ export function usePaymentLink() {
         return false;
       }
 
-      // El planType se puede obtener de la suscripción si existe, o el backend usará el plan del usuario
-      const planType = subscription?.subscription?.planType;
+      // Usar el planType pasado como parámetro, o de la suscripción, o el backend usará el plan del usuario
+      const finalPlanType = planType || subscription?.subscription?.planType;
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
         method: 'POST',
@@ -27,7 +27,7 @@ export function usePaymentLink() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          ...(planType && { planType })
+          ...(finalPlanType && { planType: finalPlanType })
         }),
       });
 
