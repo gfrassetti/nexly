@@ -56,8 +56,8 @@ const texts: Record<Language, Record<string, string>> = {
     'whatsapp.demo.step3.desc': 'Interface for composing and sending WhatsApp messages',
     'whatsapp.demo.step4': 'Message Sending',
     'whatsapp.demo.step4.desc': 'Real-time message sending to WhatsApp Business API',
-    'whatsapp.demo.step5': 'Delivery Confirmation',
-    'whatsapp.demo.step5.desc': 'Confirmation that message was delivered to WhatsApp',
+    'whatsapp.demo.step5': 'Message Reception & Response',
+    'whatsapp.demo.step5.desc': 'Receive and respond to messages from customers via Nexly',
     
     // OAuth Flow
     'oauth.simulated': 'Meta OAuth Flow (Simulated)',
@@ -117,6 +117,35 @@ const texts: Record<Language, Record<string, string>> = {
     // Subscription
     'subscription.required': 'Demo requires active subscription. This simulates the real app behavior.',
     
+    // Home Page
+    'home.title': 'Nexly - Business Communication Platform',
+    'home.subtitle': 'Connect with your customers through WhatsApp, Instagram and Messenger',
+    'home.getStarted': 'Get Started',
+    'home.tryFree': 'Try Free',
+    'home.login': 'Login',
+    'home.register': 'Register',
+    
+    // Pricing Page
+    'pricing.title': 'Choose Your Plan',
+    'pricing.subtitle': 'Start with a free trial, no credit card required',
+    'pricing.basic': 'Basic',
+    'pricing.premium': 'Premium',
+    'pricing.startTrial': 'Start Free Trial',
+    'pricing.features': 'Features',
+    'pricing.integrations': 'Integrations',
+    'pricing.messages': 'Messages',
+    'pricing.support': 'Support',
+    
+    // Contact Page
+    'contact.title': 'Contact Us',
+    'contact.subtitle': 'Get in touch with our team',
+    'contact.name': 'Name',
+    'contact.email': 'Email',
+    'contact.company': 'Company',
+    'contact.message': 'Message',
+    'contact.send': 'Send Message',
+    'contact.required': 'Required fields',
+    
     // Common
     'continue': 'Continue',
     'back': 'Back',
@@ -170,8 +199,8 @@ const texts: Record<Language, Record<string, string>> = {
     'whatsapp.demo.step3.desc': 'Interfaz para componer y enviar mensajes de WhatsApp',
     'whatsapp.demo.step4': 'Envío de Mensajes',
     'whatsapp.demo.step4.desc': 'Envío de mensajes en tiempo real a WhatsApp Business API',
-    'whatsapp.demo.step5': 'Confirmación de Entrega',
-    'whatsapp.demo.step5.desc': 'Confirmación de que el mensaje fue entregado a WhatsApp',
+    'whatsapp.demo.step5': 'Recepción y Respuesta de Mensajes',
+    'whatsapp.demo.step5.desc': 'Recibir y responder mensajes de clientes a través de Nexly',
     
     // OAuth Flow
     'oauth.simulated': 'Flujo OAuth de Meta (Simulado)',
@@ -230,6 +259,35 @@ const texts: Record<Language, Record<string, string>> = {
     
     // Subscription
     'subscription.required': 'El demo requiere una suscripción activa. Esto simula el comportamiento real de la app.',
+    
+    // Home Page
+    'home.title': 'Nexly - Plataforma de Comunicación Empresarial',
+    'home.subtitle': 'Conecta con tus clientes a través de WhatsApp, Instagram y Messenger',
+    'home.getStarted': 'Comenzar',
+    'home.tryFree': 'Probar Gratis',
+    'home.login': 'Iniciar Sesión',
+    'home.register': 'Registrarse',
+    
+    // Pricing Page
+    'pricing.title': 'Elige Tu Plan',
+    'pricing.subtitle': 'Comienza con una prueba gratuita, sin tarjeta de crédito',
+    'pricing.basic': 'Básico',
+    'pricing.premium': 'Premium',
+    'pricing.startTrial': 'Comenzar Prueba Gratis',
+    'pricing.features': 'Características',
+    'pricing.integrations': 'Integraciones',
+    'pricing.messages': 'Mensajes',
+    'pricing.support': 'Soporte',
+    
+    // Contact Page
+    'contact.title': 'Contáctanos',
+    'contact.subtitle': 'Ponte en contacto con nuestro equipo',
+    'contact.name': 'Nombre',
+    'contact.email': 'Email',
+    'contact.company': 'Empresa',
+    'contact.message': 'Mensaje',
+    'contact.send': 'Enviar Mensaje',
+    'contact.required': 'Campos obligatorios',
     
     // Common
     'continue': 'Continuar',

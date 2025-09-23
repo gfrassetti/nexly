@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -13,7 +13,8 @@ export default function WhatsAppDemo() {
   const { subscription } = useSubscription();
   const { t, language, setLanguage } = useLanguage();
 
-  const demoSteps = [
+  // Usar useMemo para recalcular cuando cambie el idioma
+  const demoSteps = useMemo(() => [
     {
       title: t('whatsapp.demo.step1'),
       description: t('whatsapp.demo.step1.desc'),
@@ -39,7 +40,7 @@ export default function WhatsAppDemo() {
       description: t('whatsapp.demo.step5.desc'),
       action: () => setDemoStep(5)
     }
-  ];
+  ], [t]);
 
   const simulateSend = async () => {
     setIsSending(true);
@@ -283,33 +284,53 @@ export default function WhatsAppDemo() {
         {demoStep === 5 && (
           <div className="space-y-4">
             <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
-              <h5 className="text-blue-300 font-medium mb-2">📱 Message Received in WhatsApp</h5>
+              <h5 className="text-blue-300 font-medium mb-2">📱 Message Reception & Response</h5>
               <p className="text-blue-200 text-sm mb-4">
-                The message appears in WhatsApp Web/Mobile, confirming successful delivery.
+                Receive and respond to messages from customers via Nexly platform.
               </p>
             </div>
 
+            {/* Incoming Message */}
             <div className="bg-neutral-800 rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold">N</span>
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">C</span>
                 </div>
                 <div>
-                  <div className="text-white font-medium">Nexly Business</div>
-                  <div className="text-neutral-400 text-sm">WhatsApp Business</div>
+                  <div className="text-white font-medium">Customer</div>
+                  <div className="text-neutral-400 text-sm">WhatsApp</div>
                 </div>
               </div>
-              <div className="bg-green-700 rounded-lg p-3 ml-13">
-                <p className="text-white">{message}</p>
-                <p className="text-green-200 text-xs mt-1">{new Date().toLocaleTimeString()}</p>
+              <div className="bg-blue-700 rounded-lg p-3 ml-13">
+                <p className="text-white">Hello! I need help with my order #12345</p>
+                <p className="text-blue-200 text-xs mt-1">{new Date().toLocaleTimeString()}</p>
+              </div>
+            </div>
+
+            {/* Response Interface */}
+            <div className="bg-neutral-800 rounded-lg p-4">
+              <h6 className="text-white font-medium mb-3">📝 Nexly Response Interface</h6>
+              <div className="bg-neutral-700 rounded-lg p-3 mb-3">
+                <p className="text-neutral-300 text-sm mb-2">Customer: Customer</p>
+                <p className="text-neutral-300 text-sm mb-2">Platform: WhatsApp</p>
+                <p className="text-neutral-300 text-sm mb-2">Message: "Hello! I need help with my order #12345"</p>
+                <p className="text-green-400 text-sm">Status: Ready to respond</p>
+              </div>
+              
+              <div className="bg-neutral-700 rounded-lg p-3">
+                <p className="text-neutral-300 text-sm mb-2">Response:</p>
+                <p className="text-white">Hi! I'll help you with order #12345. Let me check the status...</p>
+                <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm mt-2">
+                  Send Response
+                </button>
               </div>
             </div>
 
             <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
-              <h6 className="text-green-300 font-medium mb-2">✅ Demo Complete</h6>
+              <h6 className="text-green-300 font-medium mb-2">✅ Complete Integration Flow</h6>
               <p className="text-green-200 text-sm">
-                This demonstrates the complete WhatsApp Business integration flow.
-                Once Meta approves our app, all API calls will be real and functional.
+                This demonstrates the complete WhatsApp Business integration: send messages, receive customer messages, and respond through Nexly platform.
+                Once Meta approves our app, all functionality will be operational.
               </p>
             </div>
 
