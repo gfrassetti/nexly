@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
+import { useStripePayment } from "@/hooks/useStripePayment";
 import Accordion from "@/components/Accordion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -12,7 +13,9 @@ function PricingContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'mercadopago' | 'stripe'>('mercadopago');
   const { createPaymentLink, loading } = usePaymentLink();
+  const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
 
   // Detectar plan desde query parameters
   useEffect(() => {
@@ -63,13 +66,20 @@ function PricingContent() {
     if (!token) {
       // Para usuarios no autenticados, redirigir al registro con el plan
       // El plan se guardará en el registro y después del registro irá directo al checkout
-      window.location.href = `/register?plan=${planType}`;
+      window.location.href = `/register?plan=${planType}&payment=${selectedPaymentMethod}`;
       return;
     }
 
     // Para usuarios autenticados que ya tienen cuenta, crear DIRECTAMENTE la suscripción
     try {
-      const success = await createPaymentLink(planType);
+      let success = false;
+      
+      if (selectedPaymentMethod === 'stripe') {
+        success = await createStripePaymentLink(planType);
+      } else {
+        success = await createPaymentLink(planType);
+      }
+      
       if (!success) {
         // Si falla, mostrar mensaje más específico
         console.error('Failed to create payment link');
@@ -107,6 +117,42 @@ function PricingContent() {
               Acceso completo a todas las funciones durante tu período de prueba
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Payment Method Selector */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold mb-4">Elige tu método de pago preferido</h2>
+          <p className="text-neutral-400">Ambos métodos son seguros y confiables</p>
+        </div>
+        
+        <div className="flex justify-center gap-4 max-w-md mx-auto">
+          {/* MercadoPago Option */}
+          <button
+            onClick={() => setSelectedPaymentMethod('mercadopago')}
+            className={`flex items-center gap-3 px-6 py-4 rounded-lg border-2 transition-all duration-300 ${
+              selectedPaymentMethod === 'mercadopago'
+                ? 'border-nexly-teal bg-nexly-teal/10'
+                : 'border-neutral-700 bg-neutral-800/30 hover:border-neutral-600'
+            }`}
+          >
+            <img src="/mp_logo.png" alt="Mercado Pago" className="h-6 w-auto" />
+            <span className="font-medium">MercadoPago</span>
+          </button>
+          
+          {/* Stripe Option */}
+          <button
+            onClick={() => setSelectedPaymentMethod('stripe')}
+            className={`flex items-center gap-3 px-6 py-4 rounded-lg border-2 transition-all duration-300 ${
+              selectedPaymentMethod === 'stripe'
+                ? 'border-nexly-teal bg-nexly-teal/10'
+                : 'border-neutral-700 bg-neutral-800/30 hover:border-neutral-600'
+            }`}
+          >
+            <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-6 w-auto" />
+            <span className="font-medium">Stripe</span>
+          </button>
         </div>
       </div>
 
@@ -154,7 +200,7 @@ function PricingContent() {
                 // Usuario no autenticado - Botón de registro
                 <div className="space-y-3 mt-auto">
                   <button
-                    onClick={() => window.location.href = `/register?plan=${plan.id}`}
+                    onClick={() => window.location.href = `/register?plan=${plan.id}&payment=${selectedPaymentMethod}`}
                     className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
                       plan.popular
                         ? 'bg-nexly-teal hover:bg-nexly-green text-white'
@@ -168,7 +214,11 @@ function PricingContent() {
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
-                    <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
+                    {selectedPaymentMethod === 'stripe' ? (
+                      <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-4 w-auto" />
+                    ) : (
+                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
+                    )}
                   </div>
                 </div>
               ) : (
@@ -176,21 +226,25 @@ function PricingContent() {
                 <div className="space-y-3 mt-auto">
                   <button
                     onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
-                    disabled={loading}
+                    disabled={loading || stripeLoading}
                     className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
                       plan.popular
                         ? 'bg-nexly-teal hover:bg-nexly-green text-white'
                         : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
-                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${(loading || stripeLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {loading ? 'Procesando...' : 'Comenzar Prueba Gratis'}
+                    {(loading || stripeLoading) ? 'Procesando...' : 'Comenzar Prueba Gratis'}
                   </button>
                   <p className="text-center text-xs text-neutral-400 mb-3">
                     7 días gratis • Tarjeta requerida
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
-                    <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
+                    {selectedPaymentMethod === 'stripe' ? (
+                      <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-4 w-auto" />
+                    ) : (
+                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
+                    )}
                   </div>
                 </div>
               )}
@@ -233,8 +287,9 @@ function PricingContent() {
                 </div>
                 <h3 className="font-semibold mb-2">Paga con seguridad</h3>
                 <p className="text-neutral-400 text-sm mb-2">Procesamiento seguro con</p>
-                <div className="flex justify-center">
+                <div className="flex justify-center gap-4">
                   <img src="/mp_logo.png" alt="Mercado Pago" className="h-5 w-auto" />
+                  <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-5 w-auto" />
                 </div>
               </div>
             </div>
@@ -268,10 +323,17 @@ function PricingContent() {
                 content: (
                   <div>
                     <p className="mb-3">
-                      Aceptamos todas las tarjetas de crédito y débito, transferencias bancarias y efectivo a través de:
+                      Aceptamos todas las tarjetas de crédito y débito a través de:
                     </p>
-                    <div className="flex justify-center">
-                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-6 w-auto" />
+                    <div className="flex justify-center gap-6">
+                      <div className="text-center">
+                        <img src="/mp_logo.png" alt="Mercado Pago" className="h-6 w-auto mx-auto mb-2" />
+                        <span className="text-sm text-neutral-400">MercadoPago</span>
+                      </div>
+                      <div className="text-center">
+                        <img src="/png-transparent-strapi-logo-tech-companies.png" alt="Stripe" className="h-6 w-auto mx-auto mb-2" />
+                        <span className="text-sm text-neutral-400">Stripe</span>
+                      </div>
                     </div>
                   </div>
                 )

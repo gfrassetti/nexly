@@ -25,10 +25,11 @@ export default function RegisterForm() {
 
     try {
       const plan = searchParams.get('plan');
+      const paymentMethod = searchParams.get('payment') || 'mercadopago';
       const response = await registerApi({ username, email, password, plan: plan || undefined });
       setSuccess(true);
       
-      // Si hay un plan, hacer auto-login y redirigir directo al checkout de MercadoPago
+      // Si hay un plan, hacer auto-login y redirigir directo al checkout
       if (plan && (plan === 'basic' || plan === 'premium') && response.token && response.user) {
         // Auto-login
         localStorage.setItem("token", response.token);
@@ -38,7 +39,8 @@ export default function RegisterForm() {
         // Crear el enlace de pago inmediatamente después del registro
         setTimeout(async () => {
           try {
-            const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
+            const endpoint = paymentMethod === 'stripe' ? '/stripe/create-payment-link' : '/subscriptions/create-payment-link';
+            const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${response.token}`,
@@ -50,7 +52,7 @@ export default function RegisterForm() {
             const paymentData = await paymentResponse.json();
 
             if (paymentData.success && paymentData.paymentUrl) {
-              // Ir directo al checkout de MercadoPago
+              // Ir directo al checkout
               window.location.href = paymentData.paymentUrl;
             } else {
               // Si falla el checkout, ir al dashboard como fallback

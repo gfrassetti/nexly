@@ -10,6 +10,7 @@ import integrationsRouter from "./routes/integrations";
 import { verifyMetaSignature } from "./middleware/verifyMetaSignature";
 import messageRoutes from "./routes/messages";
 import subscriptionsRouter from "./routes/subscriptions";
+import stripeRouter from "./routes/stripe";
 import aiRouter from "./routes/ai";
 import analyticsRouter from "./routes/analytics";
 import { 
@@ -78,6 +79,7 @@ app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
 app.use("/subscriptions", paymentRateLimit, subscriptionsRouter);
+app.use("/stripe", stripeRouter);
 app.use("/ai", aiRouter);
 app.use("/analytics", analyticsRouter);
 

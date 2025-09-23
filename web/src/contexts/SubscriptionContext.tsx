@@ -9,7 +9,7 @@ interface SubscriptionData {
   subscription?: {
     id: string;
     planType: 'basic' | 'premium';
-    status: 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period';
+    status: 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period' | 'past_due';
     trialEndDate: string;
     daysRemaining: number;
     gracePeriodDaysRemaining: number;
@@ -22,6 +22,8 @@ interface SubscriptionData {
     cancelledAt?: string;
     gracePeriodEndDate?: string;
     maxIntegrations: number;
+    stripeSubscriptionId?: string;
+    mercadoPagoSubscriptionId?: string;
   };
 }
 
@@ -182,7 +184,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/pause`, {
+      // Determinar si es suscripción de Stripe o MercadoPago
+      const endpoint = subscription?.subscription?.stripeSubscriptionId 
+        ? '/stripe/pause' 
+        : '/subscriptions/pause';
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -221,7 +228,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/reactivate`, {
+      // Determinar si es suscripción de Stripe o MercadoPago
+      const endpoint = subscription?.subscription?.stripeSubscriptionId 
+        ? '/stripe/reactivate' 
+        : '/subscriptions/reactivate';
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -247,7 +259,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/cancel`, {
+      // Determinar si es suscripción de Stripe o MercadoPago
+      const endpoint = subscription?.subscription?.stripeSubscriptionId 
+        ? '/stripe/cancel' 
+        : '/subscriptions/cancel';
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -30,6 +30,11 @@ export const config = {
   mercadoPagoAccessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
   mercadoPagoBaseUrl: process.env.MERCADOPAGO_BASE_URL || "https://api.mercadopago.com",
   
+  // Stripe Configuration
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
+  stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || "",
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+  
   // Google AI Configuration
   googleAIApiKey: process.env.GOOGLE_AI_API_KEY || "",
   

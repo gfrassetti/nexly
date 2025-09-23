@@ -208,6 +208,8 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
         gracePeriodEndDate: subscription.gracePeriodEndDate,
         maxIntegrations: (subscription as any).getMaxIntegrations(),
         canUseFeature: (subscription as any).canUseFeature.bind(subscription),
+        stripeSubscriptionId: subscription.stripeSubscriptionId,
+        mercadoPagoSubscriptionId: subscription.mercadoPagoSubscriptionId,
       },
       userSubscriptionStatus: user.subscription_status
     });

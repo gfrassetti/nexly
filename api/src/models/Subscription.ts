@@ -4,8 +4,10 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ISubscription extends Document {
   userId: string;
   planType: 'basic' | 'premium';
-  status: 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period';
+  status: 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period' | 'past_due';
   mercadoPagoSubscriptionId?: string;
+  stripeSubscriptionId?: string;
+  stripeSessionId?: string;
   startDate: Date;
   endDate?: Date;
   trialEndDate: Date;
@@ -32,10 +34,20 @@ const SubscriptionSchema: Schema = new Schema({
   },
   status: {
     type: String,
-    enum: ['trial', 'active', 'paused', 'cancelled', 'expired', 'grace_period'],
+    enum: ['trial', 'active', 'paused', 'cancelled', 'expired', 'grace_period', 'past_due'],
     default: 'trial',
   },
   mercadoPagoSubscriptionId: {
+    type: String,
+    unique: true,
+    sparse: true, // Permite valores únicos pero también null/undefined
+  },
+  stripeSubscriptionId: {
+    type: String,
+    unique: true,
+    sparse: true, // Permite valores únicos pero también null/undefined
+  },
+  stripeSessionId: {
     type: String,
     unique: true,
     sparse: true, // Permite valores únicos pero también null/undefined
@@ -75,7 +87,7 @@ const SubscriptionSchema: Schema = new Schema({
 
 // Índices para optimizar consultas
 SubscriptionSchema.index({ userId: 1 });
-// mercadoPagoSubscriptionId ya tiene índice único sparse en la definición del campo
+// mercadoPagoSubscriptionId, stripeSubscriptionId y stripeSessionId ya tienen índices únicos sparse en la definición del campo
 SubscriptionSchema.index({ status: 1 });
 SubscriptionSchema.index({ trialEndDate: 1 });
 
