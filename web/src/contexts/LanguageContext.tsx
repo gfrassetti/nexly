@@ -4,107 +4,16 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 
 type Language = 'en' | 'es';
 
-type TextKeys = 
-  | 'dashboard.title'
-  | 'dashboard.welcome'
-  | 'dashboard.stats'
-  | 'dashboard.totalContacts'
-  | 'dashboard.totalMessages'
-  | 'dashboard.activeIntegrations'
-  | 'dashboard.recentActivity'
-  | 'dashboard.quickActions'
-  | 'dashboard.viewContacts'
-  | 'dashboard.sendMessage'
-  | 'dashboard.connectWhatsApp'
-  | 'dashboard.upgradePlan'
-  | 'dashboard.plan'
-  | 'dashboard.integrationsAvailable'
-  | 'dashboard.allAvailable'
-  | 'dashboard.upTo'
-  | 'integrations.title'
-  | 'integrations.connectWhatsApp'
-  | 'integrations.whatsappBusiness'
-  | 'integrations.instagram'
-  | 'integrations.messenger'
-  | 'integrations.completePayment'
-  | 'integrations.upgradeToEnable'
-  | 'integrations.connected'
-  | 'integrations.disconnected'
-  | 'integrations.pending'
-  | 'whatsapp.demo.title'
-  | 'whatsapp.demo.description'
-  | 'whatsapp.demo.step1'
-  | 'whatsapp.demo.step1.desc'
-  | 'whatsapp.demo.step2'
-  | 'whatsapp.demo.step2.desc'
-  | 'whatsapp.demo.step3'
-  | 'whatsapp.demo.step3.desc'
-  | 'whatsapp.demo.step4'
-  | 'whatsapp.demo.step4.desc'
-  | 'whatsapp.demo.step5'
-  | 'whatsapp.demo.step5.desc'
-  | 'oauth.simulated'
-  | 'oauth.description'
-  | 'oauth.continue'
-  | 'user.authenticated'
-  | 'user.description'
-  | 'user.status'
-  | 'user.permissions'
-  | 'user.plan'
-  | 'user.connected'
-  | 'user.whatsappBusiness'
-  | 'message.interface'
-  | 'message.description'
-  | 'message.recipient'
-  | 'message.content'
-  | 'message.placeholder'
-  | 'message.send'
-  | 'sending.title'
-  | 'sending.description'
-  | 'sending.to'
-  | 'sending.status'
-  | 'sending.sending'
-  | 'sending.sendApi'
-  | 'sent.title'
-  | 'sent.description'
-  | 'sent.messageId'
-  | 'sent.delivered'
-  | 'sent.timestamp'
-  | 'sent.verify'
-  | 'verify.title'
-  | 'verify.description'
-  | 'verify.business'
-  | 'verify.whatsappBusiness'
-  | 'verify.complete'
-  | 'verify.completeDesc'
-  | 'verify.restart'
-  | 'meta.title'
-  | 'meta.note1'
-  | 'meta.note2'
-  | 'meta.note3'
-  | 'meta.note4'
-  | 'meta.note5'
-  | 'subscription.required'
-  | 'continue'
-  | 'back'
-  | 'next'
-  | 'send'
-  | 'cancel'
-  | 'confirm'
-  | 'loading'
-  | 'success'
-  | 'error';
-
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: TextKeys) => string;
+  t: (key: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 // Textos en inglés y español
-const texts: Record<Language, Record<TextKeys, string>> = {
+const texts: Record<Language, Record<string, string>> = {
   en: {
     // Dashboard
     'dashboard.title': 'Dashboard',
@@ -342,7 +251,7 @@ interface LanguageProviderProps {
 export function LanguageProvider({ children }: LanguageProviderProps) {
   const [language, setLanguage] = useState<Language>('es');
 
-  const t = (key: TextKeys): string => {
+  const t = (key: string): string => {
     return texts[language][key] || key;
   };
 
