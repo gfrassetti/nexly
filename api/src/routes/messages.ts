@@ -6,6 +6,7 @@ import { Contact } from "../models/Contact";
 import { Integration } from "../models/Integration";
 import MessageLimit from "../models/MessageLimit";
 import { getIntegrationMessageLimit } from "../services/messageLimits";
+import { createWhatsAppService } from "../services/whatsappService";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -69,8 +70,42 @@ router.post("/send", async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // TODO: Aquí deberías llamar a la API real de Meta/Instagram/Messenger
-    console.log(`[SEND] ${provider} -> ${to}: ${body}`);
+    // Enviar mensaje real según el proveedor
+    let messageId: string | null = null;
+    
+    if (provider === 'whatsapp') {
+      // Enviar mensaje real a WhatsApp Cloud API
+      const accessToken = integration.accessToken;
+      const phoneNumberId = integration.phoneNumberId || integration.externalId;
+      
+      if (!accessToken || !phoneNumberId) {
+        return res.status(400).json({ 
+          error: "whatsapp_config_missing", 
+          detail: "Faltan credenciales de WhatsApp (accessToken o phoneNumberId)" 
+        });
+      }
+      
+      try {
+        const whatsappService = createWhatsAppService(accessToken, phoneNumberId);
+        const response = await whatsappService.sendTextMessage(to, body);
+        messageId = response.messages?.[0]?.id || null;
+        
+        console.log(`✅ Mensaje WhatsApp enviado exitosamente:`, {
+          messageId,
+          to,
+          body: body.substring(0, 50) + '...'
+        });
+      } catch (error: any) {
+        console.error('❌ Error enviando mensaje WhatsApp:', error.message);
+        return res.status(500).json({ 
+          error: "whatsapp_send_failed", 
+          detail: error.message 
+        });
+      }
+    } else {
+      // Para otros proveedores (Instagram, Messenger), por ahora solo log
+      console.log(`[SEND] ${provider} -> ${to}: ${body}`);
+    }
 
     // asegurar contacto
     let contact = await Contact.findOne({ userId: buildUserIdFilter(rawUserId), phone: to });
@@ -90,6 +125,8 @@ router.post("/send", async (req: AuthRequest, res: Response) => {
       integrationId: integration._id,
       direction: "out",
       body,
+      externalMessageId: messageId, // ID del mensaje en WhatsApp
+      provider: provider,
     });
 
     // Incrementar contador de mensajes

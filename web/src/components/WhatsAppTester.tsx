@@ -1,89 +1,128 @@
 "use client";
-import { useState } from "react";
-import { sendWhatsAppMessage } from "@/lib/api";
+
+import { useState } from 'react';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { sendMessageApi } from '@/lib/api';
 
 export default function WhatsAppTester() {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [message, setMessage] = useState("¡Hola! Este es un mensaje de prueba desde Nexly 🚀");
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [message, setMessage] = useState('Hello from Nexly! This is a test message.');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const { subscription } = useSubscription();
 
-  const handleSend = async () => {
-    if (!phoneNumber || !message) return;
-    
+  const handleSendTest = async () => {
+    if (!phoneNumber || !message) {
+      setResult({ success: false, message: 'Please fill in both phone number and message' });
+      return;
+    }
+
     setLoading(true);
     setResult(null);
-    
+
     try {
-      const response = await sendWhatsAppMessage({
+      const response = await sendMessageApi({
+        provider: 'whatsapp',
         to: phoneNumber,
-        message: message
+        body: message
       });
-      
-      setResult({ success: true, data: response });
+
+      setResult({ 
+        success: true, 
+        message: `Message sent successfully! Message ID: ${response.externalMessageId || 'N/A'}` 
+      });
     } catch (error: any) {
-      setResult({ success: false, error: error.message });
+      setResult({ 
+        success: false, 
+        message: `Error: ${error.message || 'Failed to send message'}` 
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  if (!subscription?.subscription) {
+    return (
+      <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-6">
+        <div className="text-red-400">
+          ⚠️ No active subscription found. Please activate your subscription first.
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow p-6 max-w-md">
-      <h3 className="text-lg font-semibold mb-4 text-black">🧪 Probar WhatsApp</h3>
-      
+    <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-6">
+      <h3 className="text-lg font-semibold text-white mb-4">
+        🧪 WhatsApp Test Tool
+      </h3>
+      <p className="text-neutral-400 text-sm mb-6">
+        Use this tool to test WhatsApp message sending before creating your Meta screencast.
+      </p>
+
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-black mb-2">
-            Número de teléfono (con código de país)
+          <label className="block text-sm font-medium text-neutral-300 mb-2">
+            WhatsApp Phone Number
           </label>
           <input
-            type="tel"
+            type="text"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="+5491123456789"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-black placeholder-gray-500"
+            placeholder="+5491123456789 (include country code)"
+            className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <p className="text-xs text-gray-600 mt-1">
-            Ejemplo: +5491123456789 (Argentina)
+          <p className="text-xs text-neutral-500 mt-1">
+            Include country code (e.g., +54 for Argentina)
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-black mb-2">
-            Mensaje
+          <label className="block text-sm font-medium text-neutral-300 mb-2">
+            Test Message
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-black placeholder-gray-500"
-            placeholder="Escribe tu mensaje aquí..."
+            className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <button
-          onClick={handleSend}
+          onClick={handleSendTest}
           disabled={loading || !phoneNumber || !message}
-          className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors duration-200"
         >
-          {loading ? "Enviando..." : "📱 Enviar WhatsApp"}
+          {loading ? 'Sending...' : '🚀 Send Test Message'}
         </button>
 
         {result && (
-          <div className={`p-3 rounded-md ${
+          <div className={`p-4 rounded-lg ${
             result.success 
-              ? "bg-green-100 border border-green-400 text-green-700" 
-              : "bg-red-100 border border-red-400 text-red-700"
+              ? 'bg-green-900/30 border border-green-700 text-green-300' 
+              : 'bg-red-900/30 border border-red-700 text-red-300'
           }`}>
-            <h4 className="font-medium mb-2">
-              {result.success ? "✅ Mensaje enviado" : "❌ Error"}
-            </h4>
-            <pre className="text-xs overflow-auto">
-              {JSON.stringify(result.success ? result.data : result.error, null, 2)}
-            </pre>
+            <div className="flex items-center gap-2">
+              {result.success ? '✅' : '❌'}
+              <span className="font-medium">
+                {result.success ? 'Success!' : 'Error'}
+              </span>
+            </div>
+            <p className="mt-1 text-sm">{result.message}</p>
           </div>
         )}
+
+        <div className="mt-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+          <h4 className="text-blue-300 font-medium mb-2">📋 Screencast Instructions:</h4>
+          <ol className="text-sm text-blue-200 space-y-1">
+            <li>1. Fill in a real WhatsApp number (yours or a test number)</li>
+            <li>2. Customize the message if needed</li>
+            <li>3. Click "Send Test Message"</li>
+            <li>4. Verify the message appears in WhatsApp Web/App</li>
+            <li>5. Record this process for your Meta submission</li>
+          </ol>
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { getContacts, getMessages } from "@/lib/api";
 import useSWR from "swr";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import BillingPanel from "@/components/BillingPanel";
+import WhatsAppDemo from "@/components/WhatsAppDemo";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useSearchParams } from "next/navigation";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
@@ -372,6 +373,9 @@ export default function DashboardPage() {
           {/* Panel de facturación */}
           <BillingPanel />
         </div>
+
+        {/* WhatsApp Demo - Para revisión de Meta */}
+        <WhatsAppDemo />
 
         {/* Acciones rápidas */}
         <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
