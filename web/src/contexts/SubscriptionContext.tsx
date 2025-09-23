@@ -93,19 +93,19 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   };
 
   useEffect(() => {
-    fetchSubscriptionStatus();
+    // Limpiar estado anterior cuando cambia el token
+    setSubscription(null);
+    setError(null);
+    setLoading(true);
+    
+    if (token) {
+      fetchSubscriptionStatus();
+    } else {
+      setLoading(false);
+    }
   }, [token]);
 
-  // Auto-refresh cada 30 segundos si hay error para intentar recuperarse
-  useEffect(() => {
-    if (error && token) {
-      const interval = setInterval(() => {
-        fetchSubscriptionStatus();
-      }, 30000); // 30 segundos
-
-      return () => clearInterval(interval);
-    }
-  }, [error, token]);
+  // NO auto-refresh si hay error de rate limit - esto causa más problemas
 
   const canUseFeature = (feature: string): boolean => {
     // Si está pendiente de método de pago, no puede usar features

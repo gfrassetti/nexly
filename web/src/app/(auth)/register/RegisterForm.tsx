@@ -55,14 +55,14 @@ export default function RegisterForm() {
               // Ir directo al checkout
               window.location.href = paymentData.paymentUrl;
             } else {
-              // Si falla el checkout, ir al dashboard como fallback
+              // Si falla el checkout, ir a pricing para intentar nuevamente
               console.error('Error creating payment link:', paymentData.error);
-              router.push("/dashboard");
+              router.push(`/pricing?plan=${plan}&payment=${paymentMethod}`);
             }
           } catch (error) {
             console.error('Error creating payment link:', error);
-            // Si hay error, ir al dashboard como fallback
-            router.push("/dashboard");
+            // Si hay error, ir a pricing para intentar nuevamente
+            router.push(`/pricing?plan=${plan}&payment=${paymentMethod}`);
           }
         }, 1000);
       } else {
