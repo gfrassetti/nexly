@@ -28,16 +28,41 @@ export default function RegisterForm() {
       const response = await registerApi({ username, email, password, plan: plan || undefined });
       setSuccess(true);
       
-      // Si hay un plan, hacer auto-login y redirigir al checkout
+      // Si hay un plan, hacer auto-login y redirigir directo al checkout de MercadoPago
       if (plan && (plan === 'basic' || plan === 'premium') && response.token && response.user) {
         // Auto-login
         localStorage.setItem("token", response.token);
         document.cookie = `token=${response.token}; Path=/; SameSite=Lax`;
         setAuth(response.token, response.user);
         
-        setTimeout(() => {
-          router.push(`/checkout?plan=${plan}`);
-        }, 1500);
+        // Crear el enlace de pago inmediatamente después del registro
+        setTimeout(async () => {
+          try {
+            const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/subscriptions/create-payment-link`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${response.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ planType: plan }),
+            });
+
+            const paymentData = await paymentResponse.json();
+
+            if (paymentData.success && paymentData.paymentUrl) {
+              // Ir directo al checkout de MercadoPago
+              window.location.href = paymentData.paymentUrl;
+            } else {
+              // Si falla el checkout, ir al dashboard como fallback
+              console.error('Error creating payment link:', paymentData.error);
+              router.push("/dashboard");
+            }
+          } catch (error) {
+            console.error('Error creating payment link:', error);
+            // Si hay error, ir al dashboard como fallback
+            router.push("/dashboard");
+          }
+        }, 1000);
       } else {
         // Si no hay plan, ir al login normal
         setTimeout(() => {
