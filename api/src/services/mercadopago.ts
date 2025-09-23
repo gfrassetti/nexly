@@ -27,6 +27,14 @@ class MercadoPagoService {
       // En desarrollo, usar un token mock
       this.config.accessToken = 'TEST_TOKEN_FOR_DEVELOPMENT';
     }
+
+    // Log de configuración para debug
+    console.log('🔧 Configuración MercadoPago:', {
+      hasToken: !!this.config.accessToken,
+      baseUrl: this.config.baseURL,
+      isDevelopment: config.isDevelopment,
+      country: process.env.MERCADOPAGO_COUNTRY || 'No especificado'
+    });
   }
 
   private getHeaders() {
@@ -73,12 +81,18 @@ class MercadoPagoService {
       // Modo mock para desarrollo
       if (config.isDevelopment && this.config.accessToken === 'TEST_TOKEN_FOR_DEVELOPMENT') {
         console.log('🧪 Modo desarrollo: Simulando creación de suscripción en Mercado Pago');
+        console.log('📧 Email:', data.payer_email);
+        console.log('💰 Monto:', data.auto_recurring.transaction_amount, data.auto_recurring.currency_id);
         return {
           id: `mock_subscription_${Date.now()}`,
-          init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock_pref_id',
+          init_point: `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock_pref_${Date.now()}`,
           status: 'pending'
         };
       }
+
+      // Si hay un error de países, usar modo de fallback
+      console.log('🌍 Intentando crear suscripción con configuración actual...');
+      console.log('📋 Datos enviados:', JSON.stringify(data, null, 2));
 
 
       const response = await axios.post(
@@ -103,6 +117,23 @@ class MercadoPagoService {
       }
       
       if (error.response?.status === 400) {
+        const errorData = error.response?.data;
+        if (errorData?.message?.includes('different countries')) {
+          // Intentar con configuración alternativa
+          console.log('🔄 Error de países detectado, intentando con configuración alternativa...');
+          
+          // Crear un mock más realista para evitar el error
+          if (config.isDevelopment) {
+            console.log('🧪 Usando mock de desarrollo debido a error de países');
+            return {
+              id: `fallback_subscription_${Date.now()}`,
+              init_point: `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=fallback_${Date.now()}`,
+              status: 'pending'
+            };
+          }
+          
+          throw new CustomError('Error de configuración regional. Tu cuenta de MercadoPago no está configurada para el país correcto. Contacta soporte.', 400);
+        }
         throw new CustomError('Datos de suscripción inválidos', 400);
       }
 
@@ -159,14 +190,19 @@ class MercadoPagoService {
    * Crear un plan de suscripción básico
    */
   async createBasicPlan(userEmail: string, backUrl: string) {
+    // Detectar país basado en el dominio del email o usar configuración por defecto
+    const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
+    const currency = isArgentina ? 'ARS' : 'USD';
+    const amount = isArgentina ? 2999 : 9.99; // Precio en ARS para Argentina, USD para otros países
+
     return this.createSubscription({
       payer_email: userEmail,
       reason: 'Suscripción Nexly - Plan Básico',
       auto_recurring: {
         frequency: 1,
         frequency_type: 'months',
-        transaction_amount: 2999, // Precio en ARS (ajustar según necesidad)
-        currency_id: 'ARS',
+        transaction_amount: amount,
+        currency_id: currency,
         free_trial: {
           frequency: 7,
           frequency_type: 'days',
@@ -181,14 +217,19 @@ class MercadoPagoService {
    * Crear un plan de suscripción premium
    */
   async createPremiumPlan(userEmail: string, backUrl: string) {
+    // Detectar país basado en el dominio del email o usar configuración por defecto
+    const isArgentina = userEmail.includes('.ar') || process.env.MERCADOPAGO_COUNTRY === 'AR';
+    const currency = isArgentina ? 'ARS' : 'USD';
+    const amount = isArgentina ? 5999 : 19.99; // Precio en ARS para Argentina, USD para otros países
+
     return this.createSubscription({
       payer_email: userEmail,
       reason: 'Suscripción Nexly - Plan Premium',
       auto_recurring: {
         frequency: 1,
         frequency_type: 'months',
-        transaction_amount: 5999, // Precio en ARS (ajustar según necesidad)
-        currency_id: 'ARS',
+        transaction_amount: amount,
+        currency_id: currency,
         free_trial: {
           frequency: 7,
           frequency_type: 'days',

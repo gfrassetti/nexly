@@ -117,8 +117,9 @@ export default function SubscriptionStatus() {
           </p>
           <button
             onClick={() => createPaymentLink()}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-300"
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center gap-2"
           >
+            <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
             Completar Pago
           </button>
         </div>

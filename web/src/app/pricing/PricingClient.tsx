@@ -163,9 +163,13 @@ function PricingContent() {
                   >
                     Comenzar Prueba Gratis
                   </button>
-                  <p className="text-center text-xs text-neutral-400">
+                  <p className="text-center text-xs text-neutral-400 mb-3">
                     7 días gratis • Tarjeta requerida
                   </p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
+                    <span>Pago seguro con</span>
+                    <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
+                  </div>
                 </div>
               ) : (
                 // Usuario autenticado - Botón de compra
@@ -181,9 +185,13 @@ function PricingContent() {
                   >
                     {loading ? 'Procesando...' : 'Comenzar Prueba Gratis'}
                   </button>
-                  <p className="text-center text-xs text-neutral-400">
+                  <p className="text-center text-xs text-neutral-400 mb-3">
                     7 días gratis • Tarjeta requerida
                   </p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
+                    <span>Pago seguro con</span>
+                    <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
+                  </div>
                 </div>
               )}
 
@@ -224,7 +232,10 @@ function PricingContent() {
                   <span className="text-white font-bold text-lg">3</span>
                 </div>
                 <h3 className="font-semibold mb-2">Paga con seguridad</h3>
-                <p className="text-neutral-400 text-sm">Procesamiento seguro con Mercado Pago</p>
+                <p className="text-neutral-400 text-sm mb-2">Procesamiento seguro con</p>
+                <div className="flex justify-center">
+                  <img src="/mp_logo.png" alt="Mercado Pago" className="h-5 w-auto" />
+                </div>
               </div>
             </div>
           </div>
@@ -255,9 +266,14 @@ function PricingContent() {
               {
                 title: "¿Qué métodos de pago aceptan?",
                 content: (
-                  <p>
-                    Aceptamos todas las tarjetas de crédito y débito, transferencias bancarias y efectivo a través de Mercado Pago.
-                  </p>
+                  <div>
+                    <p className="mb-3">
+                      Aceptamos todas las tarjetas de crédito y débito, transferencias bancarias y efectivo a través de:
+                    </p>
+                    <div className="flex justify-center">
+                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-6 w-auto" />
+                    </div>
+                  </div>
                 )
               },
               {
