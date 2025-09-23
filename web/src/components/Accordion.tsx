@@ -55,7 +55,7 @@ interface AccordionProps {
 }
 
 export default function Accordion({ items }: AccordionProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0); // Primer item abierto por defecto
+  const [openIndex, setOpenIndex] = useState<number | null>(null); // Todos los items cerrados por defecto
 
   const handleToggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);

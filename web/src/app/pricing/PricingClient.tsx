@@ -200,7 +200,7 @@ function PricingContent() {
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
-                    <img src="/strapi_logo.png" alt="Stripe" className="h-4 w-auto" />
+                    <img src="/strapi_logo.png" alt="Stripe" className="h-10 w-auto" />
                   </div>
                 </div>
               ) : (
