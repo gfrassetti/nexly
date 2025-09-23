@@ -4,7 +4,16 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export function usePaymentLink() {
   const [loading, setLoading] = useState(false);
-  const { subscription } = useSubscription();
+  
+  // Usar useSubscription solo si está disponible (en dashboard)
+  let subscription;
+  try {
+    const { subscription: sub } = useSubscription();
+    subscription = sub;
+  } catch (error) {
+    // Si no está disponible (como en pricing), subscription será undefined
+    subscription = undefined;
+  }
 
   const createPaymentLink = async (planType?: 'basic' | 'premium'): Promise<boolean> => {
     setLoading(true);
