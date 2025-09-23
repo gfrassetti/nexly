@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
     
     // Forward the request to the Express backend
-    const response = await fetch(`${backendUrl}/api/stripe/invoices`, {
+    const response = await fetch(`${backendUrl}/stripe/invoices`, {
       method: 'GET',
       headers: {
         'Authorization': request.headers.get('Authorization') || '',

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import Stripe from "stripe";
-import handleAuth from "../middleware/auth";
-import { default as Subscription, ISubscription } from "../models/Subscription";
+import handleAuth from "../../middleware/auth";
+import { default as Subscription, ISubscription } from "../../models/Subscription";
 
 const router = Router();
 router.use(handleAuth);

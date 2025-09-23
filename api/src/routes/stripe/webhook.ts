@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import Stripe from "stripe";
-import { User } from "../models/User";
-import { default as Subscription, ISubscription } from "../models/Subscription";
+import { User } from "../../models/User";
+import { default as Subscription, ISubscription } from "../../models/Subscription";
 
 const router = Router();
 

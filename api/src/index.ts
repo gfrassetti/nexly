@@ -13,8 +13,8 @@ import subscriptionsRouter from "./routes/subscriptions";
 import stripeRouter from "./routes/stripe";
 import aiRouter from "./routes/ai";
 import analyticsRouter from "./routes/analytics";
-import stripeWebhookRouter from "./routes/stripeWebhook";
-import stripePauseRouter from "./routes/stripePause";
+import stripeWebhookRouter from "./routes/stripe/webhook";
+import stripePauseRouter from "./routes/stripe/pause";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -80,7 +80,7 @@ app.use("/webhook", verifyMetaSignature, webhookRouter);
 app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
-app.use("/subscriptions", paymentRateLimit, subscriptionsRouter);
+app.use("/subscriptions", subscriptionsRouter);
 app.use("/stripe", stripeRouter);
 app.use("/ai", aiRouter);
 app.use("/analytics", analyticsRouter);

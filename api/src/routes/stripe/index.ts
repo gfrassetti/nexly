@@ -1,12 +1,12 @@
 // api/src/routes/stripe.ts
 import express from 'express';
-import authenticateToken from '../middleware/auth';
-import { stripeService } from '../services/stripe';
-import Subscription from '../models/Subscription';
-import { User } from '../models/User';
-import { asyncHandler, CustomError } from '../utils/errorHandler';
-import { validateSubscriptionData, paymentRateLimit } from '../middleware/security';
-import { stripeWebhookVerification } from '../middleware/verifyStripeSignature';
+import authenticateToken from '../../middleware/auth';
+import { stripeService } from '../../services/stripe';
+import Subscription from '../../models/Subscription';
+import { User } from '../../models/User';
+import { asyncHandler, CustomError } from '../../utils/errorHandler';
+import { validateSubscriptionData, paymentRateLimit } from '../../middleware/security';
+import { stripeWebhookVerification } from '../../middleware/verifyStripeSignature';
 
 const router = express.Router();
 

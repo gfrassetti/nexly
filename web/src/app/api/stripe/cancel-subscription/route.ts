@@ -7,7 +7,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     
     // Forward the request to the Express backend
-    const response = await fetch(`${backendUrl}/api/stripe/cancel-subscription`, {
+    const response = await fetch(`${backendUrl}/stripe/cancel-subscription`, {
       method: 'PUT',
       headers: {
         'Authorization': request.headers.get('Authorization') || '',

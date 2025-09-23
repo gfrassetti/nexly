@@ -2,37 +2,34 @@
 
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/hooks/useAuth";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function SubscriptionPage() {
   const { subscription, loading } = useSubscription();
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!loading && subscription?.subscription) {
-      // Redirigir a la página específica del proveedor
-      const provider = getProviderFromSubscription(subscription.subscription);
-      redirect(`/dashboard/subscription/${provider}`);
+    if (!loading) {
+      if (subscription?.subscription) {
+        // Redirigir a la página específica del proveedor
+        const provider = getProviderFromSubscription(subscription.subscription);
+        router.push(`/dashboard/subscription/${provider}`);
+      } else {
+        // Si no hay suscripción, redirigir a pricing
+        router.push("/pricing");
+      }
     }
-  }, [subscription, loading]);
+  }, [subscription, loading, router]);
 
   // Mostrar loading mientras se determina el proveedor
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
-        <span className="ml-2 text-gray-600">Cargando...</span>
-      </div>
-    );
-  }
-
-  // Si no hay suscripción, redirigir a pricing
-  if (!subscription?.subscription) {
-    redirect("/pricing");
-  }
-
-  return null;
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
+      <span className="ml-2 text-gray-600">Cargando...</span>
+    </div>
+  );
 }
 
 // Función para determinar el proveedor de la suscripción
