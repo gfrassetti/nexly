@@ -365,7 +365,7 @@ export default function DashboardPage() {
             {/* Botón de pago - solo mostrar si está en estado pendiente de pago */}
             {subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && (
               <button 
-                onClick={createPaymentLink}
+                onClick={() => createPaymentLink()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

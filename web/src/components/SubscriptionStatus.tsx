@@ -49,7 +49,7 @@ export default function SubscriptionStatus() {
               Reintentar
             </button>
             <button
-              onClick={createPaymentLink}
+              onClick={() => createPaymentLink()}
               className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
               disabled={loading}
             >
@@ -76,7 +76,7 @@ export default function SubscriptionStatus() {
             Tu cuenta está registrada pero necesitas completar el método de pago para comenzar tu prueba gratuita.
           </p>
           <button
-            onClick={createPaymentLink}
+            onClick={() => createPaymentLink()}
             className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-300"
           >
             Completar Pago
@@ -197,7 +197,7 @@ export default function SubscriptionStatus() {
           {/* Botón para renewar solo si está expirado */}
           {isExpired && (
             <button
-              onClick={createPaymentLink}
+              onClick={() => createPaymentLink()}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Volver a comprar
