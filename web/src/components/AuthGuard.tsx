@@ -25,8 +25,9 @@ export default function AuthGuard({ children, requireAuth = true }: AuthGuardPro
     }
 
     if (!requireAuth && isAuthenticated) {
-      // Redirigir a dashboard si no requiere autenticación pero ya está logueado
-      router.replace("/dashboard");
+      // Redirigir a pricing si no requiere autenticación pero ya está logueado
+      // Esto asegura que siempre vaya a pricing primero
+      router.replace("/pricing");
       return;
     }
   }, [isAuthenticated, isLoading, requireAuth, router]);
