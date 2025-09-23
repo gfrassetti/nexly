@@ -14,15 +14,6 @@ export const paymentRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Agregar clave personalizada por usuario si está autenticado
-  keyGenerator: (req: any) => {
-    // Si el usuario está autenticado, usar su ID para el rate limiting
-    if (req.user?.id) {
-      return `payment_limit_${req.user.id}`;
-    }
-    // Si no está autenticado, usar IP
-    return req.ip || req.connection.remoteAddress;
-  },
   // Permitir más intentos si es el mismo usuario
   skip: (req: any) => {
     // En desarrollo, permitir más intentos
