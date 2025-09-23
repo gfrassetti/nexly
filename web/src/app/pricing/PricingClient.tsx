@@ -241,9 +241,9 @@ function PricingContent() {
                   <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
                     <span>Pago seguro con</span>
                     {selectedPaymentMethod === 'stripe' ? (
-                      <img src="/strapi_logo.png" alt="Stripe" className="h-4 w-auto" />
+                      <img src="/strapi_logo.png" alt="Stripe" className="h-10 w-auto" />
                     ) : (
-                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-4 w-auto" />
+                      <img src="/mp_logo.png" alt="Mercado Pago" className="h-10 w-auto" />
                     )}
                   </div>
                 </div>
@@ -287,9 +287,9 @@ function PricingContent() {
                 </div>
                 <h3 className="font-semibold mb-2">Paga con seguridad</h3>
                 <p className="text-neutral-400 text-sm mb-2">Procesamiento seguro con</p>
-                <div className="flex justify-center gap-4">
-                  <img src="/mp_logo.png" alt="Mercado Pago" className="h-5 w-auto" />
-                  <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
+                <div className="flex justify-cente items-center gap-4">
+                  <img src="/mp_logo.png" alt="Mercado Pago" className="h-8 w-auto" />
+                  <img src="/strapi_logo.png" alt="Stripe" className="h-8 w-auto" />
                 </div>
               </div>
             </div>
