@@ -106,17 +106,17 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     const { code, state, error } = req.query;
 
     if (error) {
-      return res.redirect(`${config.frontendUrl}/integrations?error=oauth_denied`);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_denied`);
     }
 
     if (!code || !state) {
-      return res.redirect(`${config.frontendUrl}/integrations?error=missing_code`);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=missing_code`);
     }
 
     // Extraer userId del state
     const userId = state.toString().split('_')[0];
     if (!userId) {
-      return res.redirect(`${config.frontendUrl}/integrations?error=invalid_state`);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=invalid_state`);
     }
 
     // Intercambiar código por token de acceso
@@ -190,10 +190,10 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     // Sincronizar para obtener metadata
     await syncIntegration(integration);
 
-    res.redirect(`${config.frontendUrl}/integrations?success=whatsapp_connected`);
+    res.redirect(`${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`);
   } catch (err: any) {
     console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
-    res.redirect(`${config.frontendUrl}/integrations?error=oauth_failed`);
+    res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_failed`);
   }
 });
 

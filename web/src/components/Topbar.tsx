@@ -2,6 +2,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useRouter } from "next/navigation";
+import LanguageToggle from "./LanguageToggle";
 
 export default function Topbar() {
   const { user, clear } = useAuth();
@@ -67,6 +68,7 @@ export default function Topbar() {
             {getPlanBadge()}
           </>
         )}
+        <LanguageToggle />
         <button
           onClick={handleLogout}
           className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-sm transition-colors duration-200"

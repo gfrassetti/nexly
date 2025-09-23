@@ -28,6 +28,22 @@ const texts = {
     'dashboard.sendMessage': 'Send Message',
     'dashboard.connectWhatsApp': 'Connect WhatsApp',
     'dashboard.upgradePlan': 'Upgrade Plan',
+    'dashboard.plan': 'Current Plan',
+    'dashboard.integrationsAvailable': 'Available Integrations',
+    'dashboard.allAvailable': 'All Available',
+    'dashboard.upTo': 'Up to',
+    
+    // Integrations
+    'integrations.title': 'Integrations',
+    'integrations.connectWhatsApp': 'Connect WhatsApp',
+    'integrations.whatsappBusiness': 'WhatsApp Business',
+    'integrations.instagram': 'Instagram',
+    'integrations.messenger': 'Messenger',
+    'integrations.completePayment': 'Complete Payment',
+    'integrations.upgradeToEnable': 'Upgrade to enable',
+    'integrations.connected': 'Connected',
+    'integrations.disconnected': 'Disconnected',
+    'integrations.pending': 'Pending',
     
     // WhatsApp Demo
     'whatsapp.demo.title': 'Meta Review Demo - WhatsApp Business Integration',
@@ -126,6 +142,22 @@ const texts = {
     'dashboard.sendMessage': 'Enviar Mensaje',
     'dashboard.connectWhatsApp': 'Conectar WhatsApp',
     'dashboard.upgradePlan': 'Actualizar Plan',
+    'dashboard.plan': 'Plan Actual',
+    'dashboard.integrationsAvailable': 'Integraciones Disponibles',
+    'dashboard.allAvailable': 'Todas Disponibles',
+    'dashboard.upTo': 'Hasta',
+    
+    // Integrations
+    'integrations.title': 'Integraciones',
+    'integrations.connectWhatsApp': 'Conectar WhatsApp',
+    'integrations.whatsappBusiness': 'WhatsApp Business',
+    'integrations.instagram': 'Instagram',
+    'integrations.messenger': 'Messenger',
+    'integrations.completePayment': 'Completar Pago',
+    'integrations.upgradeToEnable': 'Actualizar para habilitar',
+    'integrations.connected': 'Conectado',
+    'integrations.disconnected': 'Desconectado',
+    'integrations.pending': 'Pendiente',
     
     // WhatsApp Demo
     'whatsapp.demo.title': 'Demo para Revisión de Meta - Integración WhatsApp Business',
