@@ -252,7 +252,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const [language, setLanguage] = useState<Language>('es');
 
   const t = (key: string): string => {
-    return texts[language][key] || key;
+    return (texts[language] as any)[key] || key;
   };
 
   return (
