@@ -34,8 +34,8 @@ function IntegrationsContent() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Integraciones</h1>
       
-      {/* Estado pendiente de método de pago */}
-      {isPendingPaymentMethod() && (
+      {/* Estado pendiente de método de pago - SOLO si realmente está pendiente */}
+      {isPendingPaymentMethod() && !isTrialActive() && !isActive() && (
         <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -71,7 +71,7 @@ function IntegrationsContent() {
                 Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Todas disponibles' : `Hasta ${getMaxIntegrations()}`}
               </p>
             </div>
-            {isPendingPaymentMethod() && (
+            {isPendingPaymentMethod() && !isTrialActive() && !isActive() && (
               <button
                 onClick={() => createPaymentLink()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"

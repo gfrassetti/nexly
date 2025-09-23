@@ -22,8 +22,11 @@ export function useIntegrations(): UseIntegrationsReturn {
     // WhatsApp siempre está disponible (primera integración)
     if (integrationName === 'whatsapp') return true;
     
-    // Durante trial, todo disponible
+    // Durante trial activo, todo disponible
     if (isTrialActive()) return true;
+    
+    // Si está activo (no trial), también todo disponible
+    if (isActive()) return true;
     
     // Para premium, todo disponible
     if (maxIntegrations >= 999) return true;

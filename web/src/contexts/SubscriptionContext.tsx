@@ -4,12 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface SubscriptionData {
   hasSubscription: boolean;
-  status?: 'none' | 'trial_pending_payment_method' | 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period';
+  status?: 'none' | 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
   userSubscriptionStatus?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
   subscription?: {
     id: string;
     planType: 'basic' | 'premium';
-    status: 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period' | 'past_due';
+    status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
     trialEndDate: string;
     daysRemaining: number;
     gracePeriodDaysRemaining: number;
@@ -18,6 +18,9 @@ interface SubscriptionData {
     isPaused: boolean;
     isCancelled: boolean;
     isInGracePeriod: boolean;
+    isIncomplete: boolean;
+    isPastDue: boolean;
+    isUnpaid: boolean;
     pausedAt?: string;
     cancelledAt?: string;
     gracePeriodEndDate?: string;
@@ -40,6 +43,9 @@ interface SubscriptionContextType {
   isCancelled: () => boolean;
   isInGracePeriod: () => boolean;
   isPendingPaymentMethod: () => boolean;
+  isIncomplete: () => boolean;
+  isPastDue: () => boolean;
+  isUnpaid: () => boolean;
   pauseSubscription: () => Promise<void>;
   reactivateSubscription: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
@@ -181,14 +187,23 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     return subscription?.userSubscriptionStatus === 'trial_pending_payment_method';
   };
 
+  const isIncomplete = (): boolean => {
+    return subscription?.subscription?.status === 'incomplete';
+  };
+
+  const isPastDue = (): boolean => {
+    return subscription?.subscription?.status === 'past_due';
+  };
+
+  const isUnpaid = (): boolean => {
+    return subscription?.subscription?.status === 'unpaid';
+  };
+
   const pauseSubscription = async (): Promise<void> => {
     if (!token) return;
 
     try {
-      // Determinar si es suscripción de Stripe o MercadoPago
-      const endpoint = subscription?.subscription?.stripeSubscriptionId 
-        ? '/stripe/pause' 
-        : '/stripe/pause'; // Force Stripe for now
+      const endpoint = '/stripe/pause/pause';
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
@@ -196,6 +211,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          subscriptionId: subscription?.subscription?.stripeSubscriptionId,
+          pauseBehavior: 'mark_uncollectible', // Marcar facturas como no cobrables
+          resumeBehavior: 'create_prorations', // Crear proraciones al reanudar
+        }),
       });
 
       const data = await response.json();
@@ -229,10 +249,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (!token) return;
 
     try {
-      // Determinar si es suscripción de Stripe o MercadoPago
-      const endpoint = subscription?.subscription?.stripeSubscriptionId 
-        ? '/stripe/reactivate' 
-        : '/stripe/reactivate'; // Force Stripe for now
+      const endpoint = '/stripe/pause/resume';
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
@@ -240,15 +257,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          subscriptionId: subscription?.subscription?.stripeSubscriptionId,
+        }),
       });
 
       const data = await response.json();
 
-      if (data.success && data.paymentUrl) {
-        // Abrir el pago en nueva ventana
-        window.open(data.paymentUrl, '_blank');
-        
-        // Actualizar estado local para mostrar que está en proceso de reactivación
+      if (data.success) {
+        // Actualizar estado local inmediatamente para UX instantánea
         if (subscription?.subscription) {
           setSubscription({
             ...subscription,
@@ -258,6 +275,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
               isPaused: false,
               isActive: true,
               isCancelled: false,
+              pausedAt: undefined,
             }
           });
         }
@@ -299,7 +317,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             ...subscription,
             subscription: {
               ...subscription.subscription,
-              status: 'cancelled',
+              status: 'canceled',
               cancelledAt: new Date().toISOString(),
               isCancelled: true,
               isActive: false,
@@ -337,6 +355,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     isCancelled,
     isInGracePeriod,
     isPendingPaymentMethod,
+    isIncomplete,
+    isPastDue,
+    isUnpaid,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription,

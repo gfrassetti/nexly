@@ -18,6 +18,8 @@ export const useStripePayment = () => {
         method: 'POST',
         body: JSON.stringify({
           planType,
+          payment_behavior: 'default_incomplete', // Mejor manejo de pagos fallidos
+          payment_method_types: ['card'], // Solo tarjetas para mejor compatibilidad
         }),
       }, token);
 
@@ -31,7 +33,18 @@ export const useStripePayment = () => {
     } catch (error: any) {
       console.error('Error creating Stripe payment link:', error);
       
-      if (error.message) {
+      // Manejar errores específicos de Stripe
+      if (error.message?.includes('card_declined')) {
+        throw new Error('Tu tarjeta fue rechazada. Por favor, intenta con otra tarjeta.');
+      } else if (error.message?.includes('insufficient_funds')) {
+        throw new Error('Fondos insuficientes. Por favor, verifica tu saldo.');
+      } else if (error.message?.includes('expired_card')) {
+        throw new Error('Tu tarjeta ha expirado. Por favor, usa otra tarjeta.');
+      } else if (error.message?.includes('incorrect_cvc')) {
+        throw new Error('Código de seguridad incorrecto. Por favor, verifica tu CVC.');
+      } else if (error.message?.includes('processing_error')) {
+        throw new Error('Error de procesamiento. Por favor, intenta nuevamente.');
+      } else if (error.message) {
         throw new Error(error.message);
       } else {
         throw new Error('Error al crear el enlace de pago');
@@ -41,8 +54,67 @@ export const useStripePayment = () => {
     }
   };
 
+  // Función para manejar pagos fallidos y reintentar
+  const retryPayment = async (subscriptionId: string) => {
+    if (!token) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    setLoading(true);
+    try {
+      const response = await api('/stripe/retry-payment', {
+        method: 'POST',
+        body: JSON.stringify({
+          subscriptionId,
+        }),
+      }, token);
+
+      if (response.success) {
+        return response;
+      } else {
+        throw new Error('Error al reintentar el pago');
+      }
+    } catch (error: any) {
+      console.error('Error retrying payment:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para actualizar método de pago
+  const updatePaymentMethod = async (subscriptionId: string, paymentMethodId: string) => {
+    if (!token) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    setLoading(true);
+    try {
+      const response = await api('/stripe/update-payment-method', {
+        method: 'POST',
+        body: JSON.stringify({
+          subscriptionId,
+          paymentMethodId,
+        }),
+      }, token);
+
+      if (response.success) {
+        return response;
+      } else {
+        throw new Error('Error al actualizar el método de pago');
+      }
+    } catch (error: any) {
+      console.error('Error updating payment method:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     createPaymentLink,
+    retryPayment,
+    updatePaymentMethod,
     loading,
   };
 };

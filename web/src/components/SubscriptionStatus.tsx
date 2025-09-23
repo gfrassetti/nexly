@@ -16,13 +16,16 @@ export default function SubscriptionStatus() {
     isCancelled,
     isInGracePeriod,
     isPendingPaymentMethod,
+    isIncomplete,
+    isPastDue,
+    isUnpaid,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription
   } = useSubscription();
 
   const { createPaymentLink } = usePaymentLink();
-  const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
+  const { createPaymentLink: createStripePaymentLink, retryPayment, loading: stripeLoading } = useStripePayment();
 
   if (loading) {
     return (
@@ -62,7 +65,8 @@ export default function SubscriptionStatus() {
             >
               Reintentar
             </button>
-            {!isRateLimited && (
+            {/* Botón de MercadoPago comentado - solo Stripe ahora */}
+            {/* {!isRateLimited && (
               <button
                 onClick={() => createPaymentLink()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
@@ -70,7 +74,7 @@ export default function SubscriptionStatus() {
               >
                 {loading ? 'Procesando...' : 'Completar Pago'}
               </button>
-            )}
+            )} */}
             {/* Botón temporal para resetear rate limit en desarrollo */}
             {isRateLimited && process.env.NODE_ENV === 'development' && (
               <button
@@ -103,8 +107,86 @@ export default function SubscriptionStatus() {
     );
   }
 
-  // Estado pendiente de método de pago
-  if (isPendingPaymentMethod()) {
+  // Estado de pago incompleto (requiere acción del usuario)
+  if (isIncomplete() && !isTrialActive() && !isActive()) {
+    return (
+      <div className="bg-orange-900/20 border border-orange-700 rounded-lg p-6">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-orange-400">Pago Requiere Acción</h3>
+          </div>
+          <p className="text-orange-300 mb-6">
+            Tu pago requiere autenticación adicional (3D Secure) o hay un problema con tu método de pago.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <button
+              onClick={() => {
+                const selectedPlan = localStorage.getItem('selectedPlan') || 'basic';
+                createStripePaymentLink(selectedPlan as 'basic' | 'premium');
+              }}
+              disabled={stripeLoading}
+              className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+            >
+              <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
+              <div className="text-left">
+                <p className="font-medium">Completar Pago</p>
+                <p className="text-xs opacity-90">Resolver problema de pago</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Estado de pago vencido
+  if (isPastDue() && !isTrialActive() && !isActive()) {
+    return (
+      <div className="bg-red-900/20 border border-red-700 rounded-lg p-6">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-red-400">Pago Vencido</h3>
+          </div>
+          <p className="text-red-300 mb-6">
+            Tu último pago falló. Actualiza tu método de pago para reactivar tu suscripción.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <button
+              onClick={async () => {
+                if (subscription?.subscription?.stripeSubscriptionId) {
+                  try {
+                    await retryPayment(subscription.subscription.stripeSubscriptionId);
+                    refetch();
+                  } catch (error) {
+                    console.error('Error retrying payment:', error);
+                  }
+                }
+              }}
+              disabled={stripeLoading}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+            >
+              <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
+              <div className="text-left">
+                <p className="font-medium">Reintentar Pago</p>
+                <p className="text-xs opacity-90">Actualizar método de pago</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Estado pendiente de método de pago - SOLO si realmente está pendiente
+  if (isPendingPaymentMethod() && !isTrialActive() && !isActive()) {
     return (
       <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-6">
         <div className="text-center">
@@ -180,19 +262,23 @@ export default function SubscriptionStatus() {
             </h3>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
               sub.status === 'active' ? 'bg-green-600 text-white' :
-              sub.status === 'trial' ? 'bg-blue-600 text-white' :
+              sub.status === 'trialing' ? 'bg-blue-600 text-white' :
               sub.status === 'paused' ? 'bg-orange-600 text-white' :
-              sub.status === 'grace_period' ? 'bg-yellow-600 text-white' :
-              sub.status === 'cancelled' ? 'bg-nexly-light-blue text-white' :
+              sub.status === 'incomplete' ? 'bg-yellow-600 text-white' :
+              sub.status === 'past_due' ? 'bg-red-600 text-white' :
+              sub.status === 'canceled' ? 'bg-nexly-light-blue text-white' :
+              sub.status === 'unpaid' ? 'bg-red-500 text-white' :
               'bg-gray-600 text-white'
             }`}>
               {
                sub.status === 'active' ? 'Activo' :
-               sub.status === 'trial' ? 'Prueba' :
+               sub.status === 'trialing' ? 'Prueba' :
                sub.status === 'paused' ? 'Pausada' :
-               sub.status === 'grace_period' ? 'Período de gracia' :
-               sub.status === 'cancelled' ? 'Cancelado' :
-               'Expirado'}
+               sub.status === 'incomplete' ? 'Incompleto' :
+               sub.status === 'past_due' ? 'Vencido' :
+               sub.status === 'canceled' ? 'Cancelado' :
+               sub.status === 'unpaid' ? 'No pagado' :
+               'Desconocido'}
             </span>
           </div>
           

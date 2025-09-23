@@ -25,8 +25,17 @@ export default function AuthGuard({ children, requireAuth = true }: AuthGuardPro
     }
 
     if (!requireAuth && isAuthenticated) {
-      // Redirigir a pricing si no requiere autenticación pero ya está logueado
-      // Esto asegura que siempre vaya a pricing primero
+      // Solo redirigir a pricing si no viene de un pago exitoso
+      const currentPath = window.location.pathname;
+      const searchParams = new URLSearchParams(window.location.search);
+      const trialStarted = searchParams.get('trial_started');
+      
+      // Si viene de un pago exitoso o está en dashboard, no redirigir
+      if (currentPath === '/dashboard' || trialStarted === 'true') {
+        return;
+      }
+      
+      // Redirigir a pricing solo para otras páginas
       router.replace("/pricing");
       return;
     }

@@ -13,6 +13,8 @@ import subscriptionsRouter from "./routes/subscriptions";
 import stripeRouter from "./routes/stripe";
 import aiRouter from "./routes/ai";
 import analyticsRouter from "./routes/analytics";
+import stripeWebhookRouter from "./routes/stripeWebhook";
+import stripePauseRouter from "./routes/stripePause";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -82,6 +84,8 @@ app.use("/subscriptions", paymentRateLimit, subscriptionsRouter);
 app.use("/stripe", stripeRouter);
 app.use("/ai", aiRouter);
 app.use("/analytics", analyticsRouter);
+app.use("/stripe/webhook", stripeWebhookRouter);
+app.use("/stripe/pause", stripePauseRouter);
 
 // Error handler (debe ir al final)
 app.use(errorHandler);

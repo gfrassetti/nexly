@@ -4,8 +4,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ISubscription extends Document {
   userId: string;
   planType: 'basic' | 'premium';
-  status: 'trial' | 'active' | 'paused' | 'cancelled' | 'expired' | 'grace_period' | 'past_due';
-  mercadoPagoSubscriptionId?: string;
+  status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
+  // mercadoPagoSubscriptionId?: string; // Comentado - solo Stripe ahora
   stripeSubscriptionId?: string;
   stripeSessionId?: string;
   startDate: Date;
@@ -17,6 +17,17 @@ export interface ISubscription extends Document {
   cancelledAt?: Date;
   gracePeriodEndDate?: Date;
   originalEndDate?: Date; // Para restaurar después de reactivar
+  // Campos adicionales para estados de Stripe
+  isTrialActive?: boolean;
+  isActive?: boolean;
+  isPaused?: boolean;
+  isCancelled?: boolean;
+  isInGracePeriod?: boolean;
+  isIncomplete?: boolean;
+  isPastDue?: boolean;
+  isUnpaid?: boolean;
+  lastPaymentDate?: Date;
+  lastPaymentAttempt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,14 +45,14 @@ const SubscriptionSchema: Schema = new Schema({
   },
   status: {
     type: String,
-    enum: ['trial', 'active', 'paused', 'cancelled', 'expired', 'grace_period', 'past_due'],
-    default: 'trial',
+    enum: ['trialing', 'active', 'incomplete', 'incomplete_expired', 'past_due', 'canceled', 'unpaid', 'paused'],
+    default: 'trialing',
   },
-  mercadoPagoSubscriptionId: {
-    type: String,
-    unique: true,
-    sparse: true, // Permite valores únicos pero también null/undefined
-  },
+  // mercadoPagoSubscriptionId: {
+  //   type: String,
+  //   unique: true,
+  //   sparse: true, // Comentado - solo Stripe ahora
+  // },
   stripeSubscriptionId: {
     type: String,
     unique: true,
@@ -81,30 +92,70 @@ const SubscriptionSchema: Schema = new Schema({
   originalEndDate: {
     type: Date,
   },
+  // Campos adicionales para estados de Stripe
+  isTrialActive: {
+    type: Boolean,
+    default: false,
+  },
+  isActive: {
+    type: Boolean,
+    default: false,
+  },
+  isPaused: {
+    type: Boolean,
+    default: false,
+  },
+  isCancelled: {
+    type: Boolean,
+    default: false,
+  },
+  isInGracePeriod: {
+    type: Boolean,
+    default: false,
+  },
+  isIncomplete: {
+    type: Boolean,
+    default: false,
+  },
+  isPastDue: {
+    type: Boolean,
+    default: false,
+  },
+  isUnpaid: {
+    type: Boolean,
+    default: false,
+  },
+  lastPaymentDate: {
+    type: Date,
+  },
+  lastPaymentAttempt: {
+    type: Date,
+  },
 }, {
   timestamps: true,
 });
 
 // Índices para optimizar consultas
 SubscriptionSchema.index({ userId: 1 });
-// mercadoPagoSubscriptionId, stripeSubscriptionId y stripeSessionId ya tienen índices únicos sparse en la definición del campo
+// stripeSubscriptionId ya tiene índice único sparse en la definición del campo
+// (mercadoPagoSubscriptionId comentado - solo Stripe ahora)
 SubscriptionSchema.index({ status: 1 });
 SubscriptionSchema.index({ trialEndDate: 1 });
 
-// Métodos del schema
+// Métodos del schema - actualizados para estados de Stripe
 SubscriptionSchema.methods.isTrialActive = function(): boolean {
-  return this.status === 'trial' && new Date() < this.trialEndDate;
+  return this.status === 'trialing' && new Date() < this.trialEndDate;
 };
 
 SubscriptionSchema.methods.isActive = function(): boolean {
   const now = new Date();
   
-  // Si está en período de gracia y no ha expirado
+  // Si está en período de gracia y no ha expirado (legacy)
   if (this.status === 'grace_period' && this.gracePeriodEndDate && now < this.gracePeriodEndDate) {
     return true;
   }
   
-  // Si está activo y no ha expirado
+  // Estados activos de Stripe
   return this.status === 'active' && (!this.endDate || now < this.endDate);
 };
 
@@ -113,12 +164,25 @@ SubscriptionSchema.methods.isPaused = function(): boolean {
 };
 
 SubscriptionSchema.methods.isCancelled = function(): boolean {
-  return this.status === 'cancelled' || this.status === 'expired';
+  return this.status === 'canceled';
 };
 
 SubscriptionSchema.methods.isInGracePeriod = function(): boolean {
   const now = new Date();
   return this.status === 'grace_period' && this.gracePeriodEndDate && now < this.gracePeriodEndDate;
+};
+
+// Nuevos métodos para estados de Stripe
+SubscriptionSchema.methods.isIncomplete = function(): boolean {
+  return this.status === 'incomplete';
+};
+
+SubscriptionSchema.methods.isPastDue = function(): boolean {
+  return this.status === 'past_due';
+};
+
+SubscriptionSchema.methods.isUnpaid = function(): boolean {
+  return this.status === 'unpaid';
 };
 
 SubscriptionSchema.methods.canUseFeature = function(feature: string): boolean {
@@ -170,33 +234,37 @@ SubscriptionSchema.methods.reactivateSubscription = function(): void {
   }
 };
 
-// Método para cancelar suscripción con período de gracia
+// Método para cancelar suscripción - actualizado para Stripe
 SubscriptionSchema.methods.cancelSubscription = function(gracePeriodDays: number = 7): void {
   if (this.status === 'active' || this.status === 'paused') {
-    this.status = 'grace_period';
+    // Para Stripe, usar 'canceled' directamente o 'grace_period' si queremos período de gracia
+    this.status = 'canceled'; // O 'grace_period' si queremos período de gracia
     this.cancelledAt = new Date();
     this.autoRenew = false;
     
-    // Calcular período de gracia
-    const graceEndDate = new Date();
-    graceEndDate.setDate(graceEndDate.getDate() + gracePeriodDays);
-    this.gracePeriodEndDate = graceEndDate;
+    // Calcular período de gracia si usamos 'grace_period'
+    if (gracePeriodDays > 0) {
+      this.status = 'grace_period';
+      const graceEndDate = new Date();
+      graceEndDate.setDate(graceEndDate.getDate() + gracePeriodDays);
+      this.gracePeriodEndDate = graceEndDate;
+    }
   }
 };
 
-// Método para verificar si debe expirar
+// Método para verificar si debe expirar - actualizado para Stripe
 SubscriptionSchema.methods.checkExpiration = function(): boolean {
   const now = new Date();
   
   // Si está en período de gracia y ha expirado
   if (this.status === 'grace_period' && this.gracePeriodEndDate && now >= this.gracePeriodEndDate) {
-    this.status = 'expired';
+    this.status = 'canceled'; // Usar 'canceled' en lugar de 'expired'
     return true;
   }
   
   // Si está activo y ha expirado
   if (this.status === 'active' && this.endDate && now >= this.endDate) {
-    this.status = 'expired';
+    this.status = 'canceled'; // Usar 'canceled' en lugar de 'expired'
     return true;
   }
   
