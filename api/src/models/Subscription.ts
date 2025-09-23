@@ -17,15 +17,7 @@ export interface ISubscription extends Document {
   cancelledAt?: Date;
   gracePeriodEndDate?: Date;
   originalEndDate?: Date; // Para restaurar después de reactivar
-  // Campos adicionales para estados de Stripe
-  isTrialActive?: boolean;
-  isActive?: boolean;
-  isPaused?: boolean;
-  isCancelled?: boolean;
-  isInGracePeriod?: boolean;
-  isIncomplete?: boolean;
-  isPastDue?: boolean;
-  isUnpaid?: boolean;
+  // Los estados se calculan dinámicamente con métodos
   lastPaymentDate?: Date;
   lastPaymentAttempt?: Date;
   createdAt: Date;
@@ -92,39 +84,8 @@ const SubscriptionSchema: Schema = new Schema({
   originalEndDate: {
     type: Date,
   },
-  // Campos adicionales para estados de Stripe
-  isTrialActive: {
-    type: Boolean,
-    default: false,
-  },
-  isActive: {
-    type: Boolean,
-    default: false,
-  },
-  isPaused: {
-    type: Boolean,
-    default: false,
-  },
-  isCancelled: {
-    type: Boolean,
-    default: false,
-  },
-  isInGracePeriod: {
-    type: Boolean,
-    default: false,
-  },
-  isIncomplete: {
-    type: Boolean,
-    default: false,
-  },
-  isPastDue: {
-    type: Boolean,
-    default: false,
-  },
-  isUnpaid: {
-    type: Boolean,
-    default: false,
-  },
+  // Campos adicionales para estados de Stripe (solo fechas y IDs)
+  // Los estados se calculan dinámicamente con métodos
   lastPaymentDate: {
     type: Date,
   },

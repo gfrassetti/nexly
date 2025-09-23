@@ -74,8 +74,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
       { stripeSubscriptionId: subscriptionId },
       { 
         status: 'active',
-        isActive: true,
-        isTrialActive: false,
+        // Estados se calculan dinámicamente con métodos
         lastPaymentDate: new Date()
       },
       { new: true }
@@ -97,8 +96,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       { stripeSubscriptionId: subscriptionId },
       { 
         status: 'past_due',
-        isActive: false,
-        isPastDue: true,
+        // Estados se calculan dinámicamente con métodos
         lastPaymentAttempt: new Date()
       },
       { new: true }
@@ -117,73 +115,21 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   });
   
   if (subscriptionData) {
-    // Mapear estados de Stripe a nuestros estados
-    let status = 'active';
-    let isActive = true;
-    let isTrialActive = false;
-    let isPaused = false;
-    let isCancelled = false;
-    let isPastDue = false;
-    let isUnpaid = false;
-    
-    switch (subscription.status) {
-      case 'trialing':
-        status = 'trialing';
-        isActive = false;
-        isTrialActive = true;
-        break;
-      case 'active':
-        status = 'active';
-        isActive = true;
-        break;
-      case 'incomplete':
-        status = 'incomplete';
-        isActive = false;
-        break;
-      case 'incomplete_expired':
-        status = 'incomplete_expired';
-        isActive = false;
-        break;
-      case 'past_due':
-        status = 'past_due';
-        isActive = false;
-        isPastDue = true;
-        break;
-      case 'canceled':
-        status = 'canceled';
-        isActive = false;
-        isCancelled = true;
-        break;
-      case 'unpaid':
-        status = 'unpaid';
-        isActive = false;
-        isUnpaid = true;
-        break;
-      case 'paused':
-        status = 'paused';
-        isActive = false;
-        isPaused = true;
-        break;
-    }
-    
+    // Actualizar solo el status y fechas - los estados se calculan dinámicamente
     await Subscription.findOneAndUpdate(
       { stripeSubscriptionId: subscription.id },
       {
-        status,
-        isActive,
-        isTrialActive,
-        isPaused,
-        isCancelled,
-        isPastDue,
-        isUnpaid,
+        status: subscription.status,
+        planType: subscription.items.data[0]?.price?.lookup_key === 'premium_plan' ? 'premium' : 'basic',
         trialEndDate: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
+        pausedAt: subscription.pause_collection?.behavior ? new Date() : undefined,
         cancelledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : undefined,
         updatedAt: new Date()
       },
       { new: true }
     );
     
-    console.log(`Subscription ${subscription.id} updated to ${status}`);
+    console.log(`Subscription ${subscription.id} updated to ${subscription.status}`);
   }
 }
 
@@ -195,8 +141,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     { stripeSubscriptionId: subscription.id },
     { 
       status: 'canceled',
-      isActive: false,
-      isCancelled: true,
+      // Estados se calculan dinámicamente con métodos
       cancelledAt: new Date()
     },
     { new: true }

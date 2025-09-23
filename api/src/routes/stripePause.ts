@@ -50,8 +50,7 @@ router.post('/pause', async (req: AuthRequest, res: Response) => {
       { userId, stripeSubscriptionId: subscriptionId },
       {
         status: 'paused',
-        isPaused: true,
-        isActive: false,
+        // Estados se calculan dinámicamente con métodos
         pausedAt: new Date(),
         updatedAt: new Date(),
       }
@@ -118,8 +117,7 @@ router.post('/resume', async (req: AuthRequest, res: Response) => {
       { userId, stripeSubscriptionId: subscriptionId },
       {
         status: 'active',
-        isPaused: false,
-        isActive: true,
+        // Estados se calculan dinámicamente con métodos
         pausedAt: null,
         updatedAt: new Date(),
       }

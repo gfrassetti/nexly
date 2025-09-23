@@ -48,7 +48,7 @@ router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res
       status: 'trial',
       startDate: trialStartDate,
       endDate: trialEndDate,
-      isActive: true,
+      // Estados se calculan dinámicamente con métodos
       trialStartDate,
       trialEndDate
     });
@@ -63,7 +63,7 @@ router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res
         planType: subscription.planType,
         status: subscription.status,
         trialEndDate: subscription.trialEndDate,
-        isTrialActive: subscription.status === 'trialing'
+        isTrialActive: (subscription as any).isTrialActive()
       }
     });
 

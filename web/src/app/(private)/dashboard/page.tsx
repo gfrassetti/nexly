@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getContacts, getMessages } from "@/lib/api";
 import useSWR from "swr";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
+import BillingPanel from "@/components/BillingPanel";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useSearchParams } from "next/navigation";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
@@ -309,7 +310,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Segunda fila de métricas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Mensajes por plataforma */}
           <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
             <h3 className="text-lg font-semibold text-white mb-4">Mensajes por Plataforma</h3>
@@ -367,6 +368,9 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+
+          {/* Panel de facturación */}
+          <BillingPanel />
         </div>
 
         {/* Acciones rápidas */}
