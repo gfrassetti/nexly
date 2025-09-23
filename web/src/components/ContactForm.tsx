@@ -46,10 +46,10 @@ export default function ContactForm() {
     }
 
     try {
-      // Configuración de EmailJS (necesitarás crear una cuenta en emailjs.com)
-      const serviceId = 'service_nexly'; // Cambiar por tu Service ID
-      const templateId = 'template_contact'; // Cambiar por tu Template ID
-      const publicKey = 'YOUR_PUBLIC_KEY'; // Cambiar por tu Public Key
+      // Configuración de EmailJS usando variables de entorno
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'service_pfgehki';
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'template_XXXXXXX';
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '3-6tL7sWTn0JliyVV';
       
       // Parámetros del email
       const templateParams = {
