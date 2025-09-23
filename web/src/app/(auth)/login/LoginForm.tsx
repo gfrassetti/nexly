@@ -31,14 +31,9 @@ export default function LoginForm() {
       document.cookie = `token=${data.token}; Path=/; SameSite=Lax`;
       setAuth(data.token, data.user);
       
-      // Redirigir según el contexto
-      const plan = searchParams.get('plan');
-      if (plan && (plan === 'basic' || plan === 'premium')) {
-        // Ir a checkout para completar el pago
-        router.replace(`/checkout?plan=${plan}`);
-      } else {
-        router.replace("/dashboard");
-      }
+      // Siempre ir al dashboard después del login
+      // El dashboard mostrará el botón de "Completar Pago" si es necesario
+      router.replace("/dashboard");
     } catch (e: any) {
       setError(e.message || "Error de login");
     } finally {
