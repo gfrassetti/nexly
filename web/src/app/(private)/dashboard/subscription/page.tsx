@@ -12,7 +12,15 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     if (!loading) {
-      if (subscription?.subscription) {
+      // Verificar si hay una suscripción activa
+      const hasActiveSubscription = subscription?.hasSubscription && 
+        subscription?.subscription && 
+        (subscription.subscription.status === 'active' || 
+         subscription.subscription.status === 'trialing' ||
+         subscription.subscription.status === 'paused' ||
+         subscription.subscription.stripeSubscriptionId);
+
+      if (hasActiveSubscription) {
         // Redirigir a la página específica del proveedor
         const provider = getProviderFromSubscription(subscription.subscription);
         router.push(`/dashboard/subscription/${provider}`);

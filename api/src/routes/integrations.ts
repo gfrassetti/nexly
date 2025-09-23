@@ -85,6 +85,7 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
       `redirect_uri=${config.apiUrl}/integrations/oauth/whatsapp/callback&` +
       `scope=whatsapp_business_management,whatsapp_business_messaging&` +
       `response_type=code&` +
+      `config_id=${config.metaConfigId}&` +
       `state=${state}`;
 
     res.json({ 
@@ -522,22 +523,37 @@ router.post("/conversations/:id/reply", async (req: AuthRequest, res: Response) 
 
 /**
  * POST /integrations/send-whatsapp
- * Envía un mensaje de WhatsApp usando el número de prueba
+ * Envía un mensaje de WhatsApp usando la integración del cliente
+ * ARQUITECTURA SaaS: Usa el token del cliente, no el token de sistema
  */
 router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
     const { to, message } = req.body;
     
     if (!to || !message) {
       return res.status(400).json({ error: "missing_to_or_message" });
     }
 
-    if (!config.metaAccessToken || !config.metaPhoneNumberId) {
-      return res.status(500).json({ error: "whatsapp_not_configured" });
+    // Buscar la integración de WhatsApp del cliente
+    const integration = await Integration.findOne({
+      userId,
+      provider: "whatsapp",
+      status: "linked"
+    });
+
+    if (!integration || !integration.accessToken || !integration.phoneNumberId) {
+      return res.status(400).json({ 
+        error: "whatsapp_not_connected",
+        message: "El cliente debe conectar su WhatsApp Business primero"
+      });
     }
 
+    // Usar el token del cliente (no el token de sistema)
     const response = await axios.post(
-      `https://graph.facebook.com/v22.0/${config.metaPhoneNumberId}/messages`,
+      `https://graph.facebook.com/v19.0/${integration.phoneNumberId}/messages`,
       {
         messaging_product: "whatsapp",
         to: to,
@@ -548,7 +564,7 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
       },
       {
         headers: {
-          'Authorization': `Bearer ${config.metaAccessToken}`,
+          'Authorization': `Bearer ${integration.accessToken}`,
           'Content-Type': 'application/json'
         }
       }
@@ -670,6 +686,122 @@ router.get("/webhook-token", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("webhook_token_failed:", err);
     res.status(500).json({ error: "webhook_token_failed" });
+  }
+});
+
+/**
+ * POST /integrations/admin/create-test-phone
+ * TAREA ADMINISTRATIVA: Crear número de teléfono de prueba usando token de sistema
+ * Solo para administradores - no para clientes
+ */
+router.post("/admin/create-test-phone", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    // Verificar si es administrador (puedes implementar lógica de admin aquí)
+    // Por ahora, solo verificar que tenga token de sistema
+    if (!config.metaAccessToken || !config.metaWabaId) {
+      return res.status(500).json({ 
+        error: "system_token_not_configured",
+        message: "Token de sistema no configurado para tareas administrativas"
+      });
+    }
+
+    const { phoneNumber } = req.body;
+    
+    if (!phoneNumber) {
+      return res.status(400).json({ error: "phone_number_required" });
+    }
+
+    // Usar token de sistema para crear número de prueba
+    const response = await axios.post(
+      `https://graph.facebook.com/v19.0/${config.metaWabaId}/phone_numbers`,
+      {
+        phone_number: phoneNumber,
+        verified_name: "Test Business"
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${config.metaAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      phoneNumberId: response.data.id,
+      phoneNumber: response.data.display_phone_number,
+      message: "Número de prueba creado exitosamente"
+    });
+  } catch (err: any) {
+    console.error("create_test_phone_failed:", err?.response?.data || err?.message);
+    res.status(500).json({ 
+      error: "create_test_phone_failed",
+      details: err?.response?.data || err?.message 
+    });
+  }
+});
+
+/**
+ * GET /integrations/admin/system-status
+ * TAREA ADMINISTRATIVA: Verificar estado del sistema usando token de sistema
+ */
+router.get("/admin/system-status", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    // Verificar configuración del token de sistema
+    const systemStatus = {
+      systemToken: {
+        configured: !!config.metaAccessToken,
+        wabaId: !!config.metaWabaId,
+        phoneNumberId: !!config.metaPhoneNumberId
+      },
+      systemApi: {
+        connected: false,
+        wabaInfo: null,
+        phoneNumbers: [],
+        error: null
+      }
+    };
+
+    // Probar conexión con token de sistema
+    if (config.metaAccessToken && config.metaWabaId) {
+      try {
+        const wabaResponse = await axios.get(
+          `https://graph.facebook.com/v19.0/${config.metaWabaId}`,
+          {
+            params: {
+              access_token: config.metaAccessToken,
+              fields: 'id,name,display_phone_number'
+            }
+          }
+        );
+
+        const phoneNumbersResponse = await axios.get(
+          `https://graph.facebook.com/v19.0/${config.metaWabaId}/phone_numbers`,
+          {
+            params: {
+              access_token: config.metaAccessToken
+            }
+          }
+        );
+
+        systemStatus.systemApi.connected = true;
+        systemStatus.systemApi.wabaInfo = wabaResponse.data;
+        systemStatus.systemApi.phoneNumbers = phoneNumbersResponse.data.data;
+      } catch (error: any) {
+        systemStatus.systemApi.error = error.response?.data?.error?.message || error.message;
+      }
+    }
+
+    res.json(systemStatus);
+  } catch (err) {
+    console.error("system_status_failed:", err);
+    res.status(500).json({ error: "system_status_failed" });
   }
 });
 

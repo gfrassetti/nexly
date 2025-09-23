@@ -15,6 +15,7 @@ export const config = {
   // Meta App Configuration (usando los nombres de Railway)
   metaAppId: process.env.META_APP_ID || "", // Necesitas agregar esta en Railway
   metaAppSecret: process.env.META_APP_SECRET || "",
+  metaConfigId: process.env.META_CONFIG_ID, // ID de configuración de Meta
   metaVerifyToken: process.env.WEBHOOK_VERIFY_TOKEN || "", // Usando WEBHOOK_VERIFY_TOKEN
   
   // URLs

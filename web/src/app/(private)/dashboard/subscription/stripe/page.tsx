@@ -195,7 +195,15 @@ export default function SubscriptionInfo() {
     );
   }
 
-  if (!subscription?.subscription) {
+  // Verificar si realmente no hay suscripción activa
+  const hasActiveSubscription = subscription?.hasSubscription && 
+    subscription?.subscription && 
+    (subscription.subscription.status === 'active' || 
+     subscription.subscription.status === 'trialing' ||
+     subscription.subscription.status === 'paused' ||
+     subscription.subscription.stripeSubscriptionId);
+
+  if (!hasActiveSubscription) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="max-w-4xl mx-auto">

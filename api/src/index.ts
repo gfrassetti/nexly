@@ -76,7 +76,7 @@ const PORT = Number(process.env.PORT) || 4000;
 
 app.use("/health", healthRouter);
 app.use("/auth", authRouter);
-app.use("/webhook", verifyMetaSignature, webhookRouter);
+app.use("/webhook", webhookRouter);
 app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);

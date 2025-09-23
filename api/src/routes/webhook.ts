@@ -23,14 +23,17 @@ router.get("/", (req, res) => {
   res.sendStatus(403);
 });
 
-// POST
-router.post("/", verifyMetaSignature, async (req, res) => {
-  try {
-    // Solo validar firma en prod
-    if (process.env.NODE_ENV === "production") {
-      const ok = verifyMetaSignature(req);
-      if (!ok) return res.status(401).send("Unauthorized");
+// POST - Solo aplicar verificación de firma a POST requests
+router.post("/", async (req, res) => {
+  // Verificar firma de Meta solo en producción y si hay APP_SECRET
+  if (process.env.NODE_ENV === "production" && config.metaAppSecret) {
+    const isValidSignature = verifyMetaSignature(req);
+    if (!isValidSignature) {
+      console.log("❌ Invalid Meta signature");
+      return res.status(401).send("Unauthorized");
     }
+  }
+  try {
 
     const entry = req.body?.entry?.[0];
     const change = entry?.changes?.[0]?.value;

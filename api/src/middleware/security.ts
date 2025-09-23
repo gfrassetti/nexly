@@ -42,11 +42,19 @@ export const validateWebhookOrigin = (req: Request, res: Response, next: NextFun
   const allowedOrigins: string[] = [
     'https://api.mercadopago.com',
     'https://www.mercadopago.com.ar',
+    'https://graph.facebook.com',
+    'https://www.facebook.com',
+    'https://api.facebook.com',
     process.env.FRONTEND_URL
   ].filter((url): url is string => Boolean(url));
 
-  // Para webhooks de Mercado Pago, verificar que venga de su dominio
+  // Para webhooks, verificar que venga de un dominio autorizado
   if (req.path.includes('/webhook')) {
+    // Permitir requests de verificación de Meta (GET requests sin origin)
+    if (req.method === 'GET' && req.query['hub.verify_token']) {
+      return next();
+    }
+    
     const isAuthorized = allowedOrigins.some(allowed => 
       (origin && origin.includes(allowed)) || (referer && referer.includes(allowed))
     );
