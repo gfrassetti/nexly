@@ -47,7 +47,7 @@ export default function a() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link
-                href="/register"
+                href="/pricing"
                 className="bg-nexly-teal hover:bg-nexly-green text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-nexly-teal/25 hover:shadow-nexly-green/25"
               >
                 <span>Registrarse y Probar Gratis</span>

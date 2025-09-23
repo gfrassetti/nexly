@@ -50,10 +50,10 @@ export default function Header({
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <Link
-                  href="/dashboard"
+                  href="/pricing"
                   className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
                 >
-                  Dashboard
+                  Elegir Plan
                 </Link>
               ) : (
                 <>
@@ -64,7 +64,7 @@ export default function Header({
                     Iniciar sesión
                   </Link>
                   <Link
-                    href="/register"
+                    href="/pricing"
                     className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
                   >
                     Registrarse
@@ -89,10 +89,10 @@ export default function Header({
           {/* Navigation */}
           {isAuthenticated ? (
             <Link
-              href="/dashboard"
+              href="/pricing"
               className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200"
             >
-              Ir al Dashboard
+              Elegir Plan
             </Link>
           ) : (
             <ClientNavigation />

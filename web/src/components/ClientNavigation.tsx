@@ -29,7 +29,7 @@ export default function ClientNavigation() {
           Iniciar sesión
         </Link>
         <Link
-          href="/register"
+          href="/pricing"
           className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
         >
           Probar gratis
@@ -65,7 +65,7 @@ export default function ClientNavigation() {
               <Link href="/login" className="block px-3 py-2 text-neutral-300 hover:text-white">
                 Iniciar sesión
               </Link>
-              <Link href="/register" className="block px-3 py-2 text-nexly-teal hover:text-nexly-green">
+              <Link href="/pricing" className="block px-3 py-2 text-nexly-teal hover:text-nexly-green">
                 Probar gratis
               </Link>
             </div>
