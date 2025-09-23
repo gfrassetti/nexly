@@ -179,7 +179,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook
               userStatus = 'active_trial';
               break;
             case 'canceled':
-              newStatus = 'cancelled';
+              newStatus = 'canceled';
               userStatus = 'none';
               break;
             case 'paused':
@@ -191,12 +191,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook
               userStatus = 'cancelled'; // Usuario con pago fallido = cancelado
               break;
             case 'unpaid':
-              newStatus = 'cancelled';
+              newStatus = 'canceled';
               userStatus = 'none';
               break;
             case 'incomplete':
             case 'incomplete_expired':
-              newStatus = 'trial'; // Mantener en trial si el pago no se completó
+              newStatus = 'trialing'; // Mantener en trial si el pago no se completó
               userStatus = 'trial_pending_payment_method';
               break;
           }
@@ -227,7 +227,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook
         });
 
         if (dbSubscription) {
-          dbSubscription.status = 'cancelled';
+          dbSubscription.status = 'canceled';
           await dbSubscription.save();
 
           // Actualizar el estado del usuario

@@ -21,7 +21,7 @@ export async function getMessageLimits(userId: string): Promise<MessageLimits> {
   }
 
   // Durante trial, acceso completo
-  if (subscription.status === 'trial') {
+  if (subscription.status === 'trialing') {
     return {
       maxMessagesPerDay: 999,
       maxMessagesPerIntegration: 999,

@@ -29,7 +29,7 @@ router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res
     // Verificar si ya tiene una suscripción activa
     const existingSubscription = await Subscription.findOne({ userId });
     
-    if (existingSubscription && (existingSubscription.status === 'trial' || existingSubscription.status === 'active')) {
+    if (existingSubscription && (existingSubscription.status === 'trialing' || existingSubscription.status === 'active')) {
       return res.json({
         success: true,
         message: 'Ya tienes una suscripción activa',
@@ -63,7 +63,7 @@ router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res
         planType: subscription.planType,
         status: subscription.status,
         trialEndDate: subscription.trialEndDate,
-        isTrialActive: subscription.status === 'trial'
+        isTrialActive: subscription.status === 'trialing'
       }
     });
 
@@ -209,7 +209,7 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
         maxIntegrations: (subscription as any).getMaxIntegrations(),
         canUseFeature: (subscription as any).canUseFeature.bind(subscription),
         stripeSubscriptionId: subscription.stripeSubscriptionId,
-        mercadoPagoSubscriptionId: subscription.mercadoPagoSubscriptionId,
+        // mercadoPagoSubscriptionId: subscription.mercadoPagoSubscriptionId, // Comentado - solo Stripe ahora
       },
       userSubscriptionStatus: user.subscription_status
     });
@@ -285,7 +285,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     
     if (existingPending) {
       // Actualizar la suscripción existente con el nuevo ID de MercadoPago
-      existingPending.mercadoPagoSubscriptionId = mercadoPagoSubscription.id;
+      // existingPending.mercadoPagoSubscriptionId = mercadoPagoSubscription.id; // Comentado - solo Stripe ahora
       await existingPending.save();
       savedSubscription = existingPending;
     } else {
@@ -361,10 +361,10 @@ router.post('/webhook', mercadoPagoWebhookVerification, async (req, res) => {
             subscription.autoRenew = true;
             break;
           case 'cancelled':
-            newStatus = 'cancelled';
+            newStatus = 'canceled';
             break;
           case 'paused':
-            newStatus = 'cancelled';
+            newStatus = 'canceled';
             break;
         }
 
@@ -419,14 +419,14 @@ router.post('/pause', authenticateToken, asyncHandler(async (req: any, res: any)
     }
 
     // Pausar en Mercado Pago si existe
-    if (subscription.mercadoPagoSubscriptionId) {
-      try {
-        await mercadoPagoService.cancelSubscription(subscription.mercadoPagoSubscriptionId);
-      } catch (error) {
-        console.error('Error pausing in Mercado Pago:', error);
-        // Continuar con la pausa local aunque falle en MP
-      }
-    }
+    // if (subscription.mercadoPagoSubscriptionId) {
+    //   try {
+    //     await mercadoPagoService.cancelSubscription(subscription.mercadoPagoSubscriptionId);
+    //   } catch (error) {
+    //     console.error('Error pausing in Mercado Pago:', error);
+    //     // Continuar con la pausa local aunque falle en MP
+    //   }
+    // } // Comentado - solo Stripe ahora
 
     (subscription as any).pauseSubscription();
     await subscription.save();
@@ -485,7 +485,7 @@ router.post('/reactivate', authenticateToken, asyncHandler(async (req: any, res:
 
     // Actualizar suscripción
     (subscription as any).reactivateSubscription();
-    subscription.mercadoPagoSubscriptionId = mercadoPagoSubscription.id;
+    // subscription.mercadoPagoSubscriptionId = mercadoPagoSubscription.id; // Comentado - solo Stripe ahora
     await subscription.save();
 
     res.json({
@@ -558,14 +558,14 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: any, res: any
     }
 
     // Si tiene ID de Mercado Pago, cancelar allí también
-    if (subscription.mercadoPagoSubscriptionId) {
-      try {
-        await mercadoPagoService.cancelSubscription(subscription.mercadoPagoSubscriptionId);
-      } catch (error) {
-        console.error('Error cancelling in Mercado Pago:', error);
-        // Continuar con la cancelación local aunque falle en MP
-      }
-    }
+    // if (subscription.mercadoPagoSubscriptionId) {
+    //   try {
+    //     await mercadoPagoService.cancelSubscription(subscription.mercadoPagoSubscriptionId);
+    //   } catch (error) {
+    //     console.error('Error cancelling in Mercado Pago:', error);
+    //     // Continuar con la cancelación local aunque falle en MP
+    //   }
+    // } // Comentado - solo Stripe ahora
 
     // Cancelar con período de gracia (7 días por defecto)
     (subscription as any).cancelSubscription(7);

@@ -146,7 +146,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   const getMaxIntegrations = (): number => {
     // Si está pendiente de método de pago, no puede usar integraciones
-    if (subscription?.userSubscriptionStatus === 'trial_pending_payment_method') {
+    if (isPendingPaymentMethod()) {
       return 0;
     }
 
@@ -156,19 +156,28 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
     const sub = subscription.subscription;
     
-    if (sub.isTrialActive) {
-      return 999; // Durante trial, acceso completo
+    // Durante trial activo, acceso completo
+    if (isTrialActive()) {
+      return 999;
+    }
+
+    // Si está activo, acceso completo también
+    if (isActive()) {
+      return sub.planType === 'basic' ? 2 : 999;
     }
 
     return sub.planType === 'basic' ? 2 : 999;
   };
 
   const isTrialActive = (): boolean => {
-    return subscription?.subscription?.isTrialActive || false;
+    return subscription?.subscription?.isTrialActive || 
+           subscription?.subscription?.status === 'trialing' ||
+           (subscription?.subscription?.status as any) === 'trial'; // Compatibilidad temporal
   };
 
   const isActive = (): boolean => {
-    return subscription?.subscription?.isActive || false;
+    return subscription?.subscription?.isActive || 
+           subscription?.subscription?.status === 'active';
   };
 
   const isPaused = (): boolean => {
@@ -184,7 +193,16 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   };
 
   const isPendingPaymentMethod = (): boolean => {
-    return subscription?.userSubscriptionStatus === 'trial_pending_payment_method';
+    // Solo mostrar pago pendiente si:
+    // 1. El estado del usuario es 'trial_pending_payment_method' Y
+    // 2. NO tiene una suscripción activa o en trial
+    // 3. Y NO tiene un stripeSubscriptionId válido (que indica que ya pagó)
+    if (subscription?.userSubscriptionStatus === 'trial_pending_payment_method') {
+      const hasActiveSubscription = isTrialActive() || isActive();
+      const hasStripeSubscription = subscription?.subscription?.stripeSubscriptionId;
+      return !hasActiveSubscription && !hasStripeSubscription;
+    }
+    return false;
   };
 
   const isIncomplete = (): boolean => {

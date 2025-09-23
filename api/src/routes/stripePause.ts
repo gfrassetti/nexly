@@ -1,14 +1,14 @@
 import { Router, Request, Response } from "express";
 import Stripe from "stripe";
 import handleAuth from "../middleware/auth";
-import { Subscription } from "../models/Subscription";
+import { default as Subscription, ISubscription } from "../models/Subscription";
 
 const router = Router();
 router.use(handleAuth);
 
 // Inicializar Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-08-27.basil',
 });
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };

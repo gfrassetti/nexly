@@ -1,13 +1,13 @@
 import { Router, Request, Response } from "express";
 import Stripe from "stripe";
 import { User } from "../models/User";
-import { Subscription } from "../models/Subscription";
+import { default as Subscription, ISubscription } from "../models/Subscription";
 
 const router = Router();
 
 // Inicializar Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-08-27.basil',
 });
 
 // Middleware para verificar la firma del webhook
@@ -66,8 +66,8 @@ router.post('/webhook', verifyStripeSignature, async (req: Request, res: Respons
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   console.log('Invoice paid:', invoice.id);
   
-  if (invoice.subscription) {
-    const subscriptionId = invoice.subscription as string;
+  if ((invoice as any).subscription && typeof (invoice as any).subscription === 'string') {
+    const subscriptionId = (invoice as any).subscription as string;
     
     // Actualizar el estado de la suscripción en la base de datos
     await Subscription.findOneAndUpdate(
@@ -89,8 +89,8 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   console.log('Invoice payment failed:', invoice.id);
   
-  if (invoice.subscription) {
-    const subscriptionId = invoice.subscription as string;
+  if ((invoice as any).subscription && typeof (invoice as any).subscription === 'string') {
+    const subscriptionId = (invoice as any).subscription as string;
     
     // Actualizar el estado de la suscripción
     await Subscription.findOneAndUpdate(
