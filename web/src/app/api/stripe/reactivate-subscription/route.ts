@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Este endpoint actúa como proxy al backend de Express
 export async function PUT(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexly-production.up.railway.app';
     const body = await request.json();
     
     // Forward the request to the Express backend

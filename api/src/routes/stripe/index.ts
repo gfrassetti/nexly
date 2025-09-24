@@ -187,7 +187,9 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     
     if (existingSubscription) {
       // Actualizar la suscripción existente con el nuevo ID de Stripe
-      existingSubscription.stripeSubscriptionId = stripeSession.subscription as string;
+      if (stripeSession.subscription) {
+        existingSubscription.stripeSubscriptionId = stripeSession.subscription as string;
+      }
       existingSubscription.stripeSessionId = stripeSession.id;
       await existingSubscription.save();
       savedSubscription = existingSubscription;
@@ -204,7 +206,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
         startDate,
         trialEndDate,
         autoRenew: false,
-        stripeSubscriptionId: stripeSession.subscription as string,
+        stripeSubscriptionId: stripeSession.subscription ? stripeSession.subscription as string : undefined,
         stripeSessionId: stripeSession.id,
       });
 
