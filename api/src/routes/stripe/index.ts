@@ -177,20 +177,20 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       throw new CustomError('Error al crear la sesión de pago en Stripe', 500);
     }
 
-    // Verificar si ya existe una suscripción pendiente
-    const existingPending = await Subscription.findOne({
+    // Verificar si ya existe una suscripción pendiente o activa
+    const existingSubscription = await Subscription.findOne({
       userId,
-      status: 'trialing'
+      status: { $in: ['trialing', 'active', 'incomplete'] }
     });
 
     let savedSubscription;
     
-    if (existingPending) {
+    if (existingSubscription) {
       // Actualizar la suscripción existente con el nuevo ID de Stripe
-      existingPending.stripeSubscriptionId = stripeSession.subscription as string;
-      existingPending.stripeSessionId = stripeSession.id;
-      await existingPending.save();
-      savedSubscription = existingPending;
+      existingSubscription.stripeSubscriptionId = stripeSession.subscription as string;
+      existingSubscription.stripeSessionId = stripeSession.id;
+      await existingSubscription.save();
+      savedSubscription = existingSubscription;
     } else {
       // Crear nueva suscripción en la base de datos
       const startDate = new Date();

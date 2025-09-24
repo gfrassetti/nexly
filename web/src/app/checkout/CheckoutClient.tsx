@@ -25,7 +25,8 @@ export default function CheckoutClient() {
           document.cookie = `token=${token}; Path=/; SameSite=Lax`;
           
           // Obtener datos del usuario desde el token
-          const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/auth/me`, {
+          const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexly-production.up.railway.app';
+          const userResponse = await fetch(`${backendUrl}/auth/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -39,7 +40,8 @@ export default function CheckoutClient() {
 
         // Crear enlace de pago
         const endpoint = paymentMethod === 'stripe' ? '/stripe/create-payment-link' : '/subscriptions/create-payment-link';
-        const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://nexly-production.up.railway.app';
+        const paymentResponse = await fetch(`${backendUrl}${endpoint}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -54,7 +56,8 @@ export default function CheckoutClient() {
           // Ir directo al checkout de Stripe
           window.location.href = paymentData.paymentUrl;
         } else {
-          setError('Error al crear el enlace de pago: ' + (paymentData.error || 'Error desconocido'));
+          const errorMessage = paymentData.error || paymentData.message || 'Error desconocido';
+          setError('Error al crear el enlace de pago: ' + errorMessage);
         }
       } catch (err: any) {
         console.error('Error en checkout:', err);
@@ -78,10 +81,10 @@ export default function CheckoutClient() {
         <div className="flex justify-center mb-6">
           <Logo size="md" />
         </div>
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="rounded-2xl">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nexly-teal mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Procesando pago...</h2>
-          <p className="text-gray-600">Redirigiendo a Stripe para completar tu suscripción</p>
+          <h2 className="text-xl font-semibold text-white mb-2">Procesando pago...</h2>
+          <p className="text-nexly-teal">Redirigiendo a Stripe para completar tu suscripción</p>
         </div>
       </div>
     );
