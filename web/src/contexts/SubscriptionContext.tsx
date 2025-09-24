@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -70,7 +70,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSubscriptionStatus = async () => {
+  const fetchSubscriptionStatus = useCallback(async () => {
     if (!token) {
       setLoading(false);
       return;
@@ -113,7 +113,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     // Limpiar estado anterior cuando cambia el token
@@ -145,7 +145,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     unpaid: rawStatus === 'unpaid'
   };
 
-  const canUseFeature = (feature: string): boolean => {
+  const canUseFeature = useCallback((feature: string): boolean => {
     if (status.pendingPaymentMethod || !subscription?.hasSubscription || !subscription.subscription) {
       return false;
     }
@@ -168,15 +168,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
 
     return false;
-  };
+  }, [status, subscription]);
 
-  const getMaxIntegrations = (): number => {
+  const getMaxIntegrations = useCallback((): number => {
     if (status.pendingPaymentMethod || !subscription?.subscription) return 0;
     return subscription.subscription.planType === 'basic' ? 2 : 999;
-  };
+  }, [status, subscription]);
 
 
-  const pauseSubscription = async (): Promise<void> => {
+  const pauseSubscription = useCallback(async (): Promise<void> => {
     if (!token) return;
 
     try {
@@ -222,9 +222,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       // Handle pause subscription error
       throw error;
     }
-  };
+  }, [token, subscription]);
 
-  const reactivateSubscription = async (): Promise<void> => {
+  const reactivateSubscription = useCallback(async (): Promise<void> => {
     if (!token) return;
 
     try {
@@ -270,9 +270,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       // Handle reactivate subscription error
       throw error;
     }
-  };
+  }, [token, subscription]);
 
-  const cancelSubscription = async (): Promise<void> => {
+  const cancelSubscription = useCallback(async (): Promise<void> => {
     if (!token) return;
 
     try {
@@ -317,15 +317,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       // Handle cancel subscription error
       throw error;
     }
-  };
+  }, [token, subscription]);
 
   // Función para actualizar el estado después de un pago exitoso
-  const updateAfterPayment = (newSubscriptionData: SubscriptionData) => {
+  const updateAfterPayment = useCallback((newSubscriptionData: SubscriptionData) => {
     setSubscription(newSubscriptionData);
     setError(null);
-  };
+  }, []);
 
-  const value: SubscriptionContextType = {
+  const value: SubscriptionContextType = useMemo(() => ({
     subscription,
     loading,
     error,
@@ -337,7 +337,19 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     reactivateSubscription,
     cancelSubscription,
     updateAfterPayment,
-  };
+  }), [
+    subscription,
+    loading,
+    error,
+    status,
+    fetchSubscriptionStatus,
+    canUseFeature,
+    getMaxIntegrations,
+    pauseSubscription,
+    reactivateSubscription,
+    cancelSubscription,
+    updateAfterPayment,
+  ]);
 
   return (
     <SubscriptionContext.Provider value={value}>

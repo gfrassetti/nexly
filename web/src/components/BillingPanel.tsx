@@ -16,8 +16,8 @@ export default function BillingPanel() {
   }
 
   const sub = subscription.subscription;
-  const status = sub.status;
-  const isCanceled = status === "canceled";
+  const subscriptionStatus = sub.status;
+  const isCanceled = subscriptionStatus === "canceled";
   const isTrialActive = status.trialActive;
   const isActive = status.active;
 
@@ -47,7 +47,7 @@ export default function BillingPanel() {
 
   // Obtener etiqueta del estado
   const getStatusLabel = () => {
-    switch (status) {
+    switch (subscriptionStatus) {
       case 'active':
         return 'Activo';
       case 'trialing':
@@ -69,7 +69,7 @@ export default function BillingPanel() {
   };
 
   const getStatusColor = () => {
-    switch (status) {
+    switch (subscriptionStatus) {
       case 'active':
         return 'bg-green-600 text-white';
       case 'trialing':
