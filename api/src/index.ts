@@ -47,17 +47,8 @@ const ALLOWED_ORIGINS = [
 
 app.use(cors({
   origin(origin, cb) {
-    if (!origin) {
-      console.log("🔍 CORS check - No origin, allowing");
-      return cb(null, true);
-    }
-    
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      console.log("🔍 CORS check - Origin allowed:", origin);
-      return cb(null, true);
-    }
-    
-    console.log("🔍 CORS check - Origin NOT allowed:", origin);
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
     return cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -65,20 +56,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type","Authorization"]
 }));
 
-// Handle preflight requests explicitly for all routes
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.status(200).end();
-});
-
-// Validate webhook origins
-app.use(validateWebhookOrigin);
-
-// Sanitize payment data
-app.use(sanitizePaymentData);
+// CORS is already configured above, no need for additional options handling
 
 app.use(
   express.json({
@@ -92,15 +70,15 @@ const PORT = Number(process.env.PORT) || 4000;
 
 app.use("/health", healthRouter);
 app.use("/auth", authRouter);
-app.use("/webhook", webhookRouter);
+app.use("/webhook", validateWebhookOrigin, webhookRouter);
 app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
-app.use("/subscriptions", subscriptionsRouter);
-app.use("/stripe", stripeRouter);
+app.use("/subscriptions", sanitizePaymentData, subscriptionsRouter);
+app.use("/stripe", sanitizePaymentData, stripeRouter);
 app.use("/ai", aiRouter);
 app.use("/analytics", analyticsRouter);
-app.use("/stripe/webhook", stripeWebhookRouter);
+app.use("/stripe/webhook", validateWebhookOrigin, stripeWebhookRouter);
 app.use("/stripe/pause", stripePauseRouter);
 
 // Error handler (debe ir al final)
