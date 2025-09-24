@@ -37,6 +37,7 @@ export default function DashboardPage() {
   });
   const [showTrialNotification, setShowTrialNotification] = useState(false);
   const [showPaymentError, setShowPaymentError] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
 
   // Mostrar notificación si se inició el trial
   useEffect(() => {
@@ -55,6 +56,16 @@ export default function DashboardPage() {
       setShowPaymentError(true);
       // Ocultar después de 8 segundos
       setTimeout(() => setShowPaymentError(false), 8000);
+    }
+  }, [searchParams]);
+
+  // Mostrar notificación si el pago fue exitoso
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success');
+    if (paymentSuccess === 'true') {
+      setShowPaymentSuccess(true);
+      // Ocultar después de 6 segundos
+      setTimeout(() => setShowPaymentSuccess(false), 6000);
     }
   }, [searchParams]);
 
@@ -175,6 +186,29 @@ export default function DashboardPage() {
             <button 
               onClick={() => setShowPaymentError(false)}
               className="text-yellow-400 hover:text-yellow-300"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Notificación de pago exitoso */}
+        {showPaymentSuccess && (
+          <div className="bg-nexly-green/20 border border-nexly-green/30 rounded-lg p-4 flex items-center space-x-3">
+            <div className="w-8 h-8 bg-nexly-green rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-nexly-green font-semibold">¡Pago procesado exitosamente!</h3>
+              <p className="text-neutral-300 text-sm">Tu suscripción está activa y tu prueba gratuita ha comenzado</p>
+            </div>
+            <button 
+              onClick={() => setShowPaymentSuccess(false)}
+              className="text-nexly-green hover:text-nexly-teal"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

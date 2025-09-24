@@ -15,6 +15,18 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const { setAuth } = useAuth();
 
+  // Detectar si hay un plan guardado para mantener el contexto
+  const selectedPlan = typeof window !== 'undefined' ? localStorage.getItem('selectedPlan') : null;
+  const selectedPaymentMethod = typeof window !== 'undefined' ? localStorage.getItem('selectedPaymentMethod') : 'stripe';
+  
+  // Construir la URL de registro con el plan si existe
+  const getRegisterUrl = () => {
+    if (selectedPlan) {
+      return `/register?plan=${selectedPlan}&payment=${selectedPaymentMethod}`;
+    }
+    return '/register';
+  };
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -88,7 +100,7 @@ export default function LoginForm() {
             <span className="text-neutral-400 text-sm">
               ¿No estás registrado?{" "}
             </span>
-            <Link href="/register" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors duration-300">
+            <Link href={getRegisterUrl()} className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors duration-300">
               Regístrate aquí
             </Link>
           </div>

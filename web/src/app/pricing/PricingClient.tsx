@@ -63,6 +63,10 @@ function PricingContent() {
   ];
 
   const handleStartTrial = async (planType: 'basic' | 'premium') => {
+    // Guardar el plan seleccionado en localStorage para mantener el contexto
+    localStorage.setItem('selectedPlan', planType);
+    localStorage.setItem('selectedPaymentMethod', selectedPaymentMethod);
+    
     // SIEMPRE redirigir al registro con el plan
     // El flujo correcto es: Pricing → Registro → Checkout → Pago → Dashboard
     window.location.href = `/register?plan=${planType}&payment=${selectedPaymentMethod}`;

@@ -29,6 +29,10 @@ export default function RegisterForm() {
       const response = await registerApi({ username, email, password, plan: plan || undefined });
       setSuccess(true);
       
+      // Limpiar el plan guardado del localStorage después del registro exitoso
+      localStorage.removeItem('selectedPlan');
+      localStorage.removeItem('selectedPaymentMethod');
+      
       // Si hay un plan, hacer auto-login y redirigir directo al checkout
       if (plan && (plan === 'basic' || plan === 'premium') && response.token && response.user) {
         // Auto-login

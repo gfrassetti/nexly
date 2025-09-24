@@ -162,7 +162,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
 
     console.log('🔄 Creando nueva suscripción en Stripe');
     
-    const successUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
+    const successUrl = `${process.env.FRONTEND_URL}/dashboard`;
     const cancelUrl = `${process.env.FRONTEND_URL}/pricing`;
     let stripeSession;
     
