@@ -17,14 +17,6 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     if (!loading && subscription !== null) {
-      // Debug temporal para entender qué está pasando
-      console.log("🔍 Subscription debug:", {
-        hasSubscription: subscription?.hasSubscription,
-        subscription: subscription?.subscription,
-        userSubscriptionStatus: subscription?.userSubscriptionStatus,
-        status: subscription?.subscription?.status,
-        stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId
-      });
 
       // Verificar si hay una suscripción activa - lógica MUY permisiva
       const hasActiveSubscription = 
@@ -45,26 +37,61 @@ export default function SubscriptionPage() {
           (subscription.subscription as any).mercadoPagoSubscriptionId
         ));
 
-      console.log("🔍 Has active subscription:", hasActiveSubscription);
-
       if (hasActiveSubscription) {
         // Redirigir a la página específica del proveedor
         const provider = getProviderFromSubscription(subscription.subscription);
-        console.log("🔍 Redirecting to provider:", provider);
         router.replace(`/dashboard/subscription/${provider}`);
-      } else {
-        // Solo si realmente NO hay suscripción, redirigir a pricing
-        console.log("🔍 No active subscription, redirecting to pricing");
-        router.replace("/pricing");
       }
+      // Si no hay suscripción activa, NO redirigir - mostrar la página de "Sin Suscripción"
     }
   }, [subscription, loading, router]);
 
-  // Mostrar loading mientras se determina el proveedor
+  // Mostrar loading mientras se carga la suscripción
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
+        <span className="ml-2 text-gray-600">Cargando...</span>
+      </div>
+    );
+  }
+
+  // Si no hay suscripción activa, mostrar página de "Sin Suscripción"
+  if (!loading && subscription !== null && !subscription?.hasSubscription && !subscription?.subscription) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl text-gray-400">●</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Sin Suscripción Activa</h2>
+            <p className="text-gray-600 mb-6">No tienes una suscripción activa. Elige un plan para comenzar a usar todas las funciones de Nexly.</p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => window.location.href = "/pricing"}
+                className="bg-gradient-to-r from-nexly-green to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Ver Planes Disponibles
+              </button>
+              <button
+                onClick={() => window.location.href = "/dashboard"}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-xl transition-all duration-200"
+              >
+                Volver al Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si hay suscripción activa, mostrar loading mientras redirige
   return (
     <div className="flex items-center justify-center h-64">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
-      <span className="ml-2 text-gray-600">Cargando...</span>
+      <span className="ml-2 text-gray-600">Redirigiendo a tu suscripción...</span>
     </div>
   );
 }
