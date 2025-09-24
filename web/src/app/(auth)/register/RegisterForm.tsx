@@ -36,34 +36,10 @@ export default function RegisterForm() {
         document.cookie = `token=${response.token}; Path=/; SameSite=Lax`;
         setAuth(response.token, response.user);
         
-        // Crear el enlace de pago inmediatamente después del registro
-        setTimeout(async () => {
-          try {
-            const endpoint = paymentMethod === 'stripe' ? '/stripe/create-payment-link' : '/subscriptions/create-payment-link';
-            const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${response.token}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ planType: plan }),
-            });
-
-            const paymentData = await paymentResponse.json();
-
-            if (paymentData.success && paymentData.paymentUrl) {
-              // Ir directo al checkout
-              window.location.href = paymentData.paymentUrl;
-            } else {
-              // Si falla el checkout, ir al dashboard para que pueda intentar nuevamente
-              console.error('Error creating payment link:', paymentData.error);
-              router.push('/dashboard?payment_error=true');
-            }
-          } catch (error) {
-            console.error('Error creating payment link:', error);
-            // Si hay error, ir al dashboard para que pueda intentar nuevamente
-            router.push('/dashboard?payment_error=true');
-          }
+        // Redirigir directo al checkout después del registro
+        setTimeout(() => {
+          // Ir directo al checkout de Stripe
+          window.location.href = `/checkout?plan=${plan}&payment=${paymentMethod}&token=${response.token}`;
         }, 1000);
       } else {
         // Si no hay plan, ir a login para que inicie sesión
@@ -93,7 +69,7 @@ export default function RegisterForm() {
         
         {success && (
           <div className="p-3 bg-nexly-green/20 border border-nexly-green/50 text-nexly-green rounded">
-            ✅ ¡Cuenta creada exitosamente! Redirigiendo al login...
+            ✅ Cuenta creada exitosamente.
           </div>
         )}
         

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
-import { usePaymentLink } from "@/hooks/usePaymentLink";
-import { useStripePayment } from "@/hooks/useStripePayment";
+// import { usePaymentLink } from "@/hooks/usePaymentLink";
+// import { useStripePayment } from "@/hooks/useStripePayment";
 import Accordion from "@/components/Accordion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,8 +14,8 @@ function PricingContent() {
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'mercadopago' | 'stripe'>('stripe');
-  const { createPaymentLink, loading } = usePaymentLink();
-  const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
+  // const { createPaymentLink, loading } = usePaymentLink();
+  // const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
 
   // Detectar plan desde query parameters
   useEffect(() => {
@@ -63,30 +63,9 @@ function PricingContent() {
   ];
 
   const handleStartTrial = async (planType: 'basic' | 'premium') => {
-    if (!token) {
-      // Para usuarios no autenticados, redirigir al registro con el plan
-      // El plan se guardará en el registro y después del registro irá directo al checkout
-      window.location.href = `/register?plan=${planType}&payment=${selectedPaymentMethod}`;
-      return;
-    }
-
-    // Para usuarios autenticados que ya tienen cuenta, crear DIRECTAMENTE la suscripción
-    try {
-      let success = false;
-      
-      if (selectedPaymentMethod === 'stripe') {
-        success = await createStripePaymentLink(planType);
-      } else {
-        success = await createPaymentLink(planType);
-      }
-      
-      if (!success) {
-        // Si falla, mostrar mensaje más específico
-        console.error('Failed to create payment link');
-      }
-    } catch (error) {
-      console.error('Error in handleStartTrial:', error);
-    }
+    // SIEMPRE redirigir al registro con el plan
+    // El flujo correcto es: Pricing → Registro → Checkout → Pago → Dashboard
+    window.location.href = `/register?plan=${planType}&payment=${selectedPaymentMethod}`;
   };
 
   return (
@@ -182,50 +161,26 @@ function PricingContent() {
                 ))}
               </ul>
 
-              {!token ? (
-                // Usuario no autenticado - Botón de registro
-                <div className="space-y-3 mt-auto">
-                  <button
-                    onClick={() => window.location.href = `/register?plan=${plan.id}&payment=${selectedPaymentMethod}`}
-                    className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
-                      plan.popular
-                        ? 'bg-nexly-teal hover:bg-nexly-green text-white'
-                        : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
-                    }`}
-                  >
-                    Comenzar Prueba Gratis
-                  </button>
-                  <p className="text-center text-xs text-neutral-400 mb-3">
-                    7 días gratis • Tarjeta requerida
-                  </p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
-                    <span>Pago seguro con</span>
-                    <img src="/strapi_logo.png" alt="Stripe" className="h-10 w-auto" />
-                  </div>
+              {/* Botón único que siempre redirige al registro */}
+              <div className="space-y-3 mt-auto">
+                <button
+                  onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
+                  className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
+                    plan.popular
+                      ? 'bg-nexly-teal hover:bg-nexly-green text-white'
+                      : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
+                  }`}
+                >
+                  Comenzar Prueba Gratis
+                </button>
+                <p className="text-center text-xs text-neutral-400 mb-3">
+                  7 días gratis • Tarjeta requerida
+                </p>
+                <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
+                  <span>Pago seguro con</span>
+                  <img src="/strapi_logo.png" alt="Stripe" className="h-10 w-auto" />
                 </div>
-              ) : (
-                // Usuario autenticado - Botón de compra
-                <div className="space-y-3 mt-auto">
-                  <button
-                    onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
-                    disabled={loading || stripeLoading}
-                    className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
-                      plan.popular
-                        ? 'bg-nexly-teal hover:bg-nexly-green text-white'
-                        : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
-                    } ${(loading || stripeLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {(loading || stripeLoading) ? 'Procesando...' : 'Comenzar Prueba Gratis'}
-                  </button>
-                  <p className="text-center text-xs text-neutral-400 mb-3">
-                    7 días gratis • Tarjeta requerida
-                  </p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-neutral-500">
-                    <span>Pago seguro con</span>
-                    <img src="/strapi_logo.png" alt="Stripe" className="h-10 w-auto" />
-                  </div>
-                </div>
-              )}
+              </div>
 
               <p className="text-center text-sm text-neutral-400 mt-4">
                 Sin compromiso • Cancela cuando quieras

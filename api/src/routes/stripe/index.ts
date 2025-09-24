@@ -180,7 +180,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     // Verificar si ya existe una suscripción pendiente
     const existingPending = await Subscription.findOne({
       userId,
-      status: 'trial'
+      status: 'trialing'
     });
 
     let savedSubscription;
@@ -200,7 +200,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       const subscription = new Subscription({
         userId,
         planType: finalPlanType,
-        status: 'trial',
+        status: 'trialing',
         startDate,
         trialEndDate,
         autoRenew: false,
@@ -492,7 +492,7 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: any, res: any
 
     const subscription = await Subscription.findOne({
       userId,
-      status: { $in: ['trial', 'active', 'paused'] }
+      status: { $in: ['trialing', 'active', 'paused'] }
     });
 
     if (!subscription) {
