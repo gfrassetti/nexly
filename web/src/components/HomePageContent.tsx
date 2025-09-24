@@ -37,13 +37,26 @@ export default function a() {
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Unifica WhatsApp, Instagram y{" "}
+              Unifica WhatsApp Business, Instagram y{" "}
               <span className="text-nexly-teal bg-gradient-to-r from-nexly-teal to-nexly-light-blue bg-clip-text text-transparent">Messenger</span>
             </h1>
                 <p className="text-xl text-neutral-300 mb-8 max-w-3xl mx-auto">
-                  Conecta WhatsApp, Instagram y Messenger. Gestiona todas tus conversaciones, 
+                  Conecta WhatsApp Business, Instagram y Messenger. Gestiona todas tus conversaciones, 
                   automatiza respuestas y convierte más clientes.
                 </p>
+                
+                <div className="bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <svg className="w-5 h-5 text-nexly-light-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-semibold text-nexly-light-blue">WhatsApp Business Platform</span>
+                  </div>
+                  <p className="text-neutral-300 text-sm">
+                    Nexly se integra con <strong>WhatsApp Business Platform (Cloud API)</strong>, 
+                    no con WhatsApp personal. Necesitas un número asignado a una WABA (WhatsApp Business Account).
+                  </p>
+                </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link
@@ -111,7 +124,7 @@ export default function a() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Mensajería Unificada</h3>
               <p className="text-neutral-300">
-                Conecta WhatsApp, Instagram y Messenger en una sola interfaz.
+                Conecta WhatsApp Business, Instagram y Messenger en una sola interfaz.
               </p>
             </div>
 

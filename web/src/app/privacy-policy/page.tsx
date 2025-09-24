@@ -46,11 +46,20 @@ export default function PrivacyPolicyPage() {
               
               <h3 className="text-xl font-medium text-gray-800 mb-3">2.2 Información de Integraciones</h3>
               <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
-                <li>Tokens de acceso de WhatsApp Business, Instagram, Facebook Messenger y otras plataformas</li>
-                <li>IDs de cuentas de negocio y números de teléfono</li>
+                <li>Tokens de acceso de WhatsApp Business Platform (Cloud API), Instagram, Facebook Messenger y otras plataformas</li>
+                <li>IDs de cuentas de negocio (WABA), Business Manager IDs y números de teléfono</li>
                 <li>Metadatos de mensajes y conversaciones</li>
                 <li>Información de contactos y listas de distribución</li>
               </ul>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                <h4 className="font-semibold mb-2 text-blue-800">Información específica de WhatsApp Business</h4>
+                <p className="text-blue-700 text-sm">
+                  Para WhatsApp Business, recopilamos información de tu Meta Business Manager, 
+                  WABA (WhatsApp Business Account) y número de teléfono asignado. Esta información 
+                  es necesaria para la integración con la WhatsApp Business Platform (Cloud API).
+                </p>
+              </div>
             </section>
 
             <section className="mb-8">
@@ -72,7 +81,8 @@ export default function PrivacyPolicyPage() {
                 No vendemos, alquilamos ni compartimos su información personal con terceros, excepto en los siguientes casos:
               </p>
               <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
-                <li><strong>Plataformas de Mensajería:</strong> Compartimos tokens de acceso con WhatsApp, Instagram, Facebook Messenger y otras plataformas integradas para facilitar el envío de mensajes</li>
+                <li><strong>Plataformas de Mensajería:</strong> Compartimos tokens de acceso con WhatsApp Business Platform (Cloud API), Instagram, Facebook Messenger y otras plataformas integradas para facilitar el envío de mensajes</li>
+                <li><strong>Meta Business Manager:</strong> Para WhatsApp Business, compartimos información con Meta para la gestión de tu WABA y Business Manager</li>
                 <li><strong>Proveedores de Servicios:</strong> Utilizamos servicios de terceros para hosting y análisis</li>
                 <li><strong>Requisitos Legales:</strong> Cuando sea requerido por ley o para proteger nuestros derechos</li>
               </ul>

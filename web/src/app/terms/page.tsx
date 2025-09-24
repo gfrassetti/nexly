@@ -42,6 +42,14 @@ export default function TermsPage() {
                 incluyendo WhatsApp Business, Instagram, Facebook Messenger, TikTok, Telegram y Twitter/X. 
                 Nuestro servicio facilita la comunicación empresarial a través de estas plataformas.
               </p>
+              <div className="bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg p-4 mt-4">
+                <h3 className="text-lg font-semibold mb-2 text-nexly-light-blue">⚠️ Importante sobre WhatsApp</h3>
+                <p className="text-neutral-300 text-sm">
+                  Nexly se integra únicamente con <strong>WhatsApp Business Platform (Cloud API)</strong>, 
+                  NO con WhatsApp personal o la app móvil WhatsApp Business. Para usar WhatsApp en Nexly, 
+                  necesitas un número asignado a una Cuenta de WhatsApp Business (WABA) a través de Meta Business Manager.
+                </p>
+              </div>
             </section>
 
             <section>
@@ -70,9 +78,19 @@ export default function TermsPage() {
 
                 <h3 className="text-xl font-medium mb-2 text-nexly-light-blue">4.2 Planes de Suscripción</h3>
                 <ul className="list-disc list-inside space-y-2 text-neutral-300">
-                  <li><strong>Plan Básico:</strong> Hasta 2 integraciones (WhatsApp, Instagram)</li>
+                  <li><strong>Plan Básico:</strong> Hasta 2 integraciones (WhatsApp Business, Instagram)</li>
                   <li><strong>Plan Premium:</strong> Todas las integraciones disponibles</li>
                 </ul>
+                
+                <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4 mt-4">
+                  <h4 className="font-semibold mb-2 text-nexly-teal">Requisitos para WhatsApp Business</h4>
+                  <ul className="list-disc list-inside space-y-1 text-neutral-300 text-sm">
+                    <li>Meta Business Manager configurado</li>
+                    <li>Cuenta de WhatsApp Business (WABA) verificada</li>
+                    <li>Número de teléfono asignado a la WABA</li>
+                    <li>Verificación del negocio y aprobación del display name</li>
+                  </ul>
+                </div>
 
                 <h3 className="text-xl font-medium mb-2 text-nexly-light-blue">4.3 Facturación</h3>
                 <ul className="list-disc list-inside space-y-2 text-neutral-300">

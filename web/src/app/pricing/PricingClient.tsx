@@ -33,7 +33,7 @@ function PricingContent() {
       period: '/mes',
       description: 'Perfecto para emprendedores y pequeñas empresas',
       features: [
-        'WhatsApp',
+        'WhatsApp Business',
         'Instagram',
         'Hasta 2 integraciones',
         'Mensajes ilimitados',
@@ -48,7 +48,7 @@ function PricingContent() {
       period: '/mes',
       description: 'Para empresas que necesitan más integraciones',
       features: [
-        'WhatsApp',
+        'WhatsApp Business',
         'Instagram',
         'Facebook Messenger',
         'TikTok',
@@ -193,6 +193,36 @@ function PricingContent() {
           ))}
         </div>
 
+        {/* Información sobre WhatsApp Business */}
+        <div className="mt-16 bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg p-8 max-w-4xl mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-4 text-nexly-light-blue">⚠️ Importante sobre WhatsApp Business</h2>
+            <p className="text-neutral-300 text-lg">Nexly se integra con WhatsApp Business Platform (Cloud API), NO con WhatsApp personal</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold mb-3 text-nexly-teal">¿Qué necesitas?</h3>
+              <ul className="space-y-2 text-neutral-300 text-sm">
+                <li>• Meta Business Manager configurado</li>
+                <li>• Cuenta de WhatsApp Business (WABA)</li>
+                <li>• Número de teléfono asignado a la WABA</li>
+                <li>• Verificación del negocio (para volúmenes altos)</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-3 text-nexly-teal">¿Qué NO funciona?</h3>
+              <ul className="space-y-2 text-neutral-300 text-sm">
+                <li>• WhatsApp personal (número personal)</li>
+                <li>• App móvil WhatsApp Business</li>
+                <li>• Números sin WABA asignada</li>
+                <li>• Cuentas personales de Facebook</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* Información adicional para usuarios no autenticados */}
         {!token && (
           <div className="mt-16 bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-4xl mx-auto">
@@ -292,6 +322,25 @@ function PricingContent() {
                   <p>
                     Si cancelas, tu plan permanecerá activo hasta el final del período de facturación actual. Después de eso, tu cuenta volverá al plan gratuito.
                   </p>
+                )
+              },
+              {
+                title: "¿Puedo usar mi WhatsApp personal con Nexly?",
+                content: (
+                  <div>
+                    <p className="mb-3">
+                      <strong>No.</strong> Nexly se integra únicamente con WhatsApp Business Platform (Cloud API), 
+                      no con WhatsApp personal o la app móvil WhatsApp Business.
+                    </p>
+                    <p className="mb-3">
+                      Para usar WhatsApp en Nexly necesitas:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Meta Business Manager configurado</li>
+                      <li>Cuenta de WhatsApp Business (WABA) verificada</li>
+                      <li>Número de teléfono asignado a la WABA</li>
+                    </ul>
+                  </div>
                 )
               }
             ]}
