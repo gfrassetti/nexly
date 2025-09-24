@@ -50,10 +50,10 @@ export default function Header({
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <Link
-                  href="/pricing"
+                  href="/dashboard"
                   className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
                 >
-                  Elegir Plan
+                  Volver a Mi Panel
                 </Link>
               ) : (
                 <>
