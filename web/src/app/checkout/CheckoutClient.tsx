@@ -94,7 +94,7 @@ export default function CheckoutClient() {
     return (
       <div className="w-full max-w-md text-center">
         <div className="flex justify-center mb-6">
-          <Logo size="md" />
+          <Logo size="md" />{/* Logo de Nexly */}
         </div>
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
