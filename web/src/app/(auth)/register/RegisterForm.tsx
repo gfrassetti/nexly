@@ -66,9 +66,9 @@ export default function RegisterForm() {
           }
         }, 1000);
       } else {
-        // Si no hay plan, ir a pricing para que elija uno
+        // Si no hay plan, ir a login para que inicie sesión
         setTimeout(() => {
-          router.push("/pricing");
+          router.push("/login");
         }, 1500);
       }
     } catch (err: any) {
@@ -93,7 +93,7 @@ export default function RegisterForm() {
         
         {success && (
           <div className="p-3 bg-nexly-green/20 border border-nexly-green/50 text-nexly-green rounded">
-            ✅ ¡Cuenta creada exitosamente! Redirigiendo...
+            ✅ ¡Cuenta creada exitosamente! Redirigiendo al login...
           </div>
         )}
         

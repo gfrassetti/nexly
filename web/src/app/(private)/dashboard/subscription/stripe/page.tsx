@@ -205,15 +205,11 @@ export default function SubscriptionInfo() {
     userSubscriptionStatus: subscription?.userSubscriptionStatus
   });
 
-  const hasActiveSubscription = subscription?.hasSubscription && 
-    subscription?.subscription && 
-    (subscription.subscription.status === 'active' || 
-     subscription.subscription.status === 'trialing' ||
-     subscription.subscription.status === 'paused' ||
-     (subscription.subscription.status as any) === 'trial' || // Compatibilidad temporal
-     subscription.subscription.stripeSubscriptionId ||
-     subscription?.userSubscriptionStatus === 'active_trial' ||
-     subscription?.userSubscriptionStatus === 'active_paid');
+  // Lógica más permisiva para detectar suscripción activa
+  const hasActiveSubscription = subscription?.hasSubscription || 
+    (subscription?.subscription && subscription.subscription.stripeSubscriptionId) ||
+    subscription?.userSubscriptionStatus === 'active_trial' ||
+    subscription?.userSubscriptionStatus === 'active_paid';
 
   console.log("🔍 Stripe page - Has active subscription:", hasActiveSubscription);
   console.log("🔍 Stripe page - Detailed check:", {

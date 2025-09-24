@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Este endpoint actúa como proxy al backend de Express
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
     
     // Forward the request to the Express backend
     const response = await fetch(`${backendUrl}/stripe/invoices`, {
