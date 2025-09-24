@@ -18,24 +18,8 @@ export default function SubscriptionPage() {
   useEffect(() => {
     if (!loading && subscription !== null) {
 
-      // Verificar si hay una suscripción activa - lógica MUY permisiva
-      const hasActiveSubscription = 
-        // Cualquier indicador de que hay una suscripción
-        subscription?.hasSubscription || 
-        subscription?.subscription ||
-        subscription?.userSubscriptionStatus === 'active_trial' ||
-        subscription?.userSubscriptionStatus === 'active_paid' ||
-        subscription?.userSubscriptionStatus === 'trial_pending_payment_method' ||
-        // Cualquier estado de suscripción válido
-        (subscription?.subscription && (
-          subscription.subscription.status === 'active' || 
-          subscription.subscription.status === 'trialing' ||
-          subscription.subscription.status === 'paused' ||
-          subscription.subscription.status === 'incomplete' ||
-          (subscription.subscription.status as any) === 'trial' ||
-          subscription.subscription.stripeSubscriptionId ||
-          (subscription.subscription as any).mercadoPagoSubscriptionId
-        ));
+      // Lógica simple: si hay suscripción activa
+      const hasActiveSubscription = subscription?.hasSubscription === true;
 
       if (hasActiveSubscription) {
         // Redirigir a la página específica del proveedor
@@ -56,23 +40,8 @@ export default function SubscriptionPage() {
     );
   }
 
-  // Si no hay suscripción activa, mostrar página de "Sin Suscripción"
-  // Verificar si realmente NO hay suscripción activa
-  const hasActiveSubscription = 
-    subscription?.hasSubscription || 
-    subscription?.subscription ||
-    subscription?.userSubscriptionStatus === 'active_trial' ||
-    subscription?.userSubscriptionStatus === 'active_paid' ||
-    subscription?.userSubscriptionStatus === 'trial_pending_payment_method' ||
-    (subscription?.subscription && (
-      subscription.subscription.status === 'active' || 
-      subscription.subscription.status === 'trialing' ||
-      subscription.subscription.status === 'paused' ||
-      subscription.subscription.status === 'incomplete' ||
-      (subscription.subscription.status as any) === 'trial' ||
-      subscription.subscription.stripeSubscriptionId ||
-      (subscription.subscription as any).mercadoPagoSubscriptionId
-    ));
+  // Lógica simple: si hay suscripción activa
+  const hasActiveSubscription = subscription?.hasSubscription === true;
 
 
   if (!loading && !hasActiveSubscription) {
