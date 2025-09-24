@@ -10,10 +10,10 @@ export default function SubscriptionPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Refrescar suscripción al cargar la página
+  // Refrescar suscripción al cargar la página - solo una vez
   useEffect(() => {
     refetch();
-  }, [refetch]);
+  }, []); // Sin dependencias para evitar bucle infinito
 
   useEffect(() => {
     if (!loading && subscription !== null) {
