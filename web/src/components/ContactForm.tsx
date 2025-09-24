@@ -1,96 +1,31 @@
 "use client";
-import { useState } from "react";
-import emailjs from '@emailjs/browser';
-
-interface ContactFormData {
-  name: string;
-  email: string;
-  company?: string;
-  message: string;
-}
+import { useForm, ValidationError } from '@formspree/react';
 
 export default function ContactForm() {
-  const [formData, setFormData] = useState<ContactFormData>({
-    name: "",
-    email: "",
-    company: "",
-    message: ""
-  });
-  const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [state, handleSubmit] = useForm("movkqygz");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setToast(null);
-
-    // Validaciones básicas
-    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
-      setToast({ type: 'error', message: 'Por favor completa todos los campos obligatorios.' });
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.email.includes('@')) {
-      setToast({ type: 'error', message: 'Por favor ingresa un email válido.' });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-      
-      if (!serviceId || !templateId || !publicKey) {
-        console.warn('EmailJS configuration missing, using fallback');
-        // Fallback temporal - simular envío exitoso
-        setToast({ type: 'success', message: 'Mensaje enviado exitosamente (modo desarrollo)' });
-        setLoading(false);
-        return;
-      }
-      
-      const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        company: formData.company || 'No especificado',
-        message: formData.message,
-        to_email: 'guidofrassetti@gmail.com'
-      };
-
-      await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      
-      setToast({ 
-        type: 'success', 
-        message: '¡Mensaje enviado correctamente! Te contactaremos pronto.' 
-      });
-      
-      // Limpiar formulario
-      setFormData({
-        name: "",
-        email: "",
-        company: "",
-        message: ""
-      });
-
-    } catch (error) {
-      console.error('Error sending email:', error);
-      setToast({ 
-        type: 'error', 
-        message: 'Error al enviar el mensaje. Intenta nuevamente más tarde.' 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Si el formulario se envió exitosamente
+  if (state.succeeded) {
+    return (
+      <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-2xl mx-auto text-center">
+        <div className="w-16 h-16 bg-nexly-green rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-3xl font-bold mb-4 text-nexly-green">¡Mensaje enviado!</h2>
+        <p className="text-neutral-300 text-lg mb-6">
+          Gracias por contactarnos. Te responderemos pronto.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-nexly-teal hover:bg-nexly-green text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
+        >
+          Enviar otro mensaje
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-2xl mx-auto">
@@ -100,34 +35,6 @@ export default function ContactForm() {
           ¿Tienes alguna pregunta? Estamos aquí para ayudarte.
         </p>
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <div className={`mb-6 p-4 rounded-lg flex items-center justify-between ${
-          toast.type === 'success' 
-            ? 'bg-green-900/50 border border-green-700 text-green-300' 
-            : 'bg-red-900/50 border border-red-700 text-red-300'
-        }`}>
-          <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {toast.type === 'success' ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              )}
-            </svg>
-            <span>{toast.message}</span>
-          </div>
-          <button
-            onClick={() => setToast(null)}
-            className="ml-4 text-current hover:opacity-70 transition-opacity duration-200"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
@@ -139,11 +46,15 @@ export default function ContactForm() {
               type="text"
               id="name"
               name="name"
-              value={formData.name}
-              onChange={handleChange}
               required
               className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
               placeholder="Tu nombre completo"
+            />
+            <ValidationError 
+              prefix="Nombre" 
+              field="name"
+              errors={state.errors}
+              className="text-red-400 text-sm mt-1"
             />
           </div>
           
@@ -155,11 +66,15 @@ export default function ContactForm() {
               type="email"
               id="email"
               name="email"
-              value={formData.email}
-              onChange={handleChange}
               required
               className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
               placeholder="tu@email.com"
+            />
+            <ValidationError 
+              prefix="Email" 
+              field="email"
+              errors={state.errors}
+              className="text-red-400 text-sm mt-1"
             />
           </div>
         </div>
@@ -172,10 +87,14 @@ export default function ContactForm() {
             type="text"
             id="company"
             name="company"
-            value={formData.company}
-            onChange={handleChange}
             className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
             placeholder="Nombre de tu empresa (opcional)"
+          />
+          <ValidationError 
+            prefix="Empresa" 
+            field="company"
+            errors={state.errors}
+            className="text-red-400 text-sm mt-1"
           />
         </div>
 
@@ -186,21 +105,25 @@ export default function ContactForm() {
           <textarea
             id="message"
             name="message"
-            value={formData.message}
-            onChange={handleChange}
             required
             rows={5}
             className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent resize-none"
             placeholder="Cuéntanos cómo podemos ayudarte..."
           />
+          <ValidationError 
+            prefix="Mensaje" 
+            field="message"
+            errors={state.errors}
+            className="text-red-400 text-sm mt-1"
+          />
         </div>
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={state.submitting}
           className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2"
         >
-          {loading ? (
+          {state.submitting ? (
             <>
               <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
