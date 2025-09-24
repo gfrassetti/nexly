@@ -21,16 +21,50 @@ export const paymentRateLimit = rateLimit({
   }
 });
 
-// Rate limiting general
+// Rate limiting general - más permisivo para uso normal
 export const generalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
+  max: 1000, // máximo 1000 requests por IP (aumentado de 100)
   message: {
     success: false,
     error: 'Demasiadas solicitudes. Intenta nuevamente en 15 minutos.'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Permitir más requests si es el mismo usuario autenticado
+  skip: (req: any) => {
+    // En desarrollo, permitir más requests
+    if (process.env.NODE_ENV === 'development') return true;
+    
+    // Si el usuario está autenticado, permitir más requests
+    const token = req.headers.authorization;
+    if (token && token.startsWith('Bearer ')) return true;
+    
+    return false;
+  }
+});
+
+// Rate limiting específico para suscripciones - menos restrictivo
+export const subscriptionRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 200, // máximo 200 requests por IP para suscripciones
+  message: {
+    success: false,
+    error: 'Demasiadas solicitudes de suscripción. Intenta nuevamente en 15 minutos.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Permitir más requests si es el mismo usuario autenticado
+  skip: (req: any) => {
+    // En desarrollo, permitir más requests
+    if (process.env.NODE_ENV === 'development') return true;
+    
+    // Si el usuario está autenticado, permitir más requests
+    const token = req.headers.authorization;
+    if (token && token.startsWith('Bearer ')) return true;
+    
+    return false;
+  }
 });
 
 // Validar origen de webhooks

@@ -18,6 +18,7 @@ import stripePauseRouter from "./routes/stripe/pause";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
+  subscriptionRateLimit,
   securityHeaders, 
   validateWebhookOrigin,
   sanitizePaymentData 
@@ -39,16 +40,27 @@ app.use(generalRateLimit);
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://nexly-93kgcbsuy-guido-fs-projects.vercel.app",
-  "https://nexly-git-master-guido-fs-projects.vercel.app",
-  "https://nexly-topaz.vercel.app",
-  "https://www.nexly.com.ar" // nuevo dominio agregado
+  "https://www.nexly.com.ar", // nuevo dominio agregado
+  "https://nexly.com.ar", // sin www también
+  "https://nexly-production.up.railway.app" // permitir el mismo dominio del backend
 ];
 
 app.use(cors({
   origin(origin, cb) {
-    if (!origin) return cb(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    console.log("🔍 CORS check - Origin:", origin);
+    console.log("🔍 CORS check - Allowed origins:", ALLOWED_ORIGINS);
+    
+    if (!origin) {
+      console.log("🔍 CORS check - No origin, allowing");
+      return cb(null, true);
+    }
+    
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      console.log("🔍 CORS check - Origin allowed:", origin);
+      return cb(null, true);
+    }
+    
+    console.log("🔍 CORS check - Origin NOT allowed:", origin);
     return cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -57,6 +69,26 @@ app.use(cors({
 }));
 
 // CORS is already configured above, no need for additional options handling
+
+// Middleware adicional para manejar CORS de manera más permisiva temporalmente
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log("🔍 Request origin:", origin);
+  console.log("🔍 Request method:", req.method);
+  console.log("🔍 Request path:", req.path);
+  
+  // Permitir CORS para requests de preflight
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
 app.use(
   express.json({
@@ -74,7 +106,7 @@ app.use("/webhook", validateWebhookOrigin, webhookRouter);
 app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationsRouter);
 app.use("/messages", messageRoutes);
-app.use("/subscriptions", sanitizePaymentData, subscriptionsRouter);
+app.use("/subscriptions", subscriptionRateLimit, sanitizePaymentData, subscriptionsRouter);
 app.use("/stripe", sanitizePaymentData, stripeRouter);
 app.use("/ai", aiRouter);
 app.use("/analytics", analyticsRouter);
