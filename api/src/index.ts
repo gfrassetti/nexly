@@ -47,8 +47,17 @@ const ALLOWED_ORIGINS = [
 
 app.use(cors({
   origin(origin, cb) {
-    if (!origin) return cb(null, true);
-    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    if (!origin) {
+      console.log("🔍 CORS check - No origin, allowing");
+      return cb(null, true);
+    }
+    
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      console.log("🔍 CORS check - Origin allowed:", origin);
+      return cb(null, true);
+    }
+    
+    console.log("🔍 CORS check - Origin NOT allowed:", origin);
     return cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -56,7 +65,13 @@ app.use(cors({
   allowedHeaders: ["Content-Type","Authorization"]
 }));
 
-app.options(/.*/, cors());
+// Handle preflight requests explicitly
+app.options('*', cors({
+  origin: ALLOWED_ORIGINS,
+  credentials: true,
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"]
+}));
 
 // Validate webhook origins
 app.use(validateWebhookOrigin);

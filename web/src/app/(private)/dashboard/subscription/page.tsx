@@ -57,7 +57,34 @@ export default function SubscriptionPage() {
   }
 
   // Si no hay suscripción activa, mostrar página de "Sin Suscripción"
-  if (!loading && subscription !== null && !subscription?.hasSubscription && !subscription?.subscription) {
+  // Verificar si realmente NO hay suscripción activa
+  const hasActiveSubscription = 
+    subscription?.hasSubscription || 
+    subscription?.subscription ||
+    subscription?.userSubscriptionStatus === 'active_trial' ||
+    subscription?.userSubscriptionStatus === 'active_paid' ||
+    subscription?.userSubscriptionStatus === 'trial_pending_payment_method' ||
+    (subscription?.subscription && (
+      subscription.subscription.status === 'active' || 
+      subscription.subscription.status === 'trialing' ||
+      subscription.subscription.status === 'paused' ||
+      subscription.subscription.status === 'incomplete' ||
+      (subscription.subscription.status as any) === 'trial' ||
+      subscription.subscription.stripeSubscriptionId ||
+      (subscription.subscription as any).mercadoPagoSubscriptionId
+    ));
+
+  // Debug temporal para entender qué está pasando
+  console.log("🔍 Subscription debug:", {
+    loading,
+    subscription,
+    hasActiveSubscription,
+    hasSubscription: subscription?.hasSubscription,
+    userSubscriptionStatus: subscription?.userSubscriptionStatus,
+    status: subscription?.subscription?.status
+  });
+
+  if (!loading && subscription !== null && !hasActiveSubscription) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="max-w-4xl mx-auto">
