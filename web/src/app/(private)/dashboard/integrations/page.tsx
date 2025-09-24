@@ -10,7 +10,7 @@ function IntegrationsContent() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
-  const { subscription, getMaxIntegrations, isTrialActive, isActive, isPendingPaymentMethod } = useSubscription();
+  const { subscription, getMaxIntegrations, status } = useSubscription();
   const { createPaymentLink } = usePaymentLink();
   const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick } = useIntegrations();
   const { showSuccess, showError } = useNotificationHelpers();
@@ -36,7 +36,7 @@ function IntegrationsContent() {
       </div>
       
       {/* Estado pendiente de método de pago - SOLO si realmente está pendiente */}
-      {isPendingPaymentMethod() && !isTrialActive() && !isActive() && (
+      {status.pendingPaymentMethod && !status.trialActive && !status.active && (
         <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -70,10 +70,10 @@ function IntegrationsContent() {
               </p>
               <p className="text-neutral-400 text-sm">
                 Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Todas disponibles' : `Hasta ${getMaxIntegrations()}`}
-                {/* Debug: {JSON.stringify({maxIntegrations: getMaxIntegrations(), isTrialActive: isTrialActive(), isActive: isActive(), planType: subscription.subscription.planType})} */}
+                {/* Debug: {JSON.stringify({maxIntegrations: getMaxIntegrations(), isTrialActive: status.trialActive, isActive: status.active, planType: subscription.subscription.planType})} */}
               </p>
             </div>
-            {isPendingPaymentMethod() && !isTrialActive() && !isActive() && (
+            {status.pendingPaymentMethod && !status.trialActive && !status.active && (
               <button
                 onClick={() => createPaymentLink()}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
@@ -81,7 +81,7 @@ function IntegrationsContent() {
 Completar Pago
               </button>
             )}
-            {!isActive() && !isTrialActive() && !isPendingPaymentMethod() && (
+            {!status.active && !status.trialActive && !status.pendingPaymentMethod && (
               <button
                 onClick={() => window.location.href = '/pricing'}
                 className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-200"

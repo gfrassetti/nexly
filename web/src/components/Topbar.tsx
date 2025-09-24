@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function Topbar() {
   const { user, clear } = useAuth();
-  const { subscription, isTrialActive, isActive, isPaused, isInGracePeriod } = useSubscription();
+  const { subscription, status } = useSubscription();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -30,16 +30,16 @@ export default function Topbar() {
     let planText = '';
     let badgeColor = '';
     
-    if (isTrialActive()) {
+    if (status.trialActive) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} Trial`;
       badgeColor = 'bg-blue-600 text-white';
-    } else if (isActive()) {
+    } else if (status.active) {
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
       badgeColor = sub.planType === 'basic' ? 'bg-green-600 text-white' : 'bg-purple-600 text-white';
-    } else if (isPaused()) {
+    } else if (status.paused) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Pausado)`;
       badgeColor = 'bg-orange-600 text-white';
-    } else if (isInGracePeriod()) {
+    } else if (status.inGracePeriod) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Gracia)`;
       badgeColor = 'bg-yellow-600 text-white';
     } else {

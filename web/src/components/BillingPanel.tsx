@@ -3,7 +3,7 @@
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function BillingPanel() {
-  const { subscription } = useSubscription();
+  const { subscription, status } = useSubscription();
 
   if (!subscription?.hasSubscription || !subscription.subscription) {
     return (
@@ -18,8 +18,8 @@ export default function BillingPanel() {
   const sub = subscription.subscription;
   const status = sub.status;
   const isCanceled = status === "canceled";
-  const isTrialActive = subscription.subscription.status === 'trialing' || (subscription.subscription.status as any) === 'trial';
-  const isActive = subscription.subscription.status === 'active';
+  const isTrialActive = status.trialActive;
+  const isActive = status.active;
 
   // Calcular próxima facturación
   const nextBilling = sub.trialEndDate 

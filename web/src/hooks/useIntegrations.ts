@@ -11,11 +11,11 @@ interface UseIntegrationsReturn {
 }
 
 export function useIntegrations(): UseIntegrationsReturn {
-  const { getMaxIntegrations, isTrialActive, isActive, isPendingPaymentMethod } = useSubscription();
+  const { getMaxIntegrations, status } = useSubscription();
 
   const isIntegrationAvailable = (integrationName: string): boolean => {
     // Si está pendiente de método de pago, no puede usar integraciones
-    if (isPendingPaymentMethod()) return false;
+    if (status.pendingPaymentMethod) return false;
     
     const maxIntegrations = getMaxIntegrations();
     
@@ -23,10 +23,10 @@ export function useIntegrations(): UseIntegrationsReturn {
     if (integrationName === 'whatsapp') return true;
     
     // Durante trial activo, todo disponible
-    if (isTrialActive()) return true;
+    if (status.trialActive) return true;
     
     // Si está activo (no trial), también todo disponible
-    if (isActive()) return true;
+    if (status.active) return true;
     
     // Para premium, todo disponible
     if (maxIntegrations >= 999) return true;

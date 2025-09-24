@@ -10,15 +10,7 @@ export default function SubscriptionStatus() {
     error, 
     refetch,
     getMaxIntegrations,
-    isTrialActive,
-    isActive,
-    isPaused,
-    isCancelled,
-    isInGracePeriod,
-    isPendingPaymentMethod,
-    isIncomplete,
-    isPastDue,
-    isUnpaid,
+    status,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription
@@ -108,7 +100,7 @@ export default function SubscriptionStatus() {
   }
 
   // Estado de pago incompleto (requiere acción del usuario)
-  if (isIncomplete() && !isTrialActive() && !isActive()) {
+  if (status.incomplete && !status.trialActive && !status.active) {
     return (
       <div className="bg-orange-900/20 border border-orange-700 rounded-lg p-6">
         <div className="text-center">
@@ -144,7 +136,7 @@ export default function SubscriptionStatus() {
   }
 
   // Estado de pago vencido
-  if (isPastDue() && !isTrialActive() && !isActive()) {
+  if (status.pastDue && !status.trialActive && !status.active) {
     return (
       <div className="bg-red-900/20 border border-red-700 rounded-lg p-6">
         <div className="text-center">
@@ -186,7 +178,7 @@ export default function SubscriptionStatus() {
   }
 
   // Estado pendiente de método de pago - SOLO si realmente está pendiente
-  if (isPendingPaymentMethod() && !isTrialActive() && !isActive()) {
+  if (status.pendingPaymentMethod && !status.trialActive && !status.active) {
     return (
       <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-6">
         <div className="text-center">
@@ -347,7 +339,7 @@ export default function SubscriptionStatus() {
           )}
           
           {/* Botón para reactivar suscripción pausada */}
-          {isPaused() && (
+          {status.paused && (
             <button
               onClick={reactivateSubscription}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
@@ -357,7 +349,7 @@ export default function SubscriptionStatus() {
           )}
           
           {/* Botón para pausar suscripción activa */}
-          {isActive() && (
+          {status.active && (
             <button
               onClick={pauseSubscription}
               className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
@@ -367,7 +359,7 @@ export default function SubscriptionStatus() {
           )}
           
           {/* Botón para cancelar */}
-          {(isActive() || isPaused()) && (
+          {(status.active || status.paused) && (
             <button
               onClick={cancelSubscription}
               className="bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-white px-4 py-2 rounded-lg transition-colors text-sm"
@@ -377,7 +369,7 @@ export default function SubscriptionStatus() {
           )}
           
           {/* Botón para cambiar plan */}
-          {isActive() && (
+          {status.active && (
             <a
               href="/pricing"
               className="bg-neutral-600 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
@@ -389,7 +381,7 @@ export default function SubscriptionStatus() {
       </div>
 
       {/* Progress bar for trial */}
-      {isTrialActive() && (
+      {status.trialActive && (
         <div className="mt-4">
           <div className="flex justify-between text-sm text-neutral-400 mb-1">
             <span>Progreso de prueba</span>
