@@ -74,17 +74,8 @@ export default function SubscriptionPage() {
       (subscription.subscription as any).mercadoPagoSubscriptionId
     ));
 
-  // Debug temporal para entender qué está pasando
-  console.log("🔍 Subscription debug:", {
-    loading,
-    subscription,
-    hasActiveSubscription,
-    hasSubscription: subscription?.hasSubscription,
-    userSubscriptionStatus: subscription?.userSubscriptionStatus,
-    status: subscription?.subscription?.status
-  });
 
-  if (!loading && subscription !== null && !hasActiveSubscription) {
+  if (!loading && !hasActiveSubscription) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         <div className="max-w-4xl mx-auto">
