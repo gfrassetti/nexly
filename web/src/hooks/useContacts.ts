@@ -24,9 +24,7 @@ export function useContacts(integrationId: string) {
     setError(null);
 
     try {
-      console.log("[useContacts] Cargando contactos...");
       const data = await getContacts(token);
-      console.log("[useContacts] Contactos recibidos:", data);
       
       // Filtrar por integración si no es "all"
       const filtered = integrationId && integrationId !== "all"
@@ -35,7 +33,6 @@ export function useContacts(integrationId: string) {
       
       setItems(filtered);
     } catch (err: any) {
-      console.error("[useContacts] Error cargando contactos:", err);
       const errorMessage = err?.response?.data?.message || 
                           err?.message || 
                           "No se pudieron cargar los contactos";

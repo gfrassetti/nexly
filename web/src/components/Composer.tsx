@@ -102,7 +102,6 @@ export default function Composer({
       setText("");
       setError(null);
     } catch (error: any) {
-      console.error('Error enviando mensaje:', error);
       setError(error?.message || "Error al enviar el mensaje");
     } finally {
       setIsLoading(false);
@@ -155,7 +154,6 @@ export default function Composer({
   };
 
   const handleAnalysisComplete = (analysis: any) => {
-    console.log('Análisis de IA completado:', analysis);
     // Aquí podrías mostrar notificaciones o actualizar la UI
   };
 

@@ -195,30 +195,11 @@ export default function SubscriptionInfo() {
     );
   }
 
-  // Verificar si realmente no hay suscripción activa
-  console.log("🔍 Stripe page - Full subscription object:", subscription);
-  console.log("🔍 Stripe page - Subscription debug:", {
-    hasSubscription: subscription?.hasSubscription,
-    subscription: subscription?.subscription,
-    status: subscription?.subscription?.status,
-    stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId,
-    userSubscriptionStatus: subscription?.userSubscriptionStatus
-  });
-
   // Lógica más permisiva para detectar suscripción activa
   const hasActiveSubscription = subscription?.hasSubscription || 
     (subscription?.subscription && subscription.subscription.stripeSubscriptionId) ||
     subscription?.userSubscriptionStatus === 'active_trial' ||
     subscription?.userSubscriptionStatus === 'active_paid';
-
-  console.log("🔍 Stripe page - Has active subscription:", hasActiveSubscription);
-  console.log("🔍 Stripe page - Detailed check:", {
-    hasSubscription: subscription?.hasSubscription,
-    hasSubscriptionObject: !!subscription?.subscription,
-    statusCheck: subscription?.subscription?.status,
-    stripeIdCheck: !!subscription?.subscription?.stripeSubscriptionId,
-    userStatusCheck: subscription?.userSubscriptionStatus
-  });
 
   if (!hasActiveSubscription) {
     return (
@@ -281,17 +262,6 @@ export default function SubscriptionInfo() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Mi Suscripción</h1>
           <p className="text-gray-600">Gestiona tu suscripción y método de pago</p>
-        </div>
-
-
-        {/* Información de facturación */}
-        <div className="mb-8">
-          <BillingInfo />
-        </div>
-
-        {/* Historial de facturas */}
-        <div className="mb-8">
-          <InvoiceHistory />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -448,6 +418,17 @@ export default function SubscriptionInfo() {
               </ul>
             </div>
           </div>
+          
+        {/* Información de facturación */}
+        <div className="mb-8">
+          <BillingInfo />
+        </div>
+
+        {/* Historial de facturas */}
+        <div className="mb-8">
+          <InvoiceHistory />
+        </div>
+        
         </div>
       </div>
     </div>

@@ -6,61 +6,57 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function SubscriptionPage() {
-  const { subscription, loading } = useSubscription();
+  const { subscription, loading, refetch } = useSubscription();
   const { user } = useAuth();
   const router = useRouter();
 
+  // Refrescar suscripción al cargar la página
   useEffect(() => {
-    console.log("🔍 useEffect triggered:", { loading, subscription: !!subscription });
-    
-    if (!loading) {
-      console.log("🔍 Full subscription object:", subscription);
+    refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    if (!loading && subscription !== null) {
+      // Debug temporal para entender qué está pasando
       console.log("🔍 Subscription debug:", {
         hasSubscription: subscription?.hasSubscription,
         subscription: subscription?.subscription,
+        userSubscriptionStatus: subscription?.userSubscriptionStatus,
         status: subscription?.subscription?.status,
-        stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId,
-        userSubscriptionStatus: subscription?.userSubscriptionStatus
+        stripeSubscriptionId: subscription?.subscription?.stripeSubscriptionId
       });
 
-      // Verificar si hay una suscripción activa - lógica más permisiva
-      const hasActiveSubscription = subscription?.hasSubscription && 
-        subscription?.subscription && 
-        (subscription.subscription.status === 'active' || 
-         subscription.subscription.status === 'trialing' ||
-         subscription.subscription.status === 'paused' ||
-         (subscription.subscription.status as any) === 'trial' || // Compatibilidad temporal
-         subscription.subscription.stripeSubscriptionId ||
-         subscription?.userSubscriptionStatus === 'active_trial' ||
-         subscription?.userSubscriptionStatus === 'active_paid');
+      // Verificar si hay una suscripción activa - lógica MUY permisiva
+      const hasActiveSubscription = 
+        // Cualquier indicador de que hay una suscripción
+        subscription?.hasSubscription || 
+        subscription?.subscription ||
+        subscription?.userSubscriptionStatus === 'active_trial' ||
+        subscription?.userSubscriptionStatus === 'active_paid' ||
+        subscription?.userSubscriptionStatus === 'trial_pending_payment_method' ||
+        // Cualquier estado de suscripción válido
+        (subscription?.subscription && (
+          subscription.subscription.status === 'active' || 
+          subscription.subscription.status === 'trialing' ||
+          subscription.subscription.status === 'paused' ||
+          subscription.subscription.status === 'incomplete' ||
+          (subscription.subscription.status as any) === 'trial' ||
+          subscription.subscription.stripeSubscriptionId ||
+          (subscription.subscription as any).mercadoPagoSubscriptionId
+        ));
 
       console.log("🔍 Has active subscription:", hasActiveSubscription);
-      console.log("🔍 Detailed check:", {
-        hasSubscription: subscription?.hasSubscription,
-        hasSubscriptionObject: !!subscription?.subscription,
-        statusCheck: subscription?.subscription?.status,
-        stripeIdCheck: !!subscription?.subscription?.stripeSubscriptionId,
-        userStatusCheck: subscription?.userSubscriptionStatus
-      });
 
       if (hasActiveSubscription) {
         // Redirigir a la página específica del proveedor
         const provider = getProviderFromSubscription(subscription.subscription);
         console.log("🔍 Redirecting to provider:", provider);
-        router.push(`/dashboard/subscription/${provider}`);
+        router.replace(`/dashboard/subscription/${provider}`);
       } else {
+        // Solo si realmente NO hay suscripción, redirigir a pricing
         console.log("🔍 No active subscription, redirecting to pricing");
-        console.log("🔍 Reasons for no subscription:", {
-          hasSubscription: subscription?.hasSubscription,
-          hasSubscriptionObject: !!subscription?.subscription,
-          status: subscription?.subscription?.status,
-          userStatus: subscription?.userSubscriptionStatus
-        });
-        // Si no hay suscripción, redirigir a pricing
-        router.push("/pricing");
+        router.replace("/pricing");
       }
-    } else {
-      console.log("🔍 Still loading subscription data...");
     }
   }, [subscription, loading, router]);
 
@@ -75,6 +71,11 @@ export default function SubscriptionPage() {
 
 // Función para determinar el proveedor de la suscripción
 function getProviderFromSubscription(sub: any): string {
+  // Si no hay objeto de suscripción, usar Stripe por defecto
+  if (!sub) {
+    return "stripe";
+  }
+  
   // Si tiene stripeSubscriptionId, es Stripe
   if (sub.stripeSubscriptionId) {
     return "stripe";

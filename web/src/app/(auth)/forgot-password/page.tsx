@@ -29,7 +29,7 @@ function ForgotPasswordForm() {
       if (response.ok) {
         setMessage(data.message);
         if (data.resetUrl) {
-          console.log("🔗 Enlace de recuperación:", data.resetUrl);
+          // Enlace de recuperación disponible
         }
       } else {
         setError(data.message || "Error al enviar solicitud");

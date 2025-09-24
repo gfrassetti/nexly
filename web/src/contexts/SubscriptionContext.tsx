@@ -91,7 +91,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       const data = await response.json();
       setSubscription(data);
     } catch (err: any) {
-      console.error('Error fetching subscription status:', err);
+      // Silently handle subscription fetch errors
       setError(err.message || 'Error al cargar el estado de suscripción');
       setSubscription(null);
     } finally {
@@ -253,12 +253,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           });
         }
         // Refrescar desde el servidor en background para sincronizar
-        fetchSubscriptionStatus().catch(console.error);
+        fetchSubscriptionStatus().catch(() => {
+          // Silently handle errors to prevent console spam
+        });
       } else {
         throw new Error(data.error || 'Error al pausar la suscripción');
       }
     } catch (error) {
-      console.error('Error pausing subscription:', error);
+      // Handle pause subscription error
       throw error;
     }
   };
@@ -299,12 +301,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         }
         
         // Refrescar desde el servidor en background para sincronizar
-        fetchSubscriptionStatus().catch(console.error);
+        fetchSubscriptionStatus().catch(() => {
+          // Silently handle errors to prevent console spam
+        });
       } else {
         throw new Error(data.error || 'Error al reactivar la suscripción');
       }
     } catch (error) {
-      console.error('Error reactivating subscription:', error);
+      // Handle reactivate subscription error
       throw error;
     }
   };
@@ -344,12 +348,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           });
         }
         // Refrescar desde el servidor en background para sincronizar
-        fetchSubscriptionStatus().catch(console.error);
+        fetchSubscriptionStatus().catch(() => {
+          // Silently handle errors to prevent console spam
+        });
       } else {
         throw new Error(data.error || 'Error al cancelar la suscripción');
       }
     } catch (error) {
-      console.error('Error cancelling subscription:', error);
+      // Handle cancel subscription error
       throw error;
     }
   };
