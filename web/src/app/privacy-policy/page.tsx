@@ -36,25 +36,25 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Información que Recopilamos</h2>
-              <h3 className="text-xl font-medium text-gray-800 mb-3">2.1 Información Personal</h3>
-              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">2. Información que Recopilamos</h2>
+              <h3 className="text-xl font-medium mb-3 text-nexly-light-blue">2.1 Información Personal</h3>
+              <ul className="list-disc list-inside text-neutral-300 mb-4 space-y-2">
                 <li>Nombre de usuario y dirección de correo electrónico</li>
                 <li>Información de contacto y perfil</li>
                 <li>Datos de autenticación y tokens de acceso</li>
               </ul>
               
-              <h3 className="text-xl font-medium text-gray-800 mb-3">2.2 Información de Integraciones</h3>
-              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
+              <h3 className="text-xl font-medium mb-3 text-nexly-light-blue">2.2 Información de Integraciones</h3>
+              <ul className="list-disc list-inside text-neutral-300 mb-4 space-y-2">
                 <li>Tokens de acceso de WhatsApp Business Platform (Cloud API), Instagram, Facebook Messenger y otras plataformas</li>
                 <li>IDs de cuentas de negocio (WABA), Business Manager IDs y números de teléfono</li>
                 <li>Metadatos de mensajes y conversaciones</li>
                 <li>Información de contactos y listas de distribución</li>
               </ul>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                <h4 className="font-semibold mb-2 text-blue-800">Información específica de WhatsApp Business</h4>
-                <p className="text-blue-700 text-sm">
+              <div className="bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg p-4 mt-4">
+                <h4 className="font-semibold mb-2 text-nexly-light-blue">Información específica de WhatsApp Business</h4>
+                <p className="text-neutral-300 text-sm">
                   Para WhatsApp Business, recopilamos información de tu Meta Business Manager, 
                   WABA (WhatsApp Business Account) y número de teléfono asignado. Esta información 
                   es necesaria para la integración con la WhatsApp Business Platform (Cloud API).
@@ -63,9 +63,9 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Cómo Utilizamos su Información</h2>
-              <p className="text-gray-700 mb-4">Utilizamos su información para:</p>
-              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">3. Cómo Utilizamos su Información</h2>
+              <p className="text-neutral-300 mb-4">Utilizamos su información para:</p>
+              <ul className="list-disc list-inside text-neutral-300 mb-4 space-y-2">
                 <li>Proporcionar y mantener nuestros servicios de mensajería</li>
                 <li>Gestionar integraciones con plataformas de mensajería</li>
                 <li>Procesar y entregar mensajes en su nombre</li>
@@ -76,11 +76,11 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Compartir Información</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">4. Compartir Información</h2>
+              <p className="text-neutral-300 mb-4">
                 No vendemos, alquilamos ni compartimos su información personal con terceros, excepto en los siguientes casos:
               </p>
-              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
+              <ul className="list-disc list-inside text-neutral-300 mb-4 space-y-2">
                 <li><strong>Plataformas de Mensajería:</strong> Compartimos tokens de acceso con WhatsApp Business Platform (Cloud API), Instagram, Facebook Messenger y otras plataformas integradas para facilitar el envío de mensajes</li>
                 <li><strong>Meta Business Manager:</strong> Para WhatsApp Business, compartimos información con Meta para la gestión de tu WABA y Business Manager</li>
                 <li><strong>Proveedores de Servicios:</strong> Utilizamos servicios de terceros para hosting y análisis</li>
@@ -89,11 +89,11 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Seguridad de los Datos</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">5. Seguridad de los Datos</h2>
+              <p className="text-neutral-300 mb-4">
                 Implementamos medidas de seguridad técnicas y organizativas para proteger su información:
               </p>
-              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
+              <ul className="list-disc list-inside text-neutral-300 mb-4 space-y-2">
                 <li>Encriptación de datos en tránsito y en reposo</li>
                 <li>Autenticación segura y control de acceso</li>
                 <li>Monitoreo continuo de seguridad</li>
@@ -102,9 +102,9 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Sus Derechos</h2>
-              <p className="text-gray-700 mb-4">Usted tiene derecho a:</p>
-              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">6. Sus Derechos</h2>
+              <p className="text-neutral-300 mb-4">Usted tiene derecho a:</p>
+              <ul className="list-disc list-inside text-neutral-300 mb-4 space-y-2">
                 <li>Acceder y corregir su información personal</li>
                 <li>Solicitar la eliminación de sus datos</li>
                 <li>Retirar el consentimiento para el procesamiento de datos</li>
@@ -114,48 +114,48 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Retención de Datos</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">7. Retención de Datos</h2>
+              <p className="text-neutral-300 mb-4">
                 Conservamos su información personal durante el tiempo necesario para cumplir con los propósitos 
                 descritos en esta política, a menos que la ley requiera un período de retención más largo.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Cookies y Tecnologías Similares</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">8. Cookies y Tecnologías Similares</h2>
+              <p className="text-neutral-300 mb-4">
                 Utilizamos cookies y tecnologías similares para mejorar su experiencia, recordar sus preferencias 
                 y analizar el uso de nuestros servicios. Puede gestionar las cookies a través de la configuración de su navegador.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Transferencias Internacionales</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">9. Transferencias Internacionales</h2>
+              <p className="text-neutral-300 mb-4">
                 Su información puede ser transferida y procesada en países fuera de su jurisdicción. 
                 Nos aseguramos de que dichas transferencias cumplan con las leyes de protección de datos aplicables.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Cambios a esta Política</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">10. Cambios a esta Política</h2>
+              <p className="text-neutral-300 mb-4">
                 Podemos actualizar esta Política de Privacidad ocasionalmente. Le notificaremos sobre cambios 
                 significativos a través de nuestro servicio o por correo electrónico.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Contacto</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">11. Contacto</h2>
+              <p className="text-neutral-300 mb-4">
                 Si tiene preguntas sobre esta Política de Privacidad o sobre cómo manejamos su información, 
                 puede contactarnos en:
               </p>
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="text-gray-700 mb-2">
+              <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
+                <p className="text-neutral-300 mb-2">
                   <strong>Email:</strong> privacy@nexly.com
                 </p>
-                <p className="text-gray-700">
+                <p className="text-neutral-300">
                   <strong>Dirección:</strong> Nexly Technologies, Inc.
                 </p>
               </div>
