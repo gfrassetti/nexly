@@ -15,14 +15,12 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const { setAuth } = useAuth();
 
-  // Detectar si hay un plan guardado para mantener el contexto
-  const selectedPlan = typeof window !== 'undefined' ? localStorage.getItem('selectedPlan') : null;
-  const selectedPaymentMethod = typeof window !== 'undefined' ? localStorage.getItem('selectedPaymentMethod') : 'stripe';
-  
-  // Construir la URL de registro con el plan si existe
+  // Construir la URL de registro y limpiar localStorage del plan
   const getRegisterUrl = () => {
-    if (selectedPlan) {
-      return `/register?plan=${selectedPlan}&payment=${selectedPaymentMethod}`;
+    // Limpiar el plan del localStorage cuando el usuario va al registro desde login
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('selectedPlan');
+      localStorage.removeItem('selectedPaymentMethod');
     }
     return '/register';
   };
