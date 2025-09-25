@@ -67,9 +67,14 @@ function PricingContent() {
     localStorage.setItem('selectedPlan', planType);
     localStorage.setItem('selectedPaymentMethod', selectedPaymentMethod);
     
-    // SIEMPRE redirigir al registro con el plan
-    // El flujo correcto es: Pricing → Registro → Checkout → Pago → Dashboard
-    window.location.href = `/register?plan=${planType}&payment=${selectedPaymentMethod}`;
+    // Si el usuario está autenticado, ir directo al pago
+    if (token) {
+      // Usuario autenticado: ir directo al checkout/pago
+      window.location.href = `/checkout?plan=${planType}&payment=${selectedPaymentMethod}`;
+    } else {
+      // Usuario no autenticado: ir al registro primero
+      window.location.href = `/register?plan=${planType}&payment=${selectedPaymentMethod}`;
+    }
   };
 
   return (
@@ -165,7 +170,7 @@ function PricingContent() {
                 ))}
               </ul>
 
-              {/* Botón único que siempre redirige al registro */}
+              {/* Botón que redirige según el estado de autenticación */}
               <div className="space-y-3 mt-auto">
                 <button
                   onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
@@ -175,7 +180,7 @@ function PricingContent() {
                       : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
                   }`}
                 >
-                  Comenzar Prueba Gratis
+                  {token ? 'Continuar al Pago' : 'Comenzar Prueba Gratis'}
                 </button>
                 <p className="text-center text-xs text-neutral-400 mb-3">
                   7 días gratis • Tarjeta requerida
