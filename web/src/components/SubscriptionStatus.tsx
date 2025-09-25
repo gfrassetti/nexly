@@ -236,7 +236,7 @@ export default function SubscriptionStatus() {
   const sub = subscription.subscription!;
   const isTrialExpiring = sub.isTrialActive && sub.daysRemaining <= 3;
   const isExpired = sub.isCancelled && !sub.isInGracePeriod;
-
+/* reverted */
   return (
     <div className={`rounded-lg p-6 border ${
       isExpired ? 'bg-nexly-light-blue/20 border-nexly-light-blue/50' :
