@@ -257,7 +257,7 @@ export default function SubscriptionInfo() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Mi Suscripción</h1>
@@ -420,7 +420,7 @@ export default function SubscriptionInfo() {
           </div>
           
         {/* Información de facturación */}
-        <div className="mb-8">
+        <div className="lg:col-span-2 mb-8">
           <BillingInfo />
         </div>
 

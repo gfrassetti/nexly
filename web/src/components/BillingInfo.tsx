@@ -1,22 +1,43 @@
 "use client";
 
-import { useSubscriptionInfo } from "@/contexts/SubscriptionInfoContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import InvoiceHistory from "./InvoiceHistory";
 import BillingStats from "./BillingStats";
 import { useMemo } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function BillingInfo() {
-  const { subscription, customer, paymentMethod, loading, error } = useSubscriptionInfo();
+  const { subscription, loading, error } = useSubscription();
+  const { user } = useAuth();
+
+  const handleOpenPortal = async () => {
+    if (!user) {
+      alert("Usuario no autenticado");
+      return;
+    }
+    
+    const res = await fetch("/api/stripe/update-payment-method", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid: user.id }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("No se pudo abrir el portal de pagos.");
+    }
+  };
 
   // Función para obtener el nombre del plan
   const getPlanName = useMemo(() => {
-    if (!subscription) return "Plan desconocido";
-    return subscription.planType === 'basic' ? 'Plan Básico' : 'Plan Premium';
-  }, [subscription?.planType]);
+    if (!subscription?.subscription) return "Plan desconocido";
+    return subscription.subscription.planType === 'basic' ? 'Plan Básico' : 'Plan Premium';
+  }, [subscription?.subscription?.planType]);
 
   // Función para formatear el estado
   const getStatusLabel = useMemo(() => {
-    if (!subscription) return "Desconocido";
+    if (!subscription?.subscription) return "Desconocido";
     
     const statusLabels: Record<string, string> = {
       'trialing': 'Prueba',
@@ -29,12 +50,12 @@ export default function BillingInfo() {
       'paused': 'Pausado'
     };
     
-    return statusLabels[subscription.status] || subscription.status;
-  }, [subscription?.status]);
+    return statusLabels[subscription.subscription.status] || subscription.subscription.status;
+  }, [subscription?.subscription?.status]);
 
   // Función para obtener el color del badge
   const getStatusColor = useMemo(() => {
-    if (!subscription) return "bg-gray-100 text-gray-800";
+    if (!subscription?.subscription) return "bg-gray-100 text-gray-800";
     
     const statusColors: Record<string, string> = {
       'trialing': 'bg-blue-100 text-blue-800',
@@ -47,8 +68,8 @@ export default function BillingInfo() {
       'paused': 'bg-gray-100 text-gray-800'
     };
     
-    return statusColors[subscription.status] || "bg-gray-100 text-gray-800";
-  }, [subscription?.status]);
+    return statusColors[subscription.subscription.status] || "bg-gray-100 text-gray-800";
+  }, [subscription?.subscription?.status]);
 
   // Función para formatear la fecha
   const formatDate = (dateString?: string) => {
@@ -62,18 +83,13 @@ export default function BillingInfo() {
 
   // Función para formatear el monto
   const formatAmount = () => {
-    if (!subscription?.amount) return "-";
-    return (subscription.amount / 100).toLocaleString("es-ES", {
+    if (!subscription?.subscription) return "-";
+    // Usar precios fijos basados en el plan
+    const amount = subscription.subscription.planType === 'basic' ? 2999 : 4999;
+    return (amount / 100).toLocaleString("es-ES", {
       style: "currency",
-      currency: subscription.currency?.toUpperCase() || "USD"
+      currency: "USD"
     });
-  };
-
-  // Función para formatear la información de la tarjeta
-  const getCardInfo = () => {
-    if (!paymentMethod?.card) return "No hay método de pago";
-    const { brand, last4 } = paymentMethod.card;
-    return `${brand.toUpperCase()} •••• ${last4}`;
   };
 
   if (loading) {
@@ -97,7 +113,7 @@ export default function BillingInfo() {
     return null; // No mostrar errores al usuario
   }
 
-  if (!subscription) {
+  if (!subscription?.subscription) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-6">
@@ -107,10 +123,9 @@ export default function BillingInfo() {
         </div>
       </div>
     );
-  }
-
-  return (
-    <div className="max-w-6xl mx-auto space-y-6">
+  } else {
+    return (
+    <div className="max-w-7xl mx-auto space-y-6">
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Información de facturación actual */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-100">
@@ -138,25 +153,20 @@ export default function BillingInfo() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Próxima factura</span>
               <span className="font-medium text-gray-900">
-                {formatDate(subscription.currentPeriodEnd)}
+                {formatDate(subscription.subscription.trialEndDate)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Método de pago</span>
-              <span className="font-medium text-gray-900">{getCardInfo()}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
               <span className="text-gray-600">Email cliente</span>
-              <span className="font-medium text-gray-900">{customer?.email || "-"}</span>
+              <span className="font-medium text-gray-900">{user?.email || "-"}</span>
             </div>
             
             <div className="border-t border-gray-100 pt-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">ID de suscripción</span>
                 <span className="font-mono text-sm text-gray-500">
-                  {subscription.stripeSubscriptionId || subscription.id}
+                  {subscription.subscription.stripeSubscriptionId || subscription.subscription.id}
                 </span>
               </div>
             </div>
@@ -172,36 +182,25 @@ export default function BillingInfo() {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Período actual</span>
               <span className="font-medium text-gray-900">
-                {formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
+                {formatDate(subscription.subscription.trialEndDate)}
               </span>
             </div>
             
-            {subscription.trialEndDate && (
+            {subscription.subscription.trialEndDate && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Fin de prueba</span>
                 <span className="font-medium text-gray-900">
-                  {formatDate(subscription.trialEndDate)}
+                  {formatDate(subscription.subscription.trialEndDate)}
                 </span>
               </div>
             )}
             
-            {subscription.canceledAt && (
+            {subscription.subscription.cancelledAt && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Cancelado el</span>
                 <span className="font-medium text-gray-900">
-                  {formatDate(subscription.canceledAt)}
+                  {formatDate(subscription.subscription.cancelledAt)}
                 </span>
-              </div>
-            )}
-            
-            {subscription.cancelAtPeriodEnd && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <span className="text-yellow-600 mr-2">⚠️</span>
-                  <span className="text-yellow-800 text-sm">
-                    Esta suscripción se cancelará al final del período actual
-                  </span>
-                </div>
               </div>
             )}
           </div>
@@ -210,9 +209,7 @@ export default function BillingInfo() {
 
       {/* Estadísticas de facturación */}
       <BillingStats />
-
-      {/* Historial de facturas */}
-      <InvoiceHistory />
     </div>
-  );
+    );
+  }
 }
