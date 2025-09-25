@@ -69,8 +69,8 @@ function PricingContent() {
     
     // Si el usuario está autenticado, ir directo al pago
     if (token) {
-      // Usuario autenticado: ir directo al checkout/pago
-      window.location.href = `/checkout?plan=${planType}&payment=${selectedPaymentMethod}`;
+      // Usuario autenticado: ir directo al checkout/pago con el token
+      window.location.href = `/checkout?plan=${planType}&payment=${selectedPaymentMethod}&token=${token}`;
     } else {
       // Usuario no autenticado: ir al registro primero
       window.location.href = `/register?plan=${planType}&payment=${selectedPaymentMethod}`;
