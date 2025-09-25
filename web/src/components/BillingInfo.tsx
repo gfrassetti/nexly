@@ -1,6 +1,8 @@
 "use client";
 
 import { useSubscriptionInfo } from "@/contexts/SubscriptionInfoContext";
+import InvoiceHistory from "./InvoiceHistory";
+import BillingStats from "./BillingStats";
 import { useMemo } from "react";
 
 export default function BillingInfo() {
@@ -108,101 +110,109 @@ export default function BillingInfo() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* Información de facturación actual */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Facturación actual</h2>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Estado</span>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor}`}>
-              {getStatusLabel}
-            </span>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Información de facturación actual */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900">Facturación actual</h2>
           </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Plan</span>
-            <span className="font-medium text-gray-900">{getPlanName}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Monto</span>
-            <span className="font-medium text-gray-900">{formatAmount()}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Próxima factura</span>
-            <span className="font-medium text-gray-900">
-              {formatDate(subscription.currentPeriodEnd)}
-            </span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Método de pago</span>
-            <span className="font-medium text-gray-900">{getCardInfo()}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Email cliente</span>
-            <span className="font-medium text-gray-900">{customer?.email || "-"}</span>
-          </div>
-          
-          <div className="border-t border-gray-100 pt-4">
+          <div className="p-6 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">ID de suscripción</span>
-              <span className="font-mono text-sm text-gray-500">
-                {subscription.stripeSubscriptionId || subscription.id}
+              <span className="text-gray-600">Estado</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor}`}>
+                {getStatusLabel}
               </span>
             </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Plan</span>
+              <span className="font-medium text-gray-900">{getPlanName}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Monto</span>
+              <span className="font-medium text-gray-900">{formatAmount()}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Próxima factura</span>
+              <span className="font-medium text-gray-900">
+                {formatDate(subscription.currentPeriodEnd)}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Método de pago</span>
+              <span className="font-medium text-gray-900">{getCardInfo()}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Email cliente</span>
+              <span className="font-medium text-gray-900">{customer?.email || "-"}</span>
+            </div>
+            
+            <div className="border-t border-gray-100 pt-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">ID de suscripción</span>
+                <span className="font-mono text-sm text-gray-500">
+                  {subscription.stripeSubscriptionId || subscription.id}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Información adicional */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900">Detalles adicionales</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Período actual</span>
+              <span className="font-medium text-gray-900">
+                {formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
+              </span>
+            </div>
+            
+            {subscription.trialEndDate && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Fin de prueba</span>
+                <span className="font-medium text-gray-900">
+                  {formatDate(subscription.trialEndDate)}
+                </span>
+              </div>
+            )}
+            
+            {subscription.canceledAt && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Cancelado el</span>
+                <span className="font-medium text-gray-900">
+                  {formatDate(subscription.canceledAt)}
+                </span>
+              </div>
+            )}
+            
+            {subscription.cancelAtPeriodEnd && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <span className="text-yellow-600 mr-2">⚠️</span>
+                  <span className="text-yellow-800 text-sm">
+                    Esta suscripción se cancelará al final del período actual
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Información adicional */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Detalles adicionales</h2>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Período actual</span>
-            <span className="font-medium text-gray-900">
-              {formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
-            </span>
-          </div>
-          
-          {subscription.trialEndDate && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Fin de prueba</span>
-              <span className="font-medium text-gray-900">
-                {formatDate(subscription.trialEndDate)}
-              </span>
-            </div>
-          )}
-          
-          {subscription.canceledAt && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Cancelado el</span>
-              <span className="font-medium text-gray-900">
-                {formatDate(subscription.canceledAt)}
-              </span>
-            </div>
-          )}
-          
-          {subscription.cancelAtPeriodEnd && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-center">
-                <span className="text-yellow-600 mr-2">⚠️</span>
-                <span className="text-yellow-800 text-sm">
-                  Esta suscripción se cancelará al final del período actual
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Estadísticas de facturación */}
+      <BillingStats />
+
+      {/* Historial de facturas */}
+      <InvoiceHistory />
     </div>
   );
 }

@@ -1,61 +1,33 @@
 "use client";
 
-import { useInvoices } from "@/hooks/useInvoices";
+import { useInvoices, formatInvoiceAmount, formatInvoiceDate, getInvoiceStatusLabel, getInvoiceStatusColor } from "@/hooks/useInvoices";
+import { StripeInvoice } from "@/hooks/useInvoices";
 
-export default function InvoiceHistory() {
+interface InvoiceHistoryProps {
+  className?: string;
+}
+
+export default function InvoiceHistory({ className = "" }: InvoiceHistoryProps) {
   const { invoices, loading, error } = useInvoices();
-
-  // Función para formatear la fecha
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString("es-ES", {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
-
-  // Función para formatear el monto
-  const formatAmount = (amount: number, currency: string) => {
-    return (amount / 100).toLocaleString("es-ES", {
-      style: "currency",
-      currency: currency.toUpperCase()
-    });
-  };
-
-  // Función para obtener el color del estado
-  const getStatusColor = (status: string) => {
-    const statusColors: Record<string, string> = {
-      'paid': 'bg-green-100 text-green-800',
-      'open': 'bg-yellow-100 text-yellow-800',
-      'void': 'bg-gray-100 text-gray-800',
-      'uncollectible': 'bg-red-100 text-red-800',
-    };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  // Función para obtener el label del estado
-  const getStatusLabel = (status: string) => {
-    const statusLabels: Record<string, string> = {
-      'paid': 'Pagada',
-      'open': 'Pendiente',
-      'void': 'Anulada',
-      'uncollectible': 'Incobrable',
-    };
-    return statusLabels[status] || status;
-  };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100">
+      <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
         </div>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex justify-between items-center">
-                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                  <div className="h-3 bg-gray-200 rounded w-24"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
               </div>
             ))}
           </div>
@@ -65,69 +37,148 @@ export default function InvoiceHistory() {
   }
 
   if (error) {
-    return null; // No mostrar errores al usuario
+    return (
+      <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
+        </div>
+        <div className="p-6">
+          <div className="text-center text-gray-500">
+            <div className="mb-4">
+              <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <p className="text-sm">Error al cargar las facturas</p>
+            <p className="text-xs text-gray-400 mt-1">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!invoices || invoices.length === 0) {
+    return (
+      <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
+        </div>
+        <div className="p-6">
+          <div className="text-center text-gray-500">
+            <div className="mb-4">
+              <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <p className="text-sm">No hay facturas disponibles</p>
+            <p className="text-xs text-gray-400 mt-1">Las facturas aparecerán aquí una vez que comiences a usar el servicio</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-100">
+    <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
       <div className="p-6 border-b border-gray-100">
         <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
+        <p className="text-sm text-gray-500 mt-1">{invoices.length} factura{invoices.length !== 1 ? 's' : ''}</p>
       </div>
-      <div className="p-6">
-        {invoices.length > 0 ? (
-          <div className="space-y-4">
-            {invoices.map((invoice) => (
-              <div key={invoice.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <span className="font-medium text-gray-900">
-                      {formatDate(invoice.created)}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
-                      {getStatusLabel(invoice.status)}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    ID: {invoice.id}
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <span className="font-medium text-gray-900">
-                    {formatAmount(invoice.amount_paid, invoice.currency)}
-                  </span>
-                  
-                  <div className="flex space-x-2">
-                    {invoice.hosted_invoice_url && (
-                      <a
-                        href={invoice.hosted_invoice_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm underline"
-                      >
-                        Ver online
-                      </a>
-                    )}
-                    {invoice.invoice_pdf && (
-                      <a
-                        href={invoice.invoice_pdf}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-green-600 hover:text-green-800 text-sm underline"
-                      >
-                        Descargar PDF
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+      <div className="divide-y divide-gray-100">
+        {invoices.map((invoice) => (
+          <InvoiceItem key={invoice.id} invoice={invoice} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface InvoiceItemProps {
+  invoice: StripeInvoice;
+}
+
+function InvoiceItem({ invoice }: InvoiceItemProps) {
+  const handleDownload = () => {
+    if (invoice.invoice_pdf) {
+      window.open(invoice.invoice_pdf, '_blank');
+    }
+  };
+
+  const handleView = () => {
+    if (invoice.hosted_invoice_url) {
+      window.open(invoice.hosted_invoice_url, '_blank');
+    }
+  };
+
+  return (
+    <div className="p-6 hover:bg-gray-50 transition-colors">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-3">
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {invoice.number || `Factura ${invoice.id.slice(-8)}`}
+              </p>
+              <p className="text-sm text-gray-500">
+                {formatInvoiceDate(invoice.created)}
+              </p>
+            </div>
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getInvoiceStatusColor(invoice.status)}`}>
+              {getInvoiceStatusLabel(invoice.status)}
+            </span>
           </div>
-        ) : (
-          <div className="text-center text-gray-500 py-8">
-            <p>No hay facturas anteriores</p>
+          
+          {invoice.description && (
+            <p className="text-sm text-gray-600 mt-1">{invoice.description}</p>
+          )}
+          
+          <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+            <span>Período: {formatInvoiceDate(invoice.period_start)} - {formatInvoiceDate(invoice.period_end)}</span>
+            {invoice.customer_email && (
+              <span>• {invoice.customer_email}</span>
+            )}
           </div>
-        )}
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <div className="text-right">
+            <p className="text-lg font-semibold text-gray-900">
+              {formatInvoiceAmount(invoice.total, invoice.currency)}
+            </p>
+            {invoice.amount_due > 0 && invoice.amount_paid < invoice.total && (
+              <p className="text-sm text-orange-600">
+                Pendiente: {formatInvoiceAmount(invoice.amount_due, invoice.currency)}
+              </p>
+            )}
+          </div>
+
+          <div className="flex space-x-2">
+            {invoice.hosted_invoice_url && (
+              <button
+                onClick={handleView}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Ver
+              </button>
+            )}
+            
+            {invoice.invoice_pdf && (
+              <button
+                onClick={handleDownload}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                PDF
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
