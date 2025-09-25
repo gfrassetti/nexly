@@ -10,25 +10,6 @@ export default function BillingInfo() {
   const { subscription, loading, error } = useSubscription();
   const { user } = useAuth();
 
-  const handleOpenPortal = async () => {
-    if (!user) {
-      alert("Usuario no autenticado");
-      return;
-    }
-    
-    const res = await fetch("/api/stripe/update-payment-method", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid: user.id }),
-    });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert("No se pudo abrir el portal de pagos.");
-    }
-  };
-
   // Función para obtener el nombre del plan
   const getPlanName = useMemo(() => {
     if (!subscription?.subscription) return "Plan desconocido";
@@ -155,6 +136,11 @@ export default function BillingInfo() {
               <span className="font-medium text-gray-900">
                 {formatDate(subscription.subscription.trialEndDate)}
               </span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Método de pago</span>
+              <span className="font-medium text-gray-900">Método de pago configurado</span>
             </div>
             
             <div className="flex justify-between items-center">

@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationHelpers } from "@/hooks/useNotification";
+import { useStripeOperations } from "@/hooks/useStripeOperations";
 import BillingInfo from "@/components/BillingInfo";
 import InvoiceHistory from "@/components/InvoiceHistory";
+import SubscriptionActions from "@/components/SubscriptionActions";
 
 // Iconos de tarjetas de pago
 const paymentIcons = {
@@ -102,6 +104,7 @@ export default function SubscriptionInfo() {
   const { subscription, loading } = useSubscription();
   const { user } = useAuth();
   const { showSuccess, showError } = useNotificationHelpers();
+  const { handleOpenPortal, loading: stripeOperationsLoading } = useStripeOperations();
   
   const [isLoadingAction, setIsLoadingAction] = useState(false);
   const [stripeData, setStripeData] = useState<any>(null);
@@ -330,10 +333,11 @@ export default function SubscriptionInfo() {
                   </div>
                 </div>
                 <button
-                  onClick={() => window.location.href = "/pricing"}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  onClick={handleOpenPortal}
+                  disabled={stripeOperationsLoading}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-300 rounded-lg transition-colors"
                 >
-                  Cambiar
+                  {stripeOperationsLoading ? "Cargando..." : "Cambiar"}
                 </button>
               </div>
             </div>
@@ -344,67 +348,15 @@ export default function SubscriptionInfo() {
             {/* Acciones de suscripción */}
             <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Acciones</h3>
-              <div className="space-y-3">
-                {actualStatus === "active" && !isPaused && (
-                  <button
-                    onClick={handlePause}
-                    disabled={isLoadingAction}
-                    className="w-full flex items-center justify-center px-4 py-3 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    {isLoadingAction ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Pausando...
-                      </>
-                    ) : (
-                      "Pausar Suscripción"
-                    )}
-                  </button>
-                )}
-
-                {isPaused && (
-                  <button
-                    onClick={handleReactivate}
-                    disabled={isLoadingAction}
-                    className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    {isLoadingAction ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Reactivando...
-                      </>
-                    ) : (
-                      "Reactivar Suscripción"
-                    )}
-                  </button>
-                )}
-
-                {actualStatus !== "canceled" && (
-                  <button
-                    onClick={handleCancel}
-                    disabled={isLoadingAction}
-                    className="w-full flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    {isLoadingAction ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Cancelando...
-                      </>
-                    ) : (
-                      "Cancelar Suscripción"
-                    )}
-                  </button>
-                )}
-
-                {(actualStatus === "canceled" || actualStatus === "past_due") && (
-                  <button
-                    onClick={handleUpgrade}
-                    className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-nexly-green to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                  >
-                    Comprar Nueva Suscripción
-                  </button>
-                )}
-              </div>
+              <SubscriptionActions
+                subscriptionId={sub?.stripeSubscriptionId || sub?.id || ""}
+                status={actualStatus}
+                isPaused={isPaused}
+                onStatusChange={() => {
+                  // Recargar datos si es necesario
+                  window.location.reload();
+                }}
+              />
             </div>
 
             {/* Información adicional */}
