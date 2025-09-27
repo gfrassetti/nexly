@@ -177,42 +177,9 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       throw new CustomError('Error al crear la sesión de pago en Stripe', 500);
     }
 
-    // Verificar si ya existe una suscripción pendiente o activa
-    const existingSubscription = await Subscription.findOne({
-      userId,
-      status: { $in: ['trialing', 'active', 'incomplete'] }
-    });
-
-    let savedSubscription;
-    
-    if (existingSubscription) {
-      // Actualizar la suscripción existente con el nuevo ID de Stripe
-      if (stripeSession.subscription) {
-        existingSubscription.stripeSubscriptionId = stripeSession.subscription as string;
-      }
-      existingSubscription.stripeSessionId = stripeSession.id;
-      await existingSubscription.save();
-      savedSubscription = existingSubscription;
-    } else {
-      // Crear nueva suscripción en la base de datos
-      const startDate = new Date();
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
-
-      const subscription = new Subscription({
-        userId,
-        planType: finalPlanType,
-        status: 'trialing',
-        startDate,
-        trialEndDate,
-        autoRenew: false,
-        stripeSubscriptionId: stripeSession.subscription ? stripeSession.subscription as string : undefined,
-        stripeSessionId: stripeSession.id,
-      });
-
-      await subscription.save();
-      savedSubscription = subscription;
-    }
+    // NO crear suscripción aquí - solo crear la sesión de Stripe
+    // La suscripción se creará en el webhook cuando el pago se complete exitosamente
+    console.log('✅ Sesión de Stripe creada, esperando confirmación de pago en webhook');
 
     res.json({
       success: true,

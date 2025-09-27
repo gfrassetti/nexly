@@ -31,6 +31,10 @@ router.post('/webhook', verifyStripeSignature, async (req: Request, res: Respons
 
   try {
     switch (event.type) {
+      case 'checkout.session.completed':
+        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
+      
       case 'invoice.paid':
         await handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
@@ -158,6 +162,68 @@ async function handleTrialWillEnd(subscription: Stripe.Subscription) {
   // Por ejemplo, un email recordando que el trial está por terminar
   
   console.log(`Trial for subscription ${subscription.id} will end soon`);
+}
+
+// Manejar checkout completado exitosamente
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  console.log('Checkout session completed:', session.id);
+  
+  try {
+    // Obtener el customer email de la sesión
+    const customerEmail = session.customer_details?.email;
+    if (!customerEmail) {
+      console.error('No customer email found in session:', session.id);
+      return;
+    }
+
+    // Buscar el usuario por email
+    const user = await User.findOne({ email: customerEmail });
+    if (!user) {
+      console.error('User not found for email:', customerEmail);
+      return;
+    }
+
+    // Determinar el tipo de plan desde los metadatos o desde la suscripción
+    let planType = 'basic';
+    if (session.metadata?.planType) {
+      planType = session.metadata.planType;
+    } else if (session.subscription) {
+      // Obtener la suscripción de Stripe para determinar el plan
+      const stripeSubscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      const priceId = stripeSubscription.items.data[0]?.price?.id;
+      // Aquí podrías mapear priceId a planType según tu configuración
+      // Por ahora usamos 'premium' si no es el plan básico
+      planType = priceId?.includes('premium') ? 'premium' : 'basic';
+    }
+
+    // Crear la suscripción en la base de datos SOLO cuando el pago se complete
+    const startDate = new Date();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
+
+    const subscription = new Subscription({
+      userId: user._id.toString(),
+      planType: planType as 'basic' | 'premium',
+      status: 'trialing', // Ahora sí es correcto crear con status 'trialing'
+      startDate,
+      trialEndDate,
+      autoRenew: false,
+      stripeSubscriptionId: session.subscription as string,
+      stripeSessionId: session.id,
+    });
+
+    await subscription.save();
+
+    // Actualizar el estado del usuario
+    user.subscription_status = 'trial_pending_payment_method';
+    await user.save();
+
+    console.log(`✅ Subscription created for user ${user._id} after successful payment`);
+    console.log(`Subscription ID: ${subscription._id}, Stripe Subscription: ${session.subscription}`);
+
+  } catch (error) {
+    console.error('Error creating subscription after checkout completion:', error);
+  }
 }
 
 export default router;

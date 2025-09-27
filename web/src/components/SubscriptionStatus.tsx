@@ -233,6 +233,8 @@ export default function SubscriptionStatus() {
   }
 
   const sub = subscription.subscription!;
+  console.log('sub: ', sub );
+  console.log('subscription: ', subscription);
   const isTrialExpiring = sub.isTrialActive && sub.daysRemaining <= 3;
   const isExpired = sub.isCancelled && !sub.isInGracePeriod;
 /* reverted */

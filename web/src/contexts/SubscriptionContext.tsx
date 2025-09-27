@@ -84,7 +84,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           'Authorization': `Bearer ${token}`,
         },
       });
-
+      console.log('response: ', response);
       if (!response.ok) {
         if (response.status === 429) {
           console.warn('Rate limit alcanzado, asumiendo sin suscripción');
@@ -150,7 +150,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
 
     const sub = subscription.subscription;
-    
+    console.log('sub en context: ', sub);
     // Durante el trial, acceso completo
     if (status.trialActive) {
       return true;

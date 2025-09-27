@@ -83,6 +83,7 @@ class StripeService {
     successUrl: string;
     cancelUrl: string;
     trialPeriodDays?: number;
+    planType?: string;
   }) {
     try {
       const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -103,7 +104,7 @@ class StripeService {
           trial_period_days: data.trialPeriodDays || 7,
         },
         metadata: {
-          plan_type: 'subscription',
+          planType: data.planType || 'basic',
         },
       };
 
@@ -154,6 +155,7 @@ class StripeService {
         successUrl,
         cancelUrl,
         trialPeriodDays: 7,
+        planType: 'basic',
       });
     } catch (error: any) {
       console.error('Error creating basic plan:', error);
@@ -199,6 +201,7 @@ class StripeService {
         successUrl,
         cancelUrl,
         trialPeriodDays: 7,
+        planType: 'premium',
       });
     } catch (error: any) {
       console.error('Error creating premium plan:', error);
