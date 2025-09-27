@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import Logo from "@/components/Logo";
+import Loader, { PageLoader, ButtonLoader } from "@/components/Loader";
 
 export default function CheckoutClient() {
   const searchParams = useSearchParams();
@@ -87,9 +88,7 @@ export default function CheckoutClient() {
           <Logo size="md" />
         </div>
         <div className="rounded-2xl">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nexly-teal mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-white mb-2">Procesando pago...</h2>
-          <p className="text-nexly-teal">Redirigiendo a Stripe para completar tu suscripción</p>
+          <Loader size="xl" text="Redirigiendo a Stripe para completar tu suscripción" showLogo={true} />
         </div>
       </div>
     );

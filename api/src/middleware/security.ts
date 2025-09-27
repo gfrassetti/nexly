@@ -71,12 +71,14 @@ export const subscriptionRateLimit = rateLimit({
 export const validateWebhookOrigin = (req: Request, res: Response, next: NextFunction) => {
   const origin = req.headers.origin as string | undefined;
   const referer = req.headers.referer as string | undefined;
+  const userAgent = req.headers['user-agent'] as string | undefined;
   
   // Lista de orígenes permitidos
   const allowedOrigins: string[] = [
     'https://graph.facebook.com',
     'https://www.facebook.com',
     'https://api.facebook.com',
+    'https://hooks.stripe.com', // Stripe webhooks
     process.env.FRONTEND_URL
   ].filter((url): url is string => Boolean(url));
 
@@ -85,6 +87,14 @@ export const validateWebhookOrigin = (req: Request, res: Response, next: NextFun
     // Permitir requests de verificación de Meta (GET requests sin origin)
     if (req.method === 'GET' && req.query['hub.verify_token']) {
       return next();
+    }
+    
+    // Para webhooks de Stripe, verificar User-Agent
+    if (req.path.includes('/stripe/webhook')) {
+      if (userAgent && userAgent.includes('Stripe/')) {
+        return next(); // Stripe webhook válido
+      }
+      throw new CustomError('Webhook de Stripe no autorizado', 403);
     }
     
     const isAuthorized = allowedOrigins.some(allowed => 

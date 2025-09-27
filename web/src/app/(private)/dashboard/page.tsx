@@ -8,6 +8,7 @@ import BillingPanel from "@/components/BillingPanel";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useSearchParams } from "next/navigation";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
+import Loader, { PageLoader, CardLoader } from "@/components/Loader";
 
 interface DashboardStats {/* asd */
   totalContacts: number;
@@ -38,6 +39,7 @@ export default function DashboardPage() {
   const [showTrialNotification, setShowTrialNotification] = useState(false);
   const [showPaymentError, setShowPaymentError] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Mostrar notificación si se inició el trial
   useEffect(() => {
@@ -105,8 +107,16 @@ export default function DashboardPage() {
         recentMessages: metrics.recentMessages || [],
         unreadConversations: metrics.unreadConversations || 0,
       });
+      
+      // Ocultar loading cuando los datos estén listos
+      setIsLoading(false);
     }
   }, [analytics]);
+
+  // Mostrar loading inicial
+  if (isLoading) {
+    return <PageLoader text="Cargando dashboard..." />;
+  }
 
   const getPlatformColor = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -141,14 +151,35 @@ export default function DashboardPage() {
           {/* Plan Indicator */}
           {subscription?.subscription && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-neutral-400">Plan actual:</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  subscription.subscription.planType === 'premium' 
+                    ? 'bg-nexly-teal' 
+                    : 'bg-nexly-green'
+                }`}></div>
+                <span className="text-sm text-neutral-400">Plan actual:</span>
+              </div>
+              <div className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg ${
                 subscription.subscription.planType === 'premium' 
-                  ? 'bg-nexly-teal text-white' 
-                  : 'bg-neutral-600 text-neutral-200'
+                  ? 'bg-gradient-to-r from-nexly-teal to-teal-600 text-white' 
+                  : 'bg-gradient-to-r from-nexly-green to-green-600 text-white'
               }`}>
-                {subscription.subscription.planType === 'basic' ? 'Plan Básico' : 'Plan Premium'}
-              </span>
+                {subscription.subscription.planType === 'premium' ? (
+                  <>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    Plan Premium
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Plan Básico
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -223,13 +254,13 @@ export default function DashboardPage() {
         {/* Métricas principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total de contactos */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 hover:shadow-lg hover:shadow-neutral-900/20 group">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-neutral-400 text-sm font-medium">Total Contactos</p>
                 <p className="text-3xl font-bold text-white mt-2">{stats.totalContacts}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -253,13 +284,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Conversaciones hoy */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 hover:shadow-lg hover:shadow-neutral-900/20 group">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-neutral-400 text-sm font-medium">Conversaciones Hoy</p>
                 <p className="text-3xl font-bold text-white mt-2">{stats.conversationsToday}</p>
               </div>
-              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -283,13 +314,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Tiempo promedio de respuesta */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 hover:shadow-lg hover:shadow-neutral-900/20 group">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-neutral-400 text-sm font-medium">Tiempo Respuesta</p>
                 <p className="text-3xl font-bold text-white mt-2">{stats.averageResponseTime}m</p>
               </div>
-              <div className="w-12 h-12 bg-yellow-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-yellow-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -313,13 +344,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Integraciones activas */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 hover:shadow-lg hover:shadow-neutral-900/20 group">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-neutral-400 text-sm font-medium">Integraciones</p>
                 <p className="text-3xl font-bold text-white mt-2">{stats.activeIntegrations}</p>
               </div>
-              <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
@@ -346,7 +377,7 @@ export default function DashboardPage() {
         {/* Segunda fila de métricas */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Mensajes por plataforma */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 hover:shadow-lg hover:shadow-neutral-900/20">
             <h3 className="text-lg font-semibold text-white mb-4">Mensajes por Plataforma</h3>
             <div className="space-y-3">
               {Object.entries(stats.messagesByPlatform).map(([platform, count]) => (
@@ -372,7 +403,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Actividad reciente */}
-          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+          <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 hover:shadow-lg hover:shadow-neutral-900/20">
             <h3 className="text-lg font-semibold text-white mb-4">Actividad Reciente</h3>
             <div className="space-y-3">
               {stats.recentMessages.length > 0 ? (
@@ -409,12 +440,12 @@ export default function DashboardPage() {
 
 
         {/* Acciones rápidas */}
-        <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+        <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 hover:shadow-lg hover:shadow-neutral-900/20">
           <h3 className="text-lg font-semibold text-white mb-4">Acciones Rápidas</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <button 
               onClick={() => window.location.href = '/dashboard/contacts'}
-              className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg flex items-center gap-3 transition-all duration-200 hover:shadow-lg hover:shadow-green-900/20 hover:scale-105 group"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -427,7 +458,7 @@ export default function DashboardPage() {
             
             <button 
               onClick={() => window.location.href = '/dashboard/integrations'}
-              className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg flex items-center gap-3 transition-all duration-200 hover:shadow-lg hover:shadow-blue-900/20 hover:scale-105 group"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -440,7 +471,7 @@ export default function DashboardPage() {
             
             <button 
               onClick={() => window.location.href = '/dashboard/inbox'}
-              className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
+              className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg flex items-center gap-3 transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/20 hover:scale-105 group"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
