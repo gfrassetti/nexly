@@ -156,7 +156,7 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     // Por ahora, usamos el primer WABA disponible
     const waba = wabaResponse.data.data?.[0];
     if (!waba) {
-      return res.redirect(`${config.frontendUrl}/integrations?error=no_waba_found`);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_waba_found`);
     }
 
     // Obtener phone number ID
@@ -170,7 +170,7 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
 
     const phoneNumber = phoneNumbersResponse.data.data?.[0];
     if (!phoneNumber) {
-      return res.redirect(`${config.frontendUrl}/integrations?error=no_phone_number`);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_phone_number`);
     }
 
     // Crear o actualizar integración
