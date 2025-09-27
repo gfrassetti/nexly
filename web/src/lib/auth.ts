@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, user }) {
       // Enviar propiedades al cliente
-      if (session?.user) {
+      if (session?.user && user) {
         session.user.id = user.id
       }
       return session
@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       // Permitir solo usuarios con email verificado
       if (account?.provider === "google") {
-        return profile?.email_verified === true
+        return (profile as any)?.email_verified === true
       }
       return true
     },
