@@ -66,10 +66,9 @@ export default function LoginForm() {
       <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
         {error && <p className="text-sm text-red-500">{error}</p>}
         
-        {/* Google Auth Button */}
-        <GoogleAuthButton className="mb-4" />
+        {/* Google Auth Button - TEMPORALMENTE DESHABILITADO */}
+        {/* <GoogleAuthButton className="mb-4" />
         
-        {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-neutral-600"></div>
@@ -77,7 +76,7 @@ export default function LoginForm() {
           <div className="relative flex justify-center text-sm">
             <span className="px-2 bg-neutral-800 text-neutral-400">o continúa con email</span>
           </div>
-        </div>
+        </div> */}
         
         <div>
           <input
