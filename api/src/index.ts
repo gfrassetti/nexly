@@ -91,6 +91,7 @@ app.use((req, res, next) => {
 });
 
 // Middleware para parsear JSON (excepto webhooks de Stripe)
+// IMPORTANTE: Este middleware debe ir ANTES de cualquier otro middleware de parsing
 app.use((req, res, next) => {
   if (req.path === '/stripe/webhook') {
     // Para webhooks de Stripe, usar raw body

@@ -14,24 +14,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
 });
 
-// Middleware para verificar la firma del webhook
-const verifyStripeSignature = (req: Request, res: Response, next: any) => {
+
+// Endpoint para webhooks de Stripe
+router.post('/', async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+  let event: Stripe.Event;
+
   try {
-    const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    req.body = event;
-    next();
+    // Verificar la firma del webhook usando el body raw (Buffer)
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-};
-
-// Endpoint para webhooks de Stripe
-router.post('/webhook', verifyStripeSignature, async (req: Request, res: Response) => {
-  const event: Stripe.Event = req.body;
 
   try {
     switch (event.type) {
