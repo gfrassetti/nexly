@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { registerApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import Logo from "@/components/Logo";
-import GoogleAuthButton from "@/components/GoogleAuthButton";
+// GoogleAuthButton eliminado - no debe interferir con el sistema de autenticación normal
 
 export default function RegisterForm() {
   const [username, setUsername] = useState("");
@@ -80,10 +80,9 @@ export default function RegisterForm() {
         
         {error && <p className="text-sm text-nexly-light-blue">{error}</p>}
 
-        {/* Google Auth Button */}
-        <GoogleAuthButton className="mb-4" />
+        {/* Google Auth Button - TEMPORALMENTE DESHABILITADO */}
+        {/* <GoogleAuthButton className="mb-4" />
         
-        {/* Divider - Solo mostrar si Google está configurado */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-neutral-600"></div>
@@ -91,7 +90,7 @@ export default function RegisterForm() {
           <div className="relative flex justify-center text-sm">
             <span className="px-2 bg-neutral-800 text-neutral-400">o regístrate con email</span>
           </div>
-        </div>
+        </div> */}
 
         <div>
           <input

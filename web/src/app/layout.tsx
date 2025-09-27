@@ -1,7 +1,6 @@
 import "./globals.css";
 import { ReactNode } from "react";
 import { SubscriptionInfoProvider } from "@/contexts/SubscriptionInfoContext";
-import SessionProvider from "@/components/providers/SessionProvider";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -27,11 +26,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="apple-touch-icon" href="/favicon-32x32.png" />
       </head>
       <body>
-        <SessionProvider>
-          <SubscriptionInfoProvider>
-            {children}
-          </SubscriptionInfoProvider>
-        </SessionProvider>
+        <SubscriptionInfoProvider>
+          {children}
+        </SubscriptionInfoProvider>
       </body>
     </html>
   );

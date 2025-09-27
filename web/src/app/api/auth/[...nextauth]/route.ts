@@ -1,6 +1,2 @@
-import NextAuth from "next-auth"
-import { authOptions } from "@/lib/auth"
-
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
+// RUTA ELIMINADA - NextAuth no debe interferir con el sistema de autenticación normal
+// El sistema de autenticación tradicional funciona perfectamente sin NextAuth
