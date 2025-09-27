@@ -90,13 +90,20 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(
-  express.json({
-    verify: (req: any, _res, buf) => {
-      req.rawBody = Buffer.isBuffer(buf) ? buf : Buffer.from(buf || "");
-    },
-  })
-);
+// Middleware para parsear JSON (excepto webhooks de Stripe)
+app.use((req, res, next) => {
+  if (req.path === '/stripe/webhook') {
+    // Para webhooks de Stripe, usar raw body
+    express.raw({ type: 'application/json' })(req, res, next);
+  } else {
+    // Para otros endpoints, usar JSON parsing normal
+    express.json({
+      verify: (req: any, _res, buf) => {
+        req.rawBody = Buffer.isBuffer(buf) ? buf : Buffer.from(buf || "");
+      },
+    })(req, res, next);
+  }
+});
 
 const PORT = Number(process.env.PORT) || 4000;
 
@@ -125,3 +132,5 @@ connectDB()
     console.error("❌ Error al conectar DB:", err);
     process.exit(1);
   });
+
+export default app;
