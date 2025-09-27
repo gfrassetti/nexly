@@ -9,7 +9,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useSearchParams } from "next/navigation";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 
-interface DashboardStats {
+interface DashboardStats {/* asd */
   totalContacts: number;
   totalMessages: number;
   conversationsToday: number;
