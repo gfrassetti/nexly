@@ -18,6 +18,15 @@ export default function GoogleAuthButton({
     return <Loader size="sm" text="Cargando..." />;
   }
 
+  // Mostrar el botón siempre, pero con manejo de errores
+  const handleGoogleSignIn = () => {
+    signIn('google').catch((error) => {
+      console.error('Error en Google OAuth:', error);
+      // Redirigir a login tradicional si Google falla
+      window.location.href = '/login?error=google_oauth_not_configured';
+    });
+  };
+
   if (mode === 'signout') {
     return (
       <button
@@ -49,8 +58,8 @@ export default function GoogleAuthButton({
 
   return (
     <button
-      onClick={() => signIn('google')}
-      className={`w-full px-4 py-3 bg-white text-black hover:bg-gray-100 rounded-lg transition-colors duration-200 flex items-center justify-center font-medium ${className}`}
+      onClick={handleGoogleSignIn}
+      className={`w-full px-4 py-3 bg-white text-black hover:bg-gray-100 hover:shadow-lg rounded-lg transition-all duration-300 flex items-center justify-center font-medium border border-gray-200 hover:border-gray-300 ${className}`}
     >
       <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
         <path
