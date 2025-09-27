@@ -28,7 +28,6 @@ interface SubscriptionData {
     gracePeriodEndDate?: string;
     maxIntegrations: number;
     stripeSubscriptionId?: string;
-    // mercadoPagoSubscriptionId?: string; // Hidden for now
   };
 }
 
@@ -276,7 +275,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (!token) return;
 
     try {
-      // Determinar si es suscripción de Stripe o MercadoPago
+      // Determinar si es suscripción de Stripe
       const endpoint = subscription?.subscription?.stripeSubscriptionId 
         ? '/stripe/cancel' 
         : '/stripe/cancel'; // Force Stripe for now

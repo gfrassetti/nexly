@@ -452,19 +452,6 @@ export default function DashboardPage() {
             </button>
             
             {/* Botón de pago - solo mostrar si está en estado pendiente de pago */}
-            {/* Hidden MercadoPago button for now */}
-            {/* {subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && (
-              <button 
-                onClick={() => createPaymentLink()}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg flex items-center gap-3 transition-colors"
-              >
-                <img src="/mp_logo.png" alt="Mercado Pago" className="h-6 w-auto" />
-                <div className="text-left">
-                  <p className="font-medium">Completar Pago</p>
-                  <p className="text-sm opacity-90">Activar tu prueba gratuita</p>
-                </div>
-              </button>
-            )} */}
           </div>
         </div>
       </div>

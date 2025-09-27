@@ -13,7 +13,7 @@ function PricingContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'mercadopago' | 'stripe'>('stripe');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe'>('stripe');
   // const { createPaymentLink, loading } = usePaymentLink();
   // const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
 

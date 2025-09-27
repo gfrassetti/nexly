@@ -95,10 +95,6 @@ function getProviderFromSubscription(sub: any): string {
     return "stripe";
   }
   
-  // Si tiene mercadoPagoSubscriptionId, es MercadoPago
-  if (sub.mercadoPagoSubscriptionId) {
-    return "mercadopago";
-  }
   
   // Por defecto, usar Stripe (proveedor principal)
   return "stripe";

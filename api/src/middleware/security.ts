@@ -74,8 +74,6 @@ export const validateWebhookOrigin = (req: Request, res: Response, next: NextFun
   
   // Lista de orígenes permitidos
   const allowedOrigins: string[] = [
-    'https://api.mercadopago.com',
-    'https://www.mercadopago.com.ar',
     'https://graph.facebook.com',
     'https://www.facebook.com',
     'https://api.facebook.com',
@@ -150,8 +148,8 @@ export const securityHeaders = helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.mercadopago.com"],
-      frameSrc: ["'self'", "https://www.mercadopago.com.ar"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'self'"],
     },
   },
   hsts: {

@@ -5,7 +5,6 @@ export interface ISubscription extends Document {
   userId: string;
   planType: 'basic' | 'premium';
   status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
-  // mercadoPagoSubscriptionId?: string; // Comentado - solo Stripe ahora
   stripeSubscriptionId?: string;
   stripeSessionId?: string;
   startDate: Date;
@@ -40,11 +39,6 @@ const SubscriptionSchema: Schema = new Schema({
     enum: ['trialing', 'active', 'incomplete', 'incomplete_expired', 'past_due', 'canceled', 'unpaid', 'paused'],
     default: 'trialing',
   },
-  // mercadoPagoSubscriptionId: {
-  //   type: String,
-  //   unique: true,
-  //   sparse: true, // Comentado - solo Stripe ahora
-  // },
   stripeSubscriptionId: {
     type: String,
     unique: true,
@@ -99,7 +93,6 @@ const SubscriptionSchema: Schema = new Schema({
 // Índices para optimizar consultas
 SubscriptionSchema.index({ userId: 1 });
 // stripeSubscriptionId ya tiene índice único sparse en la definición del campo
-// (mercadoPagoSubscriptionId comentado - solo Stripe ahora)
 SubscriptionSchema.index({ status: 1 });
 SubscriptionSchema.index({ trialEndDate: 1 });
 

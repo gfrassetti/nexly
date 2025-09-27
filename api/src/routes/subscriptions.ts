@@ -1,12 +1,10 @@
 // api/src/routes/subscriptions.ts
 import express from 'express';
 import authenticateToken from '../middleware/auth';
-import { mercadoPagoService } from '../services/mercadopago';
 import Subscription from '../models/Subscription';
 import { User } from '../models/User';
 import { asyncHandler, CustomError } from '../utils/errorHandler';
 import { validateSubscriptionData, paymentRateLimit } from '../middleware/security';
-import { mercadoPagoWebhookVerification } from '../middleware/verifyMercadoPagoSignature';
 
 const router = express.Router();
 
@@ -209,7 +207,6 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
         maxIntegrations: (subscription as any).getMaxIntegrations(),
         canUseFeature: (subscription as any).canUseFeature.bind(subscription),
         stripeSubscriptionId: subscription.stripeSubscriptionId,
-        // mercadoPagoSubscriptionId: subscription.mercadoPagoSubscriptionId, // Comentado - solo Stripe ahora
       },
       userSubscriptionStatus: user.subscription_status
     });
@@ -257,61 +254,11 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       return res.status(400).json({ error: 'Ya tienes una suscripción activa' });
     }
 
-    // Para evitar errores 106 y 145, siempre crear una nueva suscripción en MercadoPago
-    // Esto imita el comportamiento exitoso del flujo desde pricing
-    console.log('🔄 Creando nueva suscripción en MercadoPago (evitando errores 106/145)');
-    
-    const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
-    let mercadoPagoSubscription;
-    
-    if (finalPlanType === 'basic') {
-      mercadoPagoSubscription = await mercadoPagoService.createBasicPlan(user.email, backUrl);
-    } else {
-      mercadoPagoSubscription = await mercadoPagoService.createPremiumPlan(user.email, backUrl);
-    }
-
-    // Verificar que MercadoPago creó la suscripción exitosamente
-    if (!mercadoPagoSubscription || !mercadoPagoSubscription.id) {
-      throw new CustomError('Error al crear la suscripción en MercadoPago', 500);
-    }
-
-    // Verificar si ya existe una suscripción pendiente
-    const existingPending = await Subscription.findOne({
-      userId,
-      status: 'trial'
-    });
-
-    let savedSubscription;
-    
-    if (existingPending) {
-      // Actualizar la suscripción existente con el nuevo ID de MercadoPago
-      // existingPending.mercadoPagoSubscriptionId = mercadoPagoSubscription.id; // Comentado - solo Stripe ahora
-      await existingPending.save();
-      savedSubscription = existingPending;
-    } else {
-      // Crear nueva suscripción en la base de datos
-      const startDate = new Date();
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
-
-      const subscription = new Subscription({
-        userId,
-        planType: finalPlanType,
-        status: 'trialing',
-        startDate,
-        trialEndDate,
-        autoRenew: false,
-        mercadoPagoSubscriptionId: mercadoPagoSubscription.id,
-      });
-
-      await subscription.save();
-      savedSubscription = subscription;
-    }
-
+    // Redirigir a Stripe para el pago
     res.json({
       success: true,
-      paymentUrl: mercadoPagoSubscription.init_point,
-      subscriptionId: mercadoPagoSubscription.id,
+      message: 'Redirigiendo a Stripe para completar el pago',
+      redirectUrl: '/stripe/create-payment-link'
     });
 
   } catch (error) {
@@ -320,83 +267,6 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
   }
 }));
 
-/**
- * Webhook de Mercado Pago para actualizar estado de suscripciones
- */
-router.post('/webhook', mercadoPagoWebhookVerification, async (req, res) => {
-  try {
-    // Validar origen del webhook
-    const origin = req.headers.origin || req.headers.referer;
-    const allowedOrigins = [
-      'https://api.mercadopago.com',
-      'https://www.mercadopago.com.ar'
-    ];
-    
-    if (!allowedOrigins.some(allowed => origin?.includes(allowed))) {
-      console.error('Webhook origin not authorized:', origin);
-      return res.status(403).json({ error: 'Origin not authorized' });
-    }
-
-    const { type, data } = req.body;
-
-    if (type === 'subscription_preapproval') {
-      const subscriptionId = data.id;
-      
-      // Obtener información actualizada de Mercado Pago
-      const mpSubscription = await mercadoPagoService.getSubscription(subscriptionId);
-      
-      // Buscar la suscripción en nuestra BD
-      const subscription = await Subscription.findOne({
-        mercadoPagoSubscriptionId: subscriptionId
-      });
-
-      if (subscription) {
-        // Actualizar estado según Mercado Pago
-        const mpStatus = mpSubscription.status;
-        let newStatus = subscription.status;
-
-        switch (mpStatus) {
-          case 'authorized':
-            newStatus = 'active';
-            subscription.autoRenew = true;
-            break;
-          case 'cancelled':
-            newStatus = 'canceled';
-            break;
-          case 'paused':
-            newStatus = 'canceled';
-            break;
-        }
-
-        subscription.status = newStatus;
-        await subscription.save();
-
-        // Actualizar el estado del usuario en la tabla User
-        const user = await User.findById(subscription.userId);
-        if (user) {
-          if (mpStatus === 'authorized') {
-            // Si MercadoPago confirma el método de pago, cambiar a active_trial
-            user.subscription_status = 'active_trial';
-          } else if (mpStatus === 'cancelled') {
-            // Si se cancela, volver a none
-            user.subscription_status = 'none';
-          }
-          await user.save();
-          
-          console.log(`User ${user._id} subscription_status updated to: ${user.subscription_status}`);
-        }
-
-        console.log(`Subscription ${subscriptionId} updated to status: ${newStatus}`);
-      }
-    }
-
-    res.status(200).json({ success: true });
-
-  } catch (error) {
-    console.error('Error processing webhook:', error);
-    res.status(500).json({ error: 'Error procesando webhook' });
-  }
-});
 
 /**
  * Pausar suscripción
@@ -418,15 +288,6 @@ router.post('/pause', authenticateToken, asyncHandler(async (req: any, res: any)
       throw new CustomError('No tienes una suscripción activa para pausar', 404);
     }
 
-    // Pausar en Mercado Pago si existe
-    // if (subscription.mercadoPagoSubscriptionId) {
-    //   try {
-    //     await mercadoPagoService.cancelSubscription(subscription.mercadoPagoSubscriptionId);
-    //   } catch (error) {
-    //     console.error('Error pausing in Mercado Pago:', error);
-    //     // Continuar con la pausa local aunque falle en MP
-    //   }
-    // } // Comentado - solo Stripe ahora
 
     (subscription as any).pauseSubscription();
     await subscription.save();
@@ -468,30 +329,13 @@ router.post('/reactivate', authenticateToken, asyncHandler(async (req: any, res:
       throw new CustomError('No tienes una suscripción pausada para reactivar', 404);
     }
 
-    // Crear nuevo enlace de pago en Mercado Pago
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new CustomError('Usuario no encontrado', 404);
-    }
-
-    const backUrl = `${process.env.FRONTEND_URL}/dashboard/subscription/success`;
-    
-    let mercadoPagoSubscription;
-    if (subscription.planType === 'basic') {
-      mercadoPagoSubscription = await mercadoPagoService.createBasicPlan(user.email, backUrl);
-    } else {
-      mercadoPagoSubscription = await mercadoPagoService.createPremiumPlan(user.email, backUrl);
-    }
-
-    // Actualizar suscripción
+    // Reactivar suscripción
     (subscription as any).reactivateSubscription();
-    // subscription.mercadoPagoSubscriptionId = mercadoPagoSubscription.id; // Comentado - solo Stripe ahora
     await subscription.save();
 
     res.json({
       success: true,
       message: 'Suscripción reactivada exitosamente',
-      paymentUrl: mercadoPagoSubscription.init_point,
       subscription: {
         id: subscription._id,
         status: subscription.status,
@@ -557,15 +401,6 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: any, res: any
       throw new CustomError('No tienes una suscripción activa para cancelar', 404);
     }
 
-    // Si tiene ID de Mercado Pago, cancelar allí también
-    // if (subscription.mercadoPagoSubscriptionId) {
-    //   try {
-    //     await mercadoPagoService.cancelSubscription(subscription.mercadoPagoSubscriptionId);
-    //   } catch (error) {
-    //     console.error('Error cancelling in Mercado Pago:', error);
-    //     // Continuar con la cancelación local aunque falle en MP
-    //   }
-    // } // Comentado - solo Stripe ahora
 
     // Cancelar con período de gracia (7 días por defecto)
     (subscription as any).cancelSubscription(7);

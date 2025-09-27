@@ -27,9 +27,6 @@ export const config = {
   metaPhoneNumberId: process.env.META_PHONE_NUMBER_ID || "",
   metaWabaId: process.env.META_WABA_ID || "",
   
-  // Mercado Pago Configuration
-  mercadoPagoAccessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
-  mercadoPagoBaseUrl: process.env.MERCADOPAGO_BASE_URL || "https://api.mercadopago.com",
   
   // Stripe Configuration
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",

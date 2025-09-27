@@ -57,7 +57,6 @@ export default function SubscriptionStatus() {
             >
               Reintentar
             </button>
-            {/* Botón de MercadoPago comentado - solo Stripe ahora */}
             {/* {!isRateLimited && (
               <button
                 onClick={() => createPaymentLink()}
