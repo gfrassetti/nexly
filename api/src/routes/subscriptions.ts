@@ -1,4 +1,9 @@
 // api/src/routes/subscriptions.ts
+/* "Lee el estado de suscripciones desde la DB y maneja operaciones CRUD de suscripciones"
+Endpoint /status que lee suscripciones desde la base de datos
+Maneja pausar, reactivar, cancelar suscripciones */
+
+
 import express from 'express';
 import authenticateToken from '../middleware/auth';
 import Subscription from '../models/Subscription';
@@ -7,7 +12,6 @@ import { asyncHandler, CustomError } from '../utils/errorHandler';
 import { validateSubscriptionData, paymentRateLimit } from '../middleware/security';
 
 const router = express.Router();
-
 /**
  * Iniciar trial gratuito (sin pago)
  */

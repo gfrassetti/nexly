@@ -1,8 +1,12 @@
+/* "Captura webhooks de Stripe y crea/actualiza suscripciones en la DB cuando ocurren eventos de pago"
+Escucha eventos como checkout.session.completed
+Crea la suscripción en la DB SOLO cuando el pago se completa exitosamente */
+
+
 import { Router, Request, Response } from "express";
 import Stripe from "stripe";
 import { User } from "../../models/User";
 import { default as Subscription, ISubscription } from "../../models/Subscription";
-
 const router = Router();
 
 // Inicializar Stripe

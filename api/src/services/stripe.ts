@@ -1,4 +1,11 @@
 // api/src/services/stripe.ts
+
+/* "Servicio que se comunica con la API de Stripe para crear productos, precios y sesiones de checkout"
+Crea productos y precios en Stripe
+Genera sesiones de checkout con trial de 7 días
+Maneja operaciones de suscripciones en Stripe */
+
+
 import Stripe from 'stripe';
 import { CustomError } from '../utils/errorHandler';
 import { config } from '../config';

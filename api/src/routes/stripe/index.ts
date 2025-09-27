@@ -1,4 +1,11 @@
 // api/src/routes/stripe.ts
+
+/* "Endpoint principal que crea sesiones de Stripe SIN crear suscripciones en la DB"
+Endpoint /create-payment-link que solo crea la sesión de Stripe
+NO crea suscripción en la DB (eso lo hace el webhook)
+Devuelve la URL de checkout para redirigir al usuario */
+
+
 import express from 'express';
 import authenticateToken from '../../middleware/auth';
 import { stripeService } from '../../services/stripe';

@@ -1,3 +1,8 @@
+/* "Componente que redirige al usuario al checkout de Stripe después de crear la sesión"
+Obtiene token y plan desde URL
+Llama al endpoint para crear sesión de Stripe
+Redirige automáticamente a la página de pago de Stripe */
+
 "use client";
 
 import { useEffect, useState } from "react";
