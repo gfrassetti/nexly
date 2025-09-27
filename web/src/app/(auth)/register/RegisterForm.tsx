@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { registerApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import Logo from "@/components/Logo";
+import GoogleAuthButton from "@/components/GoogleAuthButton";
 
 export default function RegisterForm() {
   const [username, setUsername] = useState("");
@@ -78,6 +79,19 @@ export default function RegisterForm() {
         )}
         
         {error && <p className="text-sm text-nexly-light-blue">{error}</p>}
+
+        {/* Google Auth Button */}
+        <GoogleAuthButton className="mb-4" />
+        
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-neutral-600"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-neutral-800 text-neutral-400">o regístrate con email</span>
+          </div>
+        </div>
 
         <div>
           <input

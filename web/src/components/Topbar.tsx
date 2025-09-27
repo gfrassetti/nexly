@@ -2,13 +2,21 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Topbar() {
   const { user, clear } = useAuth();
   const { subscription, status } = useSubscription();
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleLogout = () => {
+    // Si hay sesión de Google, usar signOut de NextAuth
+    if (session) {
+      signOut({ callbackUrl: "/login" });
+      return;
+    }
+    
     // Limpiar localStorage
     localStorage.removeItem("token");
     
@@ -59,10 +67,10 @@ export default function Topbar() {
     <header className="h-12 flex items-center justify-between px-4 bg-neutral-900">
       <div className="text-sm text-neutral-300">Panel</div>
       <div className="flex items-center gap-2">
-        {user && (
+        {(user || session?.user) && (
           <>
             <span className="text-sm text-neutral-300">
-              Hola, {user.username}
+              Hola, {user?.username || session?.user?.name || 'Usuario'}
             </span>
             {getPlanBadge()}
           </>
