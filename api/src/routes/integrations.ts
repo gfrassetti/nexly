@@ -2,6 +2,7 @@
 import { Router, Request, Response } from "express";
 import mongoose, { Types } from "mongoose";
 import axios from "axios";
+import crypto from "crypto";
 import handleAuth from "../middleware/auth";
 import { Integration, IntegrationDoc } from "../models/Integration";
 import { syncIntegration } from "../services/syncIntegration";
@@ -10,6 +11,14 @@ import { config } from "../config";
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
 const router = Router();
+
+// Función helper para generar appsecret_proof
+function generateAppSecretProof(accessToken: string): string {
+  return crypto
+    .createHmac('sha256', config.metaAppSecret)
+    .update(accessToken)
+    .digest('hex');
+}
 
 // Middleware de auth para todas las rutas EXCEPTO el callback OAuth
 router.use((req, res, next) => {
@@ -145,7 +154,10 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     const tokenInfo = await axios.get(
       `https://graph.facebook.com/v19.0/me`,
       {
-        params: { access_token },
+        params: { 
+          access_token,
+          appsecret_proof: generateAppSecretProof(access_token)
+        },
         headers: { Authorization: `Bearer ${access_token}` }
       }
     );
@@ -156,7 +168,8 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
       {
         params: { 
           access_token,
-          fields: 'id,name,whatsapp_business_accounts'
+          fields: 'id,name,whatsapp_business_accounts',
+          appsecret_proof: generateAppSecretProof(access_token)
         }
       }
     );
@@ -171,7 +184,10 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     const phoneNumbersResponse = await axios.get(
       `https://graph.facebook.com/v19.0/${waba.whatsapp_business_accounts.data[0].id}/phone_numbers`,
       {
-        params: { access_token },
+        params: { 
+          access_token,
+          appsecret_proof: generateAppSecretProof(access_token)
+        },
         headers: { Authorization: `Bearer ${access_token}` }
       }
     );
