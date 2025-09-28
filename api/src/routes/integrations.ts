@@ -85,7 +85,6 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
       `redirect_uri=${config.apiUrl}/integrations/oauth/whatsapp/callback&` +
       `scope=whatsapp_business_management,whatsapp_business_messaging&` +
       `response_type=code&` +
-      `config_id=${config.metaConfigId}&` +
       `state=${state}`;
 
     res.json({ 
