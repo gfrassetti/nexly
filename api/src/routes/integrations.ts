@@ -103,9 +103,16 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
  */
 router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
   try {
+    console.log("🔍 OAuth Callback recibido:");
+    console.log("  - Query params:", req.query);
+    console.log("  - Code:", req.query.code);
+    console.log("  - State:", req.query.state);
+    console.log("  - Error:", req.query.error);
+    
     const { code, state, error } = req.query;
 
     if (error) {
+      console.log("❌ Error en OAuth:", error);
       return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_denied`);
     }
 
@@ -120,6 +127,7 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     }
 
     // Intercambiar código por token de acceso
+    console.log("🔄 Intercambiando código por token...");
     const tokenResponse = await axios.post(
       'https://graph.facebook.com/v19.0/oauth/access_token',
       {
@@ -130,6 +138,7 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
       }
     );
 
+    console.log("✅ Token recibido:", tokenResponse.data);
     const { access_token } = tokenResponse.data;
 
     // Obtener información del token (para verificar permisos)
