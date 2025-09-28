@@ -60,6 +60,53 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * GET /integrations/connect/instagram
+ * Inicia el flujo OAuth para conectar Instagram Business
+ */
+router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    if (!config.metaAppId) {
+      return res.status(500).json({ error: "meta_app_not_configured" });
+    }
+
+    // Verificar si ya tiene Instagram conectado
+    const existing = await Integration.findOne({ 
+      userId, 
+      provider: "instagram" 
+    });
+
+    if (existing && existing.status === "linked") {
+      return res.status(409).json({ 
+        error: "instagram_already_connected",
+        integration: existing._id 
+      });
+    }
+
+    // Generar state para seguridad OAuth
+    const state = `${userId}_${Date.now()}`;
+    
+    // URL de autorización de Meta - Permisos de Instagram
+    const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
+      `client_id=${config.metaAppId}&` +
+      `redirect_uri=${config.apiUrl}/integrations/oauth/instagram/callback&` +
+      `scope=instagram_basic,instagram_manage_messages,pages_show_list,pages_messaging&` +
+      `response_type=code&` +
+      `state=${state}`;
+
+    res.json({ 
+      authUrl,
+      state 
+    });
+  } catch (err) {
+    console.error("instagram_connect_failed:", err);
+    res.status(500).json({ error: "instagram_connect_failed" });
+  }
+});
+
+/**
  * GET /integrations/connect/whatsapp
  * Inicia el flujo OAuth para conectar WhatsApp Business
  */
@@ -103,6 +150,99 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
   } catch (err) {
     console.error("whatsapp_connect_failed:", err);
     res.status(500).json({ error: "whatsapp_connect_failed" });
+  }
+});
+
+/**
+ * GET /integrations/oauth/instagram/callback
+ * Callback del OAuth de Instagram
+ */
+router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
+  try {
+    console.log("🔍 Instagram OAuth Callback recibido:");
+    console.log("  - Query params:", req.query);
+    
+    const { code, state, error } = req.query;
+
+    if (error) {
+      console.log("❌ Error en Instagram OAuth:", error);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=instagram_oauth_denied`);
+    }
+
+    if (!code || !state) {
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=instagram_missing_code`);
+    }
+
+    // Extraer userId del state
+    const userId = state.toString().split('_')[0];
+    if (!userId) {
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=instagram_invalid_state`);
+    }
+
+    // Intercambiar código por token de acceso
+    console.log("🔄 Intercambiando código por token de Instagram...");
+    const tokenResponse = await axios.post(
+      'https://graph.facebook.com/v19.0/oauth/access_token',
+      {
+        client_id: config.metaAppId,
+        client_secret: config.metaAppSecret,
+        redirect_uri: `${config.apiUrl}/integrations/oauth/instagram/callback`,
+        code: code
+      }
+    );
+
+    console.log("✅ Token de Instagram recibido:", tokenResponse.data);
+    const { access_token } = tokenResponse.data;
+
+    // Obtener información del token
+    const tokenInfo = await axios.get(
+      `https://graph.facebook.com/v19.0/me`,
+      {
+        params: { 
+          access_token,
+          appsecret_proof: generateAppSecretProof(access_token)
+        }
+      }
+    );
+
+    // Obtener páginas de Instagram
+    const pagesResponse = await axios.get(
+      `https://graph.facebook.com/v19.0/me/accounts`,
+      {
+        params: { 
+          access_token,
+          fields: 'id,name,instagram_business_account',
+          appsecret_proof: generateAppSecretProof(access_token)
+        }
+      }
+    );
+
+    const instagramPage = pagesResponse.data.data?.find((page: any) => page.instagram_business_account);
+    if (!instagramPage) {
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_instagram_account`);
+    }
+
+    // Crear o actualizar integración
+    const integration = await Integration.findOneAndUpdate(
+      { userId, provider: "instagram" },
+      {
+        userId: new Types.ObjectId(userId),
+        provider: "instagram",
+        externalId: instagramPage.instagram_business_account.id,
+        accessToken: access_token,
+        name: `Instagram Business - ${instagramPage.name}`,
+        status: "pending"
+      },
+      { upsert: true, new: true }
+    );
+
+    // Sincronizar para obtener metadata
+    await syncIntegration(integration);
+
+    res.redirect(`${config.frontendUrl}/dashboard/integrations?success=instagram_connected`);
+  } catch (err: any) {
+    console.error("instagram_oauth_callback_failed:", err?.response?.data || err?.message);
+    res.redirect(`${config.frontendUrl}/dashboard/integrations?error=instagram_oauth_failed`);
   }
 });
 
@@ -540,6 +680,64 @@ router.post("/conversations/:id/reply", async (req: AuthRequest, res: Response) 
     console.error("reply_send_failed:", err?.response?.data || err?.message);
     res.status(500).json({ 
       error: "reply_send_failed",
+      details: err?.response?.data || err?.message 
+    });
+  }
+});
+
+/**
+ * POST /integrations/send-instagram
+ * Envía un mensaje de Instagram usando la integración del cliente
+ */
+router.post("/send-instagram", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { to, message } = req.body;
+    
+    if (!to || !message) {
+      return res.status(400).json({ error: "missing_to_or_message" });
+    }
+
+    // Buscar la integración de Instagram del cliente
+    const integration = await Integration.findOne({
+      userId,
+      provider: "instagram",
+      status: "linked"
+    });
+
+    if (!integration || !integration.accessToken || !integration.externalId) {
+      return res.status(400).json({ 
+        error: "instagram_not_connected",
+        message: "El cliente debe conectar su Instagram Business primero"
+      });
+    }
+
+    // Enviar mensaje a través de la API de Instagram
+    const response = await axios.post(
+      `https://graph.facebook.com/v19.0/${integration.externalId}/messages`,
+      {
+        recipient: { id: to },
+        message: { text: message }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${integration.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      messageId: response.data.message_id,
+      response: response.data 
+    });
+  } catch (err: any) {
+    console.error("instagram_send_failed:", err?.response?.data || err?.message);
+    res.status(500).json({ 
+      error: "instagram_send_failed",
       details: err?.response?.data || err?.message 
     });
   }
