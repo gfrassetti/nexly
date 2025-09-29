@@ -247,6 +247,26 @@ router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /integrations/test-callback
+ * Ruta de prueba para verificar si el routing funciona
+ */
+router.get("/test-callback", async (req: Request, res: Response) => {
+  console.log("🧪 TEST CALLBACK - Ruta de prueba funcionando!");
+  console.log("  - URL completa:", req.url);
+  console.log("  - Path:", req.path);
+  console.log("  - Query params:", req.query);
+  
+  res.json({
+    success: true,
+    message: "Test callback funcionando correctamente",
+    url: req.url,
+    path: req.path,
+    query: req.query,
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
  * GET /integrations/oauth/whatsapp/callback
  * Callback del OAuth de WhatsApp
  */
