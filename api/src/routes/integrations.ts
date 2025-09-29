@@ -253,10 +253,13 @@ router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
 router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
   try {
     console.log("🔍 OAuth Callback recibido:");
+    console.log("  - URL completa:", req.url);
+    console.log("  - Path:", req.path);
     console.log("  - Query params:", req.query);
     console.log("  - Code:", req.query.code);
     console.log("  - State:", req.query.state);
     console.log("  - Error:", req.query.error);
+    console.log("  - Headers:", req.headers);
     
     const { code, state, error } = req.query;
 
