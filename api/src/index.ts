@@ -121,6 +121,36 @@ app.use("/analytics", analyticsRouter);
 app.use("/stripe/webhook", validateWebhookOrigin, stripeWebhookRouter);
 app.use("/stripe/pause", stripePauseRouter);
 
+// Endpoint raíz
+app.get("/", (req, res) => {
+  res.json({
+    message: "Nexly API is running",
+    version: "1.0.0",
+    status: "ok",
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Middleware de manejo de rutas no encontradas
+app.use("*", (req, res) => {
+  res.status(404).json({
+    error: "Route not found",
+    message: `The requested route ${req.originalUrl} does not exist`,
+    availableRoutes: [
+      "/health",
+      "/auth",
+      "/webhook", 
+      "/contacts",
+      "/integrations",
+      "/messages",
+      "/subscriptions",
+      "/stripe",
+      "/ai",
+      "/analytics"
+    ]
+  });
+});
+
 // Error handler (debe ir al final)
 app.use(errorHandler);
 
