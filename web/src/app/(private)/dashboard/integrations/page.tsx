@@ -22,6 +22,9 @@ function IntegrationsContent() {
     if (success === "whatsapp_connected") {
       showSuccess("¡WhatsApp conectado!", "WhatsApp se ha conectado exitosamente");
       setMessage("¡WhatsApp conectado exitosamente!");
+    } else if (success === "instagram_connected") {
+      showSuccess("¡Instagram conectado!", "Instagram se ha conectado exitosamente");
+      setMessage("¡Instagram conectado exitosamente!");
     } else if (error) {
       let errorTitle = "Error de conexión";
       let errorMessage = "Error al conectar WhatsApp. Intenta de nuevo.";
@@ -31,23 +34,34 @@ function IntegrationsContent() {
           errorTitle = "Error de autenticación";
           errorMessage = "Error al autenticar con Meta. Intenta de nuevo.";
           break;
+        case "instagram_oauth_failed":
+          errorTitle = "Error de autenticación de Instagram";
+          errorMessage = "Error al autenticar con Instagram. Intenta de nuevo.";
+          break;
         case "no_waba_found":
           errorTitle = "Cuenta de WhatsApp Business no encontrada";
           errorMessage = "No se encontró una cuenta de WhatsApp Business asociada. Asegúrate de tener una cuenta de WhatsApp Business configurada en Meta Business Manager.";
+          break;
+        case "no_instagram_account":
+          errorTitle = "Cuenta de Instagram Business no encontrada";
+          errorMessage = "No se encontró una cuenta de Instagram Business asociada. Asegúrate de tener una cuenta de Instagram Business conectada a una página de Facebook.";
           break;
         case "no_phone_number":
           errorTitle = "Número de teléfono no encontrado";
           errorMessage = "No se encontró un número de teléfono asociado a tu cuenta de WhatsApp Business.";
           break;
         case "oauth_denied":
+        case "instagram_oauth_denied":
           errorTitle = "Autorización denegada";
           errorMessage = "Has denegado los permisos necesarios. Intenta de nuevo y acepta todos los permisos.";
           break;
         case "missing_code":
+        case "instagram_missing_code":
           errorTitle = "Código de autorización faltante";
           errorMessage = "Error en el proceso de autorización. Intenta de nuevo.";
           break;
         case "invalid_state":
+        case "instagram_invalid_state":
           errorTitle = "Estado de autorización inválido";
           errorMessage = "Error en el proceso de autorización. Intenta de nuevo.";
           break;

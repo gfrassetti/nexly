@@ -52,6 +52,8 @@ export function useIntegrations(): UseIntegrationsReturn {
   const handleIntegrationClick = (integrationName: string) => {
     if (integrationName === 'whatsapp') {
       window.location.href = '/dashboard/integrations/connect/whatsapp';
+    } else if (integrationName === 'instagram') {
+      window.location.href = '/dashboard/integrations/connect/instagram';
     } else if (isIntegrationAvailable(integrationName)) {
       // Aquí iría la lógica para conectar otras plataformas
       alert(`${integrationName} aún no está implementado`);
