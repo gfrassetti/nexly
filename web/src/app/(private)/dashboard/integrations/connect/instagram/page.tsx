@@ -7,14 +7,14 @@ import { useNotificationHelpers } from "@/hooks/useNotification";
 export default function ConnectInstagramPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { apiFetch } = useApiFetch();
+  const { fetch } = useApiFetch();
   const { showError } = useNotificationHelpers();
 
   const handleConnectInstagram = async () => {
     try {
       setLoading(true);
       
-      const response = await apiFetch("/integrations/connect/instagram");
+      const response = await fetch("/integrations/connect/instagram");
       
       if (response.authUrl) {
         // Redirigir a Meta para autorizar
