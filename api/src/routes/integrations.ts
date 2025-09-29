@@ -20,10 +20,12 @@ function generateAppSecretProof(accessToken: string): string {
     .digest('hex');
 }
 
-// Middleware de auth para todas las rutas EXCEPTO el callback OAuth
+// Middleware de auth para todas las rutas EXCEPTO los callbacks OAuth
 router.use((req, res, next) => {
-  // Excluir el callback OAuth del middleware de autenticación
-  if (req.path === "/oauth/whatsapp/callback") {
+  // Excluir los callbacks OAuth del middleware de autenticación
+  if (req.path === "/oauth/whatsapp/callback" || 
+      req.path === "/oauth/instagram/callback" ||
+      req.path === "/test-callback") {
     return next();
   }
   return handleAuth(req, res, next);
