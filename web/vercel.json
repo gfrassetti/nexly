@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/integrations/oauth/(.*)",
+      "destination": "https://nexly-production.up.railway.app/integrations/oauth/$1"
+    },
+    {
+      "source": "/webhook",
+      "destination": "https://nexly-production.up.railway.app/webhook"
+    }
+  ]
+}
