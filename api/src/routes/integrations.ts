@@ -273,6 +273,12 @@ router.get("/test-callback", async (req: Request, res: Response) => {
  * Callback del OAuth de WhatsApp
  */
 router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
+  console.log("🚀 INICIO: OAuth Callback recibido");
+  console.log("  - Timestamp:", new Date().toISOString());
+  console.log("  - URL completa:", req.url);
+  console.log("  - Path:", req.path);
+  console.log("  - Method:", req.method);
+  
   try {
     console.log("🔍 OAuth Callback recibido:");
     console.log("  - URL completa:", req.url);
@@ -380,8 +386,13 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     // Sincronizar para obtener metadata
     await syncIntegration(integration);
 
+    console.log("✅ ÉXITO: Redirigiendo al frontend con éxito");
     res.redirect(`${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`);
   } catch (err: any) {
+    console.error("❌ ERROR en callback de WhatsApp:", err);
+    console.log("  - Error message:", err?.message);
+    console.log("  - Error response:", err?.response?.data);
+    console.log("  - Error stack:", err?.stack);
     console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
     res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_failed`);
   }
