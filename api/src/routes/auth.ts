@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { User } from "../models/User";
 import { config } from "../config";
 import { emailService } from "../services/emailService";
+import { logAuthActivity, logAuthError } from "../utils/logger";
 
 const router = Router();
 
@@ -48,6 +49,13 @@ router.post("/register", async (req, res) => {
 
     await user.save();
 
+    // Log successful registration
+    logAuthActivity('user_registered', user._id.toString(), {
+      username: user.username,
+      email: user.email,
+      plan: plan || 'basic'
+    });
+
     // Si hay un plan válido, establecer estado pendiente de pago y crear el token para auto-login
     if (plan && (plan === 'basic' || plan === 'premium')) {
       // Establecer estado pendiente de método de pago
@@ -75,6 +83,11 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({ message: "Usuario registrado exitosamente" });
   } catch (err: any) {
+    logAuthError(err, 'register', undefined, {
+      email: req.body.email,
+      username: req.body.username,
+      plan: req.body.plan
+    });
     console.error("REGISTER error:", err);
     res
       .status(500)
@@ -119,6 +132,13 @@ router.post("/login", async (req, res) => {
       expiresIn: "24h",
     });
 
+    // Log successful login
+    logAuthActivity('login_success', user._id.toString(), {
+      username: user.username,
+      email: user.email,
+      loginMethod: identifier ? 'identifier' : email ? 'email' : 'username'
+    });
+
     res.json({
       token,
       user: {
@@ -127,7 +147,10 @@ router.post("/login", async (req, res) => {
         email: user.email,
       },
     });
-  } catch (err) {
+  } catch (err: any) {
+    logAuthError(err, 'login', undefined, {
+      identifier: req.body.identifier || req.body.email || req.body.username
+    });
     console.error("LOGIN error:", err);
     res.status(500).json({ message: "Error en el login" });
   }

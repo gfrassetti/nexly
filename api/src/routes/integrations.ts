@@ -7,6 +7,7 @@ import handleAuth from "../middleware/auth";
 import { Integration, IntegrationDoc } from "../models/Integration";
 import { syncIntegration } from "../services/syncIntegration";
 import { config } from "../config";
+import { logIntegrationActivity, logIntegrationError, logIntegrationSuccess } from "../utils/logger";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -54,8 +55,17 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       createdAt: it.createdAt,
       updatedAt: it.updatedAt,
     }));
+
+    // Log integration list request
+    logIntegrationActivity('list_integrations', userId, {
+      count: items.length,
+      providers: items.map(item => item.provider)
+    });
+
     res.json(withShape);
-  } catch (err) {
+  } catch (err: any) {
+    const userId = req.user?.id || req.user?._id;
+    logIntegrationError(err, userId || 'unknown', 'list_integrations');
     console.error("integrations_list_failed:", err);
     res.status(500).json({ error: "integrations_list_failed" });
   }
@@ -241,8 +251,20 @@ router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
     // Sincronizar para obtener metadata
     await syncIntegration(integration);
 
+    // Log successful Instagram integration
+    logIntegrationSuccess('instagram_oauth_callback', userId, {
+      integrationId: (integration as any)._id?.toString() || 'unknown',
+      externalId: instagramPage.instagram_business_account.id,
+      pageName: instagramPage.name
+    });
+
     res.redirect(`${config.frontendUrl}/dashboard/integrations?success=instagram_connected`);
   } catch (err: any) {
+    const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
+    logIntegrationError(err, userId, "instagram_oauth_callback", { 
+      errorResponse: err?.response?.data,
+      errorMessage: err?.message 
+    });
     console.error("instagram_oauth_callback_failed:", err?.response?.data || err?.message);
     res.redirect(`${config.frontendUrl}/dashboard/integrations?error=instagram_oauth_failed`);
   }
@@ -859,8 +881,19 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
     const deleted = await Integration.findOneAndDelete({ _id: id, userId }).lean();
     if (!deleted) return res.status(404).json({ error: "not_found" });
 
+    // Log integration deletion
+    logIntegrationActivity('delete_integration', userId, {
+      integrationId: id,
+      provider: deleted.provider,
+      externalId: deleted.externalId
+    });
+
     res.json({ ok: true });
-  } catch (err) {
+  } catch (err: any) {
+    const userId = req.user?.id || req.user?._id;
+    logIntegrationError(err, userId || 'unknown', 'delete_integration', {
+      integrationId: req.params.id
+    });
     console.error("integration_delete_failed:", err);
     res.status(500).json({ error: "integration_delete_failed" });
   }

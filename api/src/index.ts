@@ -15,6 +15,7 @@ import aiRouter from "./routes/ai";
 import analyticsRouter from "./routes/analytics";
 import stripeWebhookRouter from "./routes/stripe/webhook";
 import stripePauseRouter from "./routes/stripe/pause";
+import loggerTestRouter from "./routes/loggerTest";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -24,6 +25,8 @@ import {
   sanitizePaymentData 
 } from "./middleware/security";
 import { errorHandler } from "./utils/errorHandler";
+import logger from "./utils/logger";
+import { requestLogging, integrationLogging, errorLogging } from "./middleware/logging";
 
 dotenv.config();
 
@@ -31,6 +34,9 @@ const app = express();
 
 // Trust proxy for Railway (fixes X-Forwarded-For header issue)
 app.set('trust proxy', 1);
+
+// Request logging middleware (early in the chain)
+app.use(requestLogging);
 
 // Security headers
 app.use(securityHeaders);
@@ -112,7 +118,7 @@ app.use("/health", healthRouter);
 app.use("/auth", authRouter);
 app.use("/webhook", validateWebhookOrigin, webhookRouter);
 app.use("/contacts", contactsRouter);
-app.use("/integrations", integrationsRouter);
+app.use("/integrations", integrationLogging, integrationsRouter);
 app.use("/messages", messageRoutes);
 app.use("/subscriptions", subscriptionRateLimit, sanitizePaymentData, subscriptionsRouter);
 app.use("/stripe", sanitizePaymentData, stripeRouter);
@@ -120,6 +126,7 @@ app.use("/ai", aiRouter);
 app.use("/analytics", analyticsRouter);
 app.use("/stripe/webhook", validateWebhookOrigin, stripeWebhookRouter);
 app.use("/stripe/pause", stripePauseRouter);
+app.use("/loggerTest", loggerTestRouter);
 
 // Endpoint raíz
 app.get("/", (req, res) => {
@@ -151,15 +158,30 @@ app.use((req, res) => {
   });
 });
 
+// Error logging middleware
+app.use(errorLogging);
+
 // Error handler (debe ir al final)
 app.use(errorHandler);
 
 // 👇 conectar DB primero, después arrancar server
 connectDB()
   .then(() => {
-    app.listen(PORT, "0.0.0.0", () => console.log("✅ up", PORT));
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("✅ up", PORT);
+      logger.info("Server started", {
+        port: PORT,
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+      });
+    });
   })
   .catch((err) => {
+    logger.error("Database connection failed", {
+      error: err.message,
+      stack: err.stack,
+      timestamp: new Date().toISOString()
+    });
     console.error("❌ Error al conectar DB:", err);
     process.exit(1);
   });
