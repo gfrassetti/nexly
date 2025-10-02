@@ -758,14 +758,23 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     }
 
     if (!code || !state) {
+      console.log("❌ Missing code or state:", { code: !!code, state: !!state });
       return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=missing_code`);
     }
 
     // Extraer userId del state
     const userId = state.toString().split('_')[0];
     if (!userId) {
+      console.log("❌ Invalid state format:", state);
       return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=invalid_state`);
     }
+
+    console.log("✅ Validando configuración Meta:", {
+      hasAppId: !!config.metaAppId,
+      hasAppSecret: !!config.metaAppSecret,
+      apiUrl: config.apiUrl,
+      frontendUrl: config.frontendUrl
+    });
 
     // Intercambiar código por token de acceso
     console.log("🔄 Intercambiando código por token...");
@@ -783,18 +792,21 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     const { access_token } = tokenResponse.data;
 
     // Obtener información del token (para verificar permisos)
+    console.log("🔍 Verificando token...");
     const tokenInfo = await axios.get(
       `https://graph.facebook.com/v19.0/me`,
       {
         params: { 
           access_token,
           appsecret_proof: generateAppSecretProof(access_token)
-        },
-        headers: { Authorization: `Bearer ${access_token}` }
+        }
       }
     );
 
+    console.log("✅ Token verificado:", tokenInfo.data);
+
     // Obtener WhatsApp Business Account ID
+    console.log("🔍 Obteniendo WhatsApp Business Account...");
     const wabaResponse = await axios.get(
       `https://graph.facebook.com/v19.0/me/businesses`,
       {
@@ -806,30 +818,41 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
       }
     );
 
+    console.log("✅ WABA response:", wabaResponse.data);
+
     // Por ahora, usamos el primer WABA disponible
     const waba = wabaResponse.data.data?.[0];
     if (!waba) {
+      console.log("❌ No WABA found in response:", wabaResponse.data);
       return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_waba_found`);
     }
 
+    console.log("✅ WABA encontrado:", waba);
+
     // Obtener phone number ID
+    console.log("🔍 Obteniendo phone numbers...");
     const phoneNumbersResponse = await axios.get(
       `https://graph.facebook.com/v19.0/${waba.whatsapp_business_accounts.data[0].id}/phone_numbers`,
       {
         params: { 
           access_token,
           appsecret_proof: generateAppSecretProof(access_token)
-        },
-        headers: { Authorization: `Bearer ${access_token}` }
+        }
       }
     );
 
+    console.log("✅ Phone numbers response:", phoneNumbersResponse.data);
+
     const phoneNumber = phoneNumbersResponse.data.data?.[0];
     if (!phoneNumber) {
+      console.log("❌ No phone number found:", phoneNumbersResponse.data);
       return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_phone_number`);
     }
 
+    console.log("✅ Phone number encontrado:", phoneNumber);
+
     // Crear o actualizar integración
+    console.log("🔍 Creando/actualizando integración...");
     const integration = await Integration.findOneAndUpdate(
       { userId, provider: "whatsapp" },
       {
@@ -844,7 +867,10 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
       { upsert: true, new: true }
     );
 
+    console.log("✅ Integración creada/actualizada:", integration);
+
     // Sincronizar para obtener metadata
+    console.log("🔍 Sincronizando integración...");
     await syncIntegration(integration);
 
     // Log successful WhatsApp integration
@@ -863,6 +889,20 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
   } catch (err: any) {
     const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
     
+    // Log detallado del error
+    console.error("❌ ERROR en callback de WhatsApp:", {
+      message: err?.message,
+      response: err?.response?.data,
+      status: err?.response?.status,
+      config: {
+        url: err?.config?.url,
+        method: err?.config?.method,
+        data: err?.config?.data
+      },
+      query: req.query,
+      userId: userId
+    });
+    
     // Log WhatsApp callback error
     logIntegrationError(err, userId, "whatsapp_oauth_callback", {
       endpoint: req.path,
@@ -873,10 +913,6 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
       query: req.query
     });
     
-    console.error("❌ ERROR en callback de WhatsApp:", err);
-    console.log("  - Error message:", err?.message);
-    console.log("  - Error response:", err?.response?.data);
-    console.log("  - Error stack:", err?.stack);
     console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
     res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_failed`);
   }

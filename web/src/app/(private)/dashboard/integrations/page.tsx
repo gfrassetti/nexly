@@ -51,7 +51,7 @@ function IntegrationsContent() {
       switch (error) {
         case "oauth_failed":
           errorTitle = "Error de autenticación";
-          errorMessage = "Error al autenticar con Meta. Intenta de nuevo.";
+          errorMessage = "Error al autenticar con Meta. Verifica los logs del servidor para más detalles.";
           break;
         case "instagram_oauth_failed":
           errorTitle = "Error de autenticación de Instagram";
@@ -95,6 +95,10 @@ function IntegrationsContent() {
         case "instagram_invalid_token":
           errorTitle = "Token inválido";
           errorMessage = "El token de acceso es inválido o ha expirado. Intenta conectar de nuevo.";
+          break;
+        default:
+          errorTitle = "Error desconocido";
+          errorMessage = `Error: ${error}. Revisa los logs del servidor para más detalles.`;
           break;
       }
       

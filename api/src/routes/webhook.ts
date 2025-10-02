@@ -1,102 +1,82 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { config } from "../config";
-import { Contact } from "../models/Contact";
-import { Message } from "../models/Message";
-import { Integration } from "../models/Integration";
-import { verifyMetaSignature } from "../middleware/verifyMetaSignature";
+import logger from "../utils/logger";
 
 const router = Router();
 
-// GET verify (Meta)
-router.get("/", (req, res) => {
-  console.log("🔍 Webhook verification attempt:");
-  console.log("  - Received token:", req.query["hub.verify_token"]);
-  console.log("  - Expected token:", config.webhookVerifyToken);
-  console.log("  - Challenge:", req.query["hub.challenge"]);
-  
-  if (req.query["hub.verify_token"] === config.webhookVerifyToken) {
-    console.log("✅ Webhook verification successful");
-    return res.status(200).send(req.query["hub.challenge"]);
-  }
-  
-  console.log("❌ Webhook verification failed");
-  res.sendStatus(403);
-});
+// Verificación del webhook (GET) - Según documentación de Meta
+router.get("/", (req: Request, res: Response) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
-// POST - Solo aplicar verificación de firma a POST requests
-router.post("/", async (req, res) => {
-  // Verificar firma de Meta solo en producción y si hay APP_SECRET
-  if (process.env.NODE_ENV === "production" && config.metaAppSecret) {
-    const isValidSignature = verifyMetaSignature(req);
-    if (!isValidSignature) {
-      console.log("❌ Invalid Meta signature");
-      return res.status(401).send("Unauthorized");
-    }
-  }
-  try {
-
-    const entry = req.body?.entry?.[0];
-    const change = entry?.changes?.[0]?.value;
-    if (!change) return res.sendStatus(200);
-
-    const phoneNumberId = change?.metadata?.phone_number_id;
-    const integration = await Integration.findOne({
-      provider: "whatsapp",
-      $or: [{ phoneNumberId }, { externalId: phoneNumberId }],
-    });
-    if (!integration) return res.sendStatus(202);
-
-    const userId = integration.userId;
-    const messages = change?.messages || [];
-
-    for (const msg of messages) {
-      const phone = msg.from;
-      let contact = await Contact.findOne({ userId, phone });
-      if (!contact) {
-        contact = await Contact.create({
-          userId,
-          name: phone,
-          phone,
-          email: "",
-        });
-      }
-
-      if (msg.type === "text" && msg.text?.body) {
-        await Message.create({
-          userId,
-          contactId: contact._id,
-          direction: "in",
-          body: msg.text.body,
-        });
-      }
-    }
-
-    res.sendStatus(200);
-  } catch (err) {
-    console.error("POST /webhook error:", err);
-    res.sendStatus(500);
-  }
-});
-
-// Endpoint para probar manualmente el webhook
-router.get("/test", (req, res) => {
-  const testChallenge = "test_challenge_" + Date.now();
-  console.log("🧪 Testing webhook endpoint");
-  console.log("  - Current verify token:", config.webhookVerifyToken);
-  console.log("  - Test challenge:", testChallenge);
-  
-  res.json({
-    message: "Webhook endpoint is working",
-    webhookUrl: `${config.apiUrl}/webhook`,
-    verifyToken: config.webhookVerifyToken,
-    testUrl: `${config.apiUrl}/webhook?hub.verify_token=${config.webhookVerifyToken}&hub.challenge=${testChallenge}`,
-    instructions: [
-      "1. Copy the testUrl above",
-      "2. Paste it in your browser",
-      "3. You should see the challenge string returned",
-      "4. Use the same verifyToken in Meta Developer Console"
-    ]
+  console.log("🔍 Webhook verification request:", {
+    mode,
+    token,
+    challenge: challenge ? "present" : "missing"
   });
+
+  if (mode === "subscribe" && token === config.webhookVerifyToken) {
+    console.log("✅ Webhook verificado correctamente");
+    logger.info('Webhook verification successful', {
+      mode,
+      token: token ? 'present' : 'missing',
+      challenge: challenge ? 'present' : 'missing'
+    });
+    res.status(200).send(challenge);
+  } else {
+    console.log("❌ Webhook verificación fallida:", {
+      mode,
+      expectedToken: config.webhookVerifyToken,
+      receivedToken: token
+    });
+    logger.error('Webhook verification failed', {
+      mode,
+      expectedToken: config.webhookVerifyToken,
+      receivedToken: token
+    });
+    res.status(403).send("Forbidden");
+  }
+});
+
+// Notificaciones de mensajes (POST) - Según documentación de Meta
+router.post("/", (req: Request, res: Response) => {
+  console.log("📨 Webhook recibido:", JSON.stringify(req.body, null, 2));
+  
+  logger.info('Webhook notification received', {
+    body: req.body,
+    headers: req.headers
+  });
+  
+  // Procesar notificaciones de WhatsApp según la documentación
+  const body = req.body;
+  
+  if (body.object === "whatsapp_business_account") {
+    body.entry?.forEach((entry: any) => {
+      entry.changes?.forEach((change: any) => {
+        if (change.field === "messages") {
+          console.log("💬 Mensaje recibido:", change.value);
+          
+          // Procesar mensajes según la documentación
+          const messages = change.value?.messages || [];
+          const contacts = change.value?.contacts || [];
+          const metadata = change.value?.metadata || {};
+          
+          messages.forEach((message: any) => {
+            console.log("📱 Procesando mensaje:", {
+              id: message.id,
+              from: message.from,
+              type: message.type,
+              timestamp: message.timestamp,
+              text: message.text?.body
+            });
+          });
+        }
+      });
+    });
+  }
+  
+  res.status(200).send("OK");
 });
 
 export default router;
