@@ -84,6 +84,18 @@ function IntegrationsContent() {
           errorTitle = "Estado de autorización inválido";
           errorMessage = "Error en el proceso de autorización. Intenta de nuevo.";
           break;
+        case "instagram_invalid_request":
+          errorTitle = "Solicitud inválida";
+          errorMessage = "Los parámetros de la solicitud son inválidos. Verifica la configuración de la app de Meta.";
+          break;
+        case "instagram_unauthorized":
+          errorTitle = "No autorizado";
+          errorMessage = "Las credenciales de la app de Meta son inválidas. Verifica META_APP_ID y META_APP_SECRET.";
+          break;
+        case "instagram_invalid_token":
+          errorTitle = "Token inválido";
+          errorMessage = "El token de acceso es inválido o ha expirado. Intenta conectar de nuevo.";
+          break;
       }
       
       showError(errorTitle, errorMessage);

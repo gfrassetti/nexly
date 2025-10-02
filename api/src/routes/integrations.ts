@@ -163,8 +163,16 @@ router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
     const userId = req.user?.id || req.user?._id;
     if (!userId) return res.status(401).json({ error: "no_user_in_token" });
 
-    if (!config.metaAppId) {
-      return res.status(500).json({ error: "meta_app_not_configured" });
+    if (!config.metaAppId || !config.metaAppSecret) {
+      console.error("❌ Meta App no configurada correctamente:", {
+        hasAppId: !!config.metaAppId,
+        hasAppSecret: !!config.metaAppSecret,
+        appId: config.metaAppId ? `${config.metaAppId.substring(0, 4)}...` : 'missing'
+      });
+      return res.status(500).json({ 
+        error: "meta_app_not_configured",
+        details: "META_APP_ID y META_APP_SECRET son requeridos"
+      });
     }
 
     // Verificar límites de integraciones
@@ -213,6 +221,13 @@ router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
       `scope=instagram_basic,instagram_manage_messages,pages_show_list,pages_messaging&` +
       `response_type=code&` +
       `state=${state}`;
+
+    console.log("🚀 Iniciando conexión Instagram:", {
+      userId,
+      state,
+      redirectUri: `${config.apiUrl}/integrations/oauth/instagram/callback`,
+      appId: config.metaAppId ? `${config.metaAppId.substring(0, 4)}...` : 'missing'
+    });
 
     res.json({ 
       authUrl,
@@ -405,12 +420,282 @@ router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
     res.redirect(`${config.frontendUrl}/dashboard/integrations?success=instagram_connected`);
   } catch (err: any) {
     const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
+    
+    // Log detallado del error
+    console.error("❌ Instagram OAuth Callback Error:", {
+      message: err?.message,
+      response: err?.response?.data,
+      status: err?.response?.status,
+      config: {
+        url: err?.config?.url,
+        method: err?.config?.method,
+        data: err?.config?.data
+      },
+      query: req.query,
+      userId: userId
+    });
+    
     logIntegrationError(err, userId, "instagram_oauth_callback", { 
       errorResponse: err?.response?.data,
-      errorMessage: err?.message 
+      errorMessage: err?.message,
+      errorStatus: err?.response?.status,
+      errorConfig: err?.config
     });
-    console.error("instagram_oauth_callback_failed:", err?.response?.data || err?.message);
-    res.redirect(`${config.frontendUrl}/dashboard/integrations?error=instagram_oauth_failed`);
+    
+    // Determinar el tipo de error específico
+    let errorType = "instagram_oauth_failed";
+    if (err?.response?.status === 400) {
+      errorType = "instagram_invalid_request";
+    } else if (err?.response?.status === 401) {
+      errorType = "instagram_unauthorized";
+    } else if (err?.response?.data?.error?.code === 190) {
+      errorType = "instagram_invalid_token";
+    }
+    
+    res.redirect(`${config.frontendUrl}/dashboard/integrations?error=${errorType}`);
+  }
+});
+
+/**
+ * GET /integrations/debug/meta-config
+ * Endpoint para verificar la configuración de Meta (solo en desarrollo)
+ */
+router.get("/debug/meta-config", async (req: AuthRequest, res: Response) => {
+  if (config.isProduction) {
+    return res.status(404).json({ error: "not_found" });
+  }
+
+  const userId = req.user?.id || req.user?._id;
+  if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+  const configStatus = {
+    metaAppId: {
+      configured: !!config.metaAppId,
+      value: config.metaAppId ? `${config.metaAppId.substring(0, 4)}...${config.metaAppId.substring(config.metaAppId.length - 4)}` : null
+    },
+    metaAppSecret: {
+      configured: !!config.metaAppSecret,
+      value: config.metaAppSecret ? `${config.metaAppSecret.substring(0, 4)}...` : null
+    },
+    apiUrl: config.apiUrl,
+    frontendUrl: config.frontendUrl,
+    redirectUri: `${config.apiUrl}/integrations/oauth/instagram/callback`,
+    environment: config.nodeEnv
+  };
+
+  console.log("🔍 Meta Config Debug:", configStatus);
+  res.json(configStatus);
+});
+
+/**
+ * GET /integrations/debug/test-meta-api
+ * Endpoint para probar la conexión directa con Meta API
+ */
+router.get("/debug/test-meta-api", async (req: AuthRequest, res: Response) => {
+  if (config.isProduction) {
+    return res.status(404).json({ error: "not_found" });
+  }
+
+  const userId = req.user?.id || req.user?._id;
+  if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+  try {
+    // Test 1: Verificar que podemos hacer una llamada básica a Meta API
+    console.log("🧪 Testing Meta API connection...");
+    
+    const testUrl = `https://graph.facebook.com/v19.0/me?access_token=${config.metaAccessToken || 'NO_TOKEN'}`;
+    
+    let apiTest: {
+      success: boolean;
+      error: any;
+      hasAccessToken: boolean;
+      data?: any;
+    } = {
+      success: false,
+      error: null,
+      hasAccessToken: !!config.metaAccessToken
+    };
+
+    if (config.metaAccessToken) {
+      try {
+        const response = await axios.get(`https://graph.facebook.com/v19.0/me`, {
+          params: { access_token: config.metaAccessToken },
+          timeout: 10000
+        });
+        apiTest.success = true;
+        apiTest.data = response.data;
+      } catch (error: any) {
+        apiTest.error = {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        };
+      }
+    }
+
+    // Test 2: Verificar configuración OAuth
+    const oauthConfig = {
+      authUrl: `https://www.facebook.com/v19.0/dialog/oauth?client_id=${config.metaAppId}&redirect_uri=${config.apiUrl}/integrations/oauth/instagram/callback&scope=instagram_basic,instagram_manage_messages,pages_show_list,pages_messaging&response_type=code&state=test`,
+      redirectUri: `${config.apiUrl}/integrations/oauth/instagram/callback`,
+      scopes: ['instagram_basic', 'instagram_manage_messages', 'pages_show_list', 'pages_messaging']
+    };
+
+    const result = {
+      config: {
+        metaAppId: config.metaAppId ? `${config.metaAppId.substring(0, 4)}...` : 'NOT_SET',
+        metaAppSecret: config.metaAppSecret ? 'SET' : 'NOT_SET',
+        metaAccessToken: config.metaAccessToken ? 'SET' : 'NOT_SET',
+        apiUrl: config.apiUrl,
+        frontendUrl: config.frontendUrl
+      },
+      apiTest,
+      oauthConfig,
+      recommendations: [] as string[]
+    };
+
+    // Generar recomendaciones
+    if (!config.metaAppId) {
+      result.recommendations.push("❌ META_APP_ID no está configurado");
+    }
+    if (!config.metaAppSecret) {
+      result.recommendations.push("❌ META_APP_SECRET no está configurado");
+    }
+    if (!config.metaAccessToken) {
+      result.recommendations.push("⚠️ META_ACCESS_TOKEN no está configurado (opcional para OAuth, pero útil para pruebas)");
+    }
+    if (!apiTest.success && config.metaAccessToken) {
+      result.recommendations.push("❌ No se puede conectar con Meta API - verifica las credenciales");
+    }
+    if (apiTest.success) {
+      result.recommendations.push("✅ Conexión con Meta API exitosa");
+    }
+
+    res.json(result);
+  } catch (error: any) {
+    console.error("Debug test failed:", error);
+    res.status(500).json({ 
+      error: "debug_test_failed", 
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * GET /integrations/debug/simulate-callback
+ * Simular el callback de OAuth para testing
+ */
+router.get("/debug/simulate-callback", async (req: Request, res: Response) => {
+  if (config.isProduction) {
+    return res.status(404).json({ error: "not_found" });
+  }
+
+  console.log("🧪 SIMULANDO CALLBACK OAuth:");
+  console.log("  - Query params:", req.query);
+  
+  const { provider = 'instagram', userId, success = 'true' } = req.query;
+  
+  if (!userId) {
+    return res.status(400).json({ 
+      error: "missing_user_id",
+      message: "Usa: ?userId=tu_user_id&provider=instagram&success=true" 
+    });
+  }
+
+  if (success === 'true') {
+    // Simular éxito
+    const redirectUrl = `${config.frontendUrl}/dashboard/integrations?success=${provider}_connected`;
+    console.log("✅ Simulando éxito, redirigiendo a:", redirectUrl);
+    res.redirect(redirectUrl);
+  } else {
+    // Simular error
+    const errorType = req.query.error || `${provider}_oauth_failed`;
+    const redirectUrl = `${config.frontendUrl}/dashboard/integrations?error=${errorType}`;
+    console.log("❌ Simulando error, redirigiendo a:", redirectUrl);
+    res.redirect(redirectUrl);
+  }
+});
+
+/**
+ * GET /integrations/debug/flow-status
+ * Verificar el estado completo del flujo OAuth
+ */
+router.get("/debug/flow-status", async (req: AuthRequest, res: Response) => {
+  if (config.isProduction) {
+    return res.status(404).json({ error: "not_found" });
+  }
+
+  const userId = req.user?.id || req.user?._id;
+  if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+  try {
+    // 1. Verificar configuración
+    const configCheck = {
+      metaAppId: !!config.metaAppId,
+      metaAppSecret: !!config.metaAppSecret,
+      apiUrl: config.apiUrl,
+      frontendUrl: config.frontendUrl
+    };
+
+    // 2. Verificar integraciones existentes
+    const existingIntegrations = await Integration.find({ userId }).lean();
+
+    // 3. Verificar límites
+    const limitsInfo = await checkIntegrationLimits(userId);
+
+    // 4. Generar URLs de prueba
+    const testUrls = {
+      connectInstagram: `${config.apiUrl}/integrations/connect/instagram`,
+      connectWhatsApp: `${config.apiUrl}/integrations/connect/whatsapp`,
+      simulateSuccess: `${config.apiUrl}/integrations/debug/simulate-callback?userId=${userId}&provider=instagram&success=true`,
+      simulateError: `${config.apiUrl}/integrations/debug/simulate-callback?userId=${userId}&provider=instagram&success=false&error=oauth_denied`
+    };
+
+    const result = {
+      userId,
+      timestamp: new Date().toISOString(),
+      config: configCheck,
+      integrations: {
+        existing: existingIntegrations.map(i => ({
+          provider: i.provider,
+          status: i.status,
+          name: i.name,
+          createdAt: i.createdAt
+        })),
+        limits: limitsInfo
+      },
+      testUrls,
+      nextSteps: [] as string[]
+    };
+
+    // Generar recomendaciones
+    if (!configCheck.metaAppId || !configCheck.metaAppSecret) {
+      result.nextSteps.push("❌ Configurar META_APP_ID y META_APP_SECRET");
+    }
+    
+    if (!limitsInfo.canConnect) {
+      result.nextSteps.push("❌ Usuario sin suscripción activa o límite alcanzado");
+    }
+
+    if (existingIntegrations.length === 0) {
+      result.nextSteps.push("🔄 No hay integraciones. Probar conectar Instagram/WhatsApp");
+    }
+
+    const pendingIntegrations = existingIntegrations.filter(i => i.status === 'pending');
+    if (pendingIntegrations.length > 0) {
+      result.nextSteps.push(`⏳ ${pendingIntegrations.length} integraciones pendientes de sincronización`);
+    }
+
+    if (result.nextSteps.length === 0) {
+      result.nextSteps.push("✅ Todo configurado correctamente");
+    }
+
+    res.json(result);
+  } catch (error: any) {
+    console.error("Flow status check failed:", error);
+    res.status(500).json({ 
+      error: "flow_status_failed", 
+      message: error.message 
+    });
   }
 });
 
