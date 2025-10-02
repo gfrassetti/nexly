@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import ContactForm from "./ContactForm";
 import Header from "./Header";
 import Footer from "./Footer";
+import FAQSection from "./FAQSection";
 
 export default function a() {
   const { token, user } = useAuth();
@@ -155,7 +156,13 @@ export default function a() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* FAQ Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-neutral-800/30">
+        <div className="max-w-7xl mx-auto">
+          <FAQSection />
+        </div>
+      </section>
+
       {/* Contact Section */}
       <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8">
         <ContactForm />

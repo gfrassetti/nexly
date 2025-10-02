@@ -13,9 +13,13 @@ export async function syncIntegration(integration: IntegrationDoc) {
     return await syncWhatsApp(integration);
   }
 
-  if (integration.provider === "instagram" || integration.provider === "messenger") {
-    // TODO: usar Graph API para traer conversaciones iniciales si es necesario
-    return { ok: true, note: "sync for IG/Messenger pendiente" };
+  if (integration.provider === "instagram") {
+    return await syncInstagram(integration);
+  }
+
+  if (integration.provider === "messenger") {
+    // TODO: implementar sincronización para Messenger
+    return { ok: true, note: "sync for Messenger pendiente" };
   }
 
   return { ok: true };
@@ -55,6 +59,60 @@ async function syncWhatsApp(integration: IntegrationDoc) {
     return { ok: true, profile: res.data };
   } catch (err: any) {
     console.error("syncWhatsApp failed:", err?.response?.data || err?.message);
+    return { ok: false, error: "sync_failed" };
+  }
+}
+
+async function syncInstagram(integration: IntegrationDoc) {
+  if (!integration.externalId || !integration.accessToken) {
+    return { ok: false, error: "missing_externalId_or_accessToken" };
+  }
+
+  try {
+    // 🔎 Validar perfil de Instagram Business
+    const url = `https://graph.facebook.com/v19.0/${integration.externalId}`;
+    const res = await axios.get(url, {
+      params: { 
+        fields: "id,username,name,profile_picture_url,followers_count,media_count",
+        access_token: integration.accessToken
+      },
+      timeout: 10000,
+    });
+
+    // Actualizar integración con metadata
+    await Integration.updateOne(
+      { _id: integration._id },
+      {
+        $set: {
+          meta: {
+            username: res.data?.username,
+            name: res.data?.name,
+            profilePicture: res.data?.profile_picture_url,
+            followersCount: res.data?.followers_count,
+            mediaCount: res.data?.media_count,
+          },
+          status: "linked",
+        },
+      }
+    );
+
+    return { ok: true, profile: res.data };
+  } catch (err: any) {
+    console.error("syncInstagram failed:", err?.response?.data || err?.message);
+    
+    // Marcar como error si falla la sincronización
+    await Integration.updateOne(
+      { _id: integration._id },
+      {
+        $set: {
+          status: "error",
+          meta: {
+            error: err?.response?.data?.error?.message || err?.message || "Sync failed"
+          }
+        },
+      }
+    );
+    
     return { ok: false, error: "sync_failed" };
   }
 }

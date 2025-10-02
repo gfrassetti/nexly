@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSearchParams } from "next/navigation";
 // import { usePaymentLink } from "@/hooks/usePaymentLink";
 // import { useStripePayment } from "@/hooks/useStripePayment";
-import Accordion from "@/components/Accordion";
+import FAQSection from "@/components/FAQSection";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -239,111 +239,7 @@ function PricingContent() {
         )}
 
         {/* FAQ Section */}
-        <div className="mt-20 max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Preguntas frecuentes</h2>
-          
-          <Accordion 
-            items={[
-              {
-                title: "¿Qué incluye la prueba gratuita?",
-                content: (
-                  <p>
-                    Acceso completo a todas las funciones de Nexly durante 7 días. Se requiere tarjeta de crédito.
-                  </p>
-                )
-              },
-              {
-                title: "¿Puedo cambiar de plan más tarde?",
-                content: (
-                  <p>
-                    Sí, puedes cambiar entre planes en cualquier momento desde tu dashboard.
-                  </p>
-                )
-              },
-              {
-                title: "¿Qué métodos de pago aceptan?",
-                content: (
-                  <div>
-                    <p className="mb-3">
-                      Aceptamos todas las tarjetas de crédito y débito a través de:
-                    </p>
-                    <div className="flex justify-center gap-6">
-                      <div className="text-center">
-                        <img src="/strapi_logo.png" alt="Stripe" className="h-6 w-auto mx-auto mb-2" />
-                        <span className="text-sm text-neutral-400">Stripe</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              },
-              {
-                title: "¿Puedo cancelar mi suscripción?",
-                content: (
-                  <p>
-                    Sí, puedes cancelar tu suscripción en cualquier momento sin penalizaciones.
-                  </p>
-                )
-              },
-              {
-                title: "¿Puedo cambiar de plan en cualquier momento?",
-                content: (
-                  <p>
-                    Sí, puedes actualizar o degradar tu plan en cualquier momento desde tu panel de control. Los cambios se aplicarán al inicio de tu próximo ciclo de facturación.
-                  </p>
-                )
-              },
-              {
-                title: "¿Qué sucede si cancelo mi suscripción?",
-                content: (
-                  <p>
-                    Si cancelas, tu plan permanecerá activo hasta el final del período de facturación actual. Después de eso, tu cuenta volverá al plan gratuito.
-                  </p>
-                )
-              },
-              {
-                title: "⚠️ ¿Puedo usar mi WhatsApp personal con Nexly?",
-                content: (
-                  <div>
-                    <div className="mb-4 p-4 bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg">
-                      <p className="text-nexly-light-blue font-semibold mb-2">
-                        <strong>No.</strong> Nexly se integra únicamente con WhatsApp Business Platform (Cloud API), 
-                        no con WhatsApp personal o la app móvil WhatsApp Business.
-                      </p>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3 text-nexly-teal">✅ ¿Qué necesitas?</h4>
-                        <ul className="space-y-2 text-sm">
-                          <li>• Meta Business Manager configurado</li>
-                          <li>• Cuenta de WhatsApp Business (WABA)</li>
-                          <li>• Número de teléfono asignado a la WABA</li>
-                          <li>• Verificación del negocio (para volúmenes altos)</li>
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-3 text-red-400">❌ ¿Qué NO funciona?</h4>
-                        <ul className="space-y-2 text-sm">
-                          <li>• WhatsApp personal (número personal)</li>
-                          <li>• App móvil WhatsApp Business</li>
-                          <li>• Números sin WABA asignada</li>
-                          <li>• Cuentas personales de Facebook</li>
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 p-3 bg-neutral-800/50 rounded-lg">
-                      <p className="text-sm text-neutral-400">
-                        <strong>Nota:</strong> Si no tienes una WABA configurada, te ayudamos con el proceso de configuración.
-                      </p>
-                    </div>
-                  </div>
-                )
-              }
-            ]}
-          />
-        </div>
+        <FAQSection />
       </div>
 
       {/* Footer */}

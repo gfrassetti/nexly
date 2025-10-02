@@ -6,6 +6,8 @@ import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useNotificationHelpers } from "@/hooks/useNotification";
 import FreeTrialBanner from "@/components/FreeTrialBanner";
+import { useAuth } from "@/hooks/useAuth";
+import useSWR from "swr";
 
 function IntegrationsContent() {
   const [message, setMessage] = useState("");
@@ -15,6 +17,18 @@ function IntegrationsContent() {
   const { createPaymentLink } = usePaymentLink();
   const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick } = useIntegrations();
   const { showSuccess, showError } = useNotificationHelpers();
+  const { token } = useAuth();
+
+  // Fetch integraciones conectadas del usuario
+  const { data: connectedIntegrations, mutate: refreshIntegrations } = useSWR(
+    token ? ["/integrations", token] : null,
+    async ([url, t]) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      return res.json();
+    }
+  );
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -23,9 +37,13 @@ function IntegrationsContent() {
     if (success === "whatsapp_connected") {
       showSuccess("¡WhatsApp conectado!", "WhatsApp se ha conectado exitosamente");
       setMessage("¡WhatsApp conectado exitosamente!");
+      // Refrescar integraciones
+      refreshIntegrations();
     } else if (success === "instagram_connected") {
       showSuccess("¡Instagram conectado!", "Instagram se ha conectado exitosamente");
       setMessage("¡Instagram conectado exitosamente!");
+      // Refrescar integraciones
+      refreshIntegrations();
     } else if (error) {
       let errorTitle = "Error de conexión";
       let errorMessage = "Error al conectar WhatsApp. Intenta de nuevo.";
@@ -71,7 +89,7 @@ function IntegrationsContent() {
       showError(errorTitle, errorMessage);
       setError(errorMessage);
     }
-  }, [searchParams, showSuccess, showError]);
+  }, [searchParams, showSuccess, showError, refreshIntegrations]);
 
 
   return (
@@ -183,6 +201,63 @@ Completar Pago
         </div>
       )}
 
+      {/* Integraciones conectadas */}
+      {connectedIntegrations && connectedIntegrations.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Integraciones Conectadas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {connectedIntegrations.map((integration: any) => (
+              <div key={integration._id} className="bg-neutral-800 border border-neutral-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                      integration.provider === 'whatsapp' ? 'bg-green-500' : 
+                      integration.provider === 'instagram' ? 'bg-gradient-to-br from-purple-500 to-pink-500' : 
+                      'bg-blue-500'
+                    }`}>
+                      <span className="text-white text-sm font-bold">
+                        {integration.provider === 'whatsapp' ? 'W' : 
+                         integration.provider === 'instagram' ? 'I' : 
+                         integration.provider.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">{integration.name}</h3>
+                      <p className="text-neutral-400 text-sm capitalize">{integration.provider}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      integration.status === 'linked' ? 'bg-green-900 text-green-300' :
+                      integration.status === 'pending' ? 'bg-yellow-900 text-yellow-300' :
+                      'bg-red-900 text-red-300'
+                    }`}>
+                      {integration.status === 'linked' ? 'Conectado' : 
+                       integration.status === 'pending' ? 'Pendiente' : 
+                       'Error'}
+                    </span>
+                  </div>
+                </div>
+                {integration.status === 'pending' && (
+                  <p className="text-neutral-400 text-sm">
+                    La integración está siendo configurada. Esto puede tomar unos minutos.
+                  </p>
+                )}
+                {integration.status === 'error' && (
+                  <p className="text-red-400 text-sm">
+                    Error al conectar. Intenta reconectar la integración.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Integraciones disponibles */}
+      <h2 className="text-xl font-semibold text-white mb-4">
+        {connectedIntegrations && connectedIntegrations.length > 0 ? 'Conectar Más Integraciones' : 'Integraciones Disponibles'}
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {integrations.map((integration) => (
           <div key={integration.id} className="bg-white rounded-lg shadow p-6">
