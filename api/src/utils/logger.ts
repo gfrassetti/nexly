@@ -35,14 +35,18 @@ winston.addColors(customLevels.colors);
 const developmentFormat = winston.format.combine(
   winston.format.colorize({ all: true }),
   winston.format.timestamp({
-    format: 'HH:mm:ss'
+    format: 'YYYY-MM-DD HH:mm:ss'
   }),
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
     let log = `${timestamp} [${level}]: ${message}`;
     
     if (meta.userId) log += ` | User: ${meta.userId}`;
     if (meta.action) log += ` | Action: ${meta.action}`;
+    if (meta.endpoint) log += ` | Endpoint: ${meta.endpoint}`;
+    if (meta.method) log += ` | Method: ${meta.method}`;
+    if (meta.provider) log += ` | Provider: ${meta.provider}`;
     if (meta.error) log += ` | Error: ${meta.error}`;
+    if (meta.statusCode) log += ` | Status: ${meta.statusCode}`;
     
     return log;
   })
@@ -121,6 +125,10 @@ export const logIntegrationActivity = (action: string, userId: string, details?:
   logger.info(`Integration: ${action}`, {
     userId,
     action,
+    provider: details?.provider || 'unknown',
+    endpoint: details?.endpoint || 'unknown',
+    method: details?.method || 'unknown',
+    timestamp: new Date().toISOString(),
     ...details
   });
 };
@@ -130,6 +138,10 @@ export const logIntegrationSuccess = (action: string, userId: string, details?: 
     userId,
     action,
     status: 'success',
+    provider: details?.provider || 'unknown',
+    endpoint: details?.endpoint || 'unknown',
+    method: details?.method || 'unknown',
+    timestamp: new Date().toISOString(),
     ...details
   });
 };
@@ -140,6 +152,10 @@ export const logIntegrationError = (error: Error, userId: string, action: string
     action,
     error: error.message,
     stack: error.stack,
+    provider: details?.provider || 'unknown',
+    endpoint: details?.endpoint || 'unknown',
+    method: details?.method || 'unknown',
+    timestamp: new Date().toISOString(),
     ...details
   });
 };

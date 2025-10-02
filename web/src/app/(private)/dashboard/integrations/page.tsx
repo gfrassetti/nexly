@@ -5,6 +5,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useNotificationHelpers } from "@/hooks/useNotification";
+import FreeTrialBanner from "@/components/FreeTrialBanner";
 
 function IntegrationsContent() {
   const [message, setMessage] = useState("");
@@ -79,6 +80,39 @@ function IntegrationsContent() {
         <h1 className="text-2xl font-bold text-white">Integraciones</h1>
       </div>
       
+      {/* Banner del período de prueba gratuito */}
+      <FreeTrialBanner />
+
+      {/* Información específica para período de prueba gratuito */}
+      {subscription?.freeTrial?.isActive && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                Integraciones Disponibles en Período de Prueba
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>Durante tu período de prueba gratuito de 24 horas, solo puedes conectar:</p>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li><strong>WhatsApp Business</strong> - Para gestionar mensajes de WhatsApp</li>
+                  <li><strong>Instagram Business</strong> - Para gestionar mensajes directos de Instagram</li>
+                </ul>
+                <p className="mt-2">
+                  <a href="/pricing" className="font-medium underline hover:no-underline">
+                    Suscríbete para acceder a todas las integraciones
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Estado pendiente de método de pago - SOLO si realmente está pendiente */}
       {status.pendingPaymentMethod && !status.trialActive && !status.active && (
         <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 mb-6">

@@ -5,9 +5,11 @@ import axios from "axios";
 import crypto from "crypto";
 import handleAuth from "../middleware/auth";
 import { Integration, IntegrationDoc } from "../models/Integration";
+import { User } from "../models/User";
+import Subscription from "../models/Subscription";
 import { syncIntegration } from "../services/syncIntegration";
 import { config } from "../config";
-import { logIntegrationActivity, logIntegrationError, logIntegrationSuccess } from "../utils/logger";
+import logger, { logIntegrationActivity, logIntegrationError, logIntegrationSuccess } from "../utils/logger";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -21,6 +23,51 @@ function generateAppSecretProof(accessToken: string): string {
     .digest('hex');
 }
 
+// Función helper para verificar límites de integraciones
+async function checkIntegrationLimits(userId: string): Promise<{ canConnect: boolean; maxIntegrations: number; currentIntegrations: number; reason?: string }> {
+  try {
+    // Obtener usuario
+    const user = await User.findById(userId);
+    if (!user) {
+      return { canConnect: false, maxIntegrations: 0, currentIntegrations: 0, reason: 'Usuario no encontrado' };
+    }
+
+    // Obtener integraciones actuales
+    const currentIntegrations = await Integration.countDocuments({ userId, status: 'linked' });
+    
+    // Verificar si tiene alguna suscripción (activa, cancelada, pausada, etc.)
+    const subscription = await Subscription.findOne({ userId });
+    
+    // Determinar límite máximo
+    let maxIntegrations = 0;
+    
+    if (subscription) {
+      // Si tiene suscripción (aunque esté cancelada/pausada), usar límites de suscripción
+      maxIntegrations = (subscription as any).getMaxIntegrations();
+    } else {
+      // Solo si NO tiene ninguna suscripción, verificar período de prueba gratuito
+      if (user.isFreeTrialActive()) {
+        maxIntegrations = 2; // WhatsApp Business e Instagram solamente
+      } else {
+        // Sin suscripción ni período de prueba = sin integraciones
+        maxIntegrations = 0;
+      }
+    }
+
+    const canConnect = currentIntegrations < maxIntegrations;
+    
+    return {
+      canConnect,
+      maxIntegrations,
+      currentIntegrations,
+      reason: !canConnect ? `Has alcanzado el límite de ${maxIntegrations} integraciones` : undefined
+    };
+  } catch (error) {
+    console.error('Error checking integration limits:', error);
+    return { canConnect: false, maxIntegrations: 0, currentIntegrations: 0, reason: 'Error interno' };
+  }
+}
+
 // Middleware de auth para todas las rutas EXCEPTO los callbacks OAuth
 router.use((req, res, next) => {
   // Excluir los callbacks OAuth del middleware de autenticación
@@ -30,6 +77,37 @@ router.use((req, res, next) => {
     return next();
   }
   return handleAuth(req, res, next);
+});
+
+/**
+ * GET /integrations/limits
+ * Obtiene información sobre los límites de integraciones del usuario
+ */
+router.get("/limits", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const limitsInfo = await checkIntegrationLimits(userId);
+    
+    // Obtener información adicional del usuario
+    const user = await User.findById(userId);
+    const freeTrialInfo = user ? {
+      used: user.freeTrialUsed,
+      canUse: user.canUseFreeTrial(),
+      isActive: user.isFreeTrialActive(),
+      timeRemaining: user.getFreeTrialTimeRemaining(),
+      hoursRemaining: Math.ceil(user.getFreeTrialTimeRemaining() / (1000 * 60 * 60))
+    } : null;
+
+    res.json({
+      ...limitsInfo,
+      freeTrial: freeTrialInfo
+    });
+  } catch (err: any) {
+    console.error("integration_limits_failed:", err);
+    res.status(500).json({ error: "integration_limits_failed" });
+  }
 });
 
 /**
@@ -59,13 +137,18 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     // Log integration list request
     logIntegrationActivity('list_integrations', userId, {
       count: items.length,
-      providers: items.map(item => item.provider)
+      providers: items.map(item => item.provider),
+      endpoint: req.path,
+      method: req.method
     });
 
     res.json(withShape);
   } catch (err: any) {
     const userId = req.user?.id || req.user?._id;
-    logIntegrationError(err, userId || 'unknown', 'list_integrations');
+    logIntegrationError(err, userId || 'unknown', 'list_integrations', {
+      endpoint: req.path,
+      method: req.method
+    });
     console.error("integrations_list_failed:", err);
     res.status(500).json({ error: "integrations_list_failed" });
   }
@@ -82,6 +165,29 @@ router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
 
     if (!config.metaAppId) {
       return res.status(500).json({ error: "meta_app_not_configured" });
+    }
+
+    // Verificar límites de integraciones
+    const limitsCheck = await checkIntegrationLimits(userId);
+    if (!limitsCheck.canConnect) {
+      // Verificar si está en período de prueba gratuito
+      const user = await User.findById(userId);
+      if (user && user.isFreeTrialActive()) {
+        return res.status(403).json({
+          error: "free_trial_limit_reached",
+          message: "Durante el período de prueba gratuito solo puedes conectar WhatsApp Business e Instagram",
+          maxIntegrations: 2,
+          currentIntegrations: limitsCheck.currentIntegrations,
+          allowedIntegrations: ["whatsapp", "instagram"]
+        });
+      }
+      
+      return res.status(403).json({
+        error: "integration_limit_exceeded",
+        message: limitsCheck.reason,
+        maxIntegrations: limitsCheck.maxIntegrations,
+        currentIntegrations: limitsCheck.currentIntegrations
+      });
     }
 
     // Verificar si ya tiene Instagram conectado
@@ -131,6 +237,29 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: "meta_app_not_configured" });
     }
 
+    // Verificar límites de integraciones
+    const limitsCheck = await checkIntegrationLimits(userId);
+    if (!limitsCheck.canConnect) {
+      // Verificar si está en período de prueba gratuito
+      const user = await User.findById(userId);
+      if (user && user.isFreeTrialActive()) {
+        return res.status(403).json({
+          error: "free_trial_limit_reached",
+          message: "Durante el período de prueba gratuito solo puedes conectar WhatsApp Business e Instagram",
+          maxIntegrations: 2,
+          currentIntegrations: limitsCheck.currentIntegrations,
+          allowedIntegrations: ["whatsapp", "instagram"]
+        });
+      }
+      
+      return res.status(403).json({
+        error: "integration_limit_exceeded",
+        message: limitsCheck.reason,
+        maxIntegrations: limitsCheck.maxIntegrations,
+        currentIntegrations: limitsCheck.currentIntegrations
+      });
+    }
+
     // Verificar si ya tiene WhatsApp conectado
     const existing = await Integration.findOne({ 
       userId, 
@@ -155,11 +284,26 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
       `response_type=code&` +
       `state=${state}`;
 
+    // Log WhatsApp connect attempt
+    logIntegrationActivity('whatsapp_connect_start', userId, {
+      endpoint: req.path,
+      method: req.method,
+      provider: 'whatsapp',
+      state: state,
+      authUrl: authUrl
+    });
+
     res.json({ 
       authUrl,
       state 
     });
-  } catch (err) {
+  } catch (err: any) {
+    const userId = req.user?.id || req.user?._id;
+    logIntegrationError(err, userId || 'unknown', 'whatsapp_connect_start', {
+      endpoint: req.path,
+      method: req.method,
+      provider: 'whatsapp'
+    });
     console.error("whatsapp_connect_failed:", err);
     res.status(500).json({ error: "whatsapp_connect_failed" });
   }
@@ -301,6 +445,16 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
   console.log("  - Path:", req.path);
   console.log("  - Method:", req.method);
   
+  // Log del inicio del callback
+  logger.info('WhatsApp OAuth Callback Started', {
+    endpoint: req.path,
+    method: req.method,
+    query: req.query,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip || req.connection.remoteAddress,
+    timestamp: new Date().toISOString()
+  });
+  
   try {
     console.log("🔍 OAuth Callback recibido:");
     console.log("  - URL completa:", req.url);
@@ -408,9 +562,32 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     // Sincronizar para obtener metadata
     await syncIntegration(integration);
 
+    // Log successful WhatsApp integration
+    logIntegrationSuccess('whatsapp_oauth_callback', userId, {
+      integrationId: (integration as any)._id?.toString() || 'unknown',
+      externalId: waba.whatsapp_business_accounts.data[0].id,
+      phoneNumberId: phoneNumber.id,
+      phoneNumber: phoneNumber.display_phone_number,
+      endpoint: req.path,
+      method: req.method,
+      provider: 'whatsapp'
+    });
+
     console.log("✅ ÉXITO: Redirigiendo al frontend con éxito");
     res.redirect(`${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`);
   } catch (err: any) {
+    const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
+    
+    // Log WhatsApp callback error
+    logIntegrationError(err, userId, "whatsapp_oauth_callback", {
+      endpoint: req.path,
+      method: req.method,
+      provider: 'whatsapp',
+      errorResponse: err?.response?.data,
+      errorMessage: err?.message,
+      query: req.query
+    });
+    
     console.error("❌ ERROR en callback de WhatsApp:", err);
     console.log("  - Error message:", err?.message);
     console.log("  - Error response:", err?.response?.data);

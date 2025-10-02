@@ -13,6 +13,99 @@ import { validateSubscriptionData, paymentRateLimit } from '../middleware/securi
 
 const router = express.Router();
 /**
+ * Activar período de prueba gratuito de 24 horas (sin suscripción)
+ */
+router.post('/start-free-trial', authenticateToken, asyncHandler(async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new CustomError('Usuario no encontrado', 401);
+    }
+
+    // Obtener usuario
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new CustomError('Usuario no encontrado', 404);
+    }
+
+    // Verificar si ya usó el período de prueba gratuito
+    if (user.freeTrialUsed) {
+      return res.status(400).json({
+        success: false,
+        error: 'Ya has utilizado tu período de prueba gratuito de 24 horas'
+      });
+    }
+
+    // Verificar si ya tiene CUALQUIER suscripción (activa, cancelada, pausada, etc.)
+    const existingSubscription = await Subscription.findOne({ userId });
+    if (existingSubscription) {
+      return res.status(400).json({
+        success: false,
+        error: 'No puedes usar el período de prueba gratuito si ya tienes o tuviste una suscripción'
+      });
+    }
+
+    // Activar período de prueba gratuito
+    user.startFreeTrial();
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: 'Período de prueba gratuito de 24 horas activado',
+      freeTrial: {
+        startDate: user.freeTrialStartDate,
+        endDate: user.freeTrialEndDate,
+        timeRemaining: user.getFreeTrialTimeRemaining()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error starting free trial:', error);
+    throw error;
+  }
+}));
+
+/**
+ * Obtener información del período de prueba gratuito
+ */
+router.get('/free-trial-status', authenticateToken, asyncHandler(async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new CustomError('Usuario no encontrado', 401);
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new CustomError('Usuario no encontrado', 404);
+    }
+
+    const isActive = user.isFreeTrialActive();
+    const canUse = user.canUseFreeTrial();
+    const timeRemaining = user.getFreeTrialTimeRemaining();
+
+    return res.json({
+      success: true,
+      freeTrial: {
+        used: user.freeTrialUsed,
+        canUse,
+        isActive,
+        startDate: user.freeTrialStartDate,
+        endDate: user.freeTrialEndDate,
+        timeRemaining,
+        hoursRemaining: Math.ceil(timeRemaining / (1000 * 60 * 60))
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting free trial status:', error);
+    throw error;
+  }
+}));
+
+/**
  * Iniciar trial gratuito (sin pago)
  */
 router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res: any) => {
@@ -165,11 +258,23 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
     }
 
     if (!subscription) {
+      // Incluir información del período de prueba gratuito
+      const freeTrialInfo = {
+        used: user.freeTrialUsed,
+        canUse: user.canUseFreeTrial(),
+        isActive: user.isFreeTrialActive(),
+        startDate: user.freeTrialStartDate,
+        endDate: user.freeTrialEndDate,
+        timeRemaining: user.getFreeTrialTimeRemaining(),
+        hoursRemaining: Math.ceil(user.getFreeTrialTimeRemaining() / (1000 * 60 * 60))
+      };
+
       return res.json({
         hasSubscription: false,
         status: 'none',
         userSubscriptionStatus: user.subscription_status,
-        subscription: null
+        subscription: null,
+        freeTrial: freeTrialInfo
       });
     }
 

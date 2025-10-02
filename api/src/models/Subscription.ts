@@ -167,6 +167,26 @@ SubscriptionSchema.methods.getMaxIntegrations = function(): number {
   return this.planType === 'basic' ? 2 : 999; // Básico: 2 integraciones, Premium: ilimitadas
 };
 
+// Método estático para obtener límite de integraciones considerando período de prueba gratuito
+SubscriptionSchema.statics.getMaxIntegrationsForUser = async function(userId: string): Promise<number> {
+  const User = mongoose.model('User');
+  const user = await User.findById(userId);
+  
+  // Verificar si tiene alguna suscripción primero
+  const subscription = await this.findOne({ userId });
+  
+  if (subscription) {
+    // Si tiene suscripción (aunque esté cancelada/pausada), usar límites de suscripción
+    return subscription.getMaxIntegrations();
+  } else {
+    // Solo si NO tiene ninguna suscripción, verificar período de prueba gratuito
+    if (user && user.isFreeTrialActive()) {
+      return 2;
+    }
+    return 0; // Sin suscripción ni período de prueba = sin integraciones
+  }
+};
+
 // Método para pausar suscripción
 SubscriptionSchema.methods.pauseSubscription = function(): void {
   if (this.status === 'active') {

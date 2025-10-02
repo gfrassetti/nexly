@@ -35,12 +35,14 @@ export function integrationLogging(req: AuthRequest, res: Response, next: NextFu
       logger.info('Integration Request', {
         method: req.method,
         path: req.path,
+        endpoint: req.path,
         statusCode: res.statusCode,
         responseTime: `${responseTime}ms`,
         userId: req.user?.id || req.user?._id || 'anonymous',
         userAgent: req.get('User-Agent'),
         ip: req.ip || req.connection.remoteAddress,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        provider: extractProviderFromPath(req.path)
       });
     }
     
@@ -48,6 +50,14 @@ export function integrationLogging(req: AuthRequest, res: Response, next: NextFu
   };
   
   next();
+}
+
+// Función helper para extraer el provider del path
+function extractProviderFromPath(path: string): string {
+  if (path.includes('whatsapp')) return 'whatsapp';
+  if (path.includes('instagram')) return 'instagram';
+  if (path.includes('messenger')) return 'messenger';
+  return 'unknown';
 }
 
 /**

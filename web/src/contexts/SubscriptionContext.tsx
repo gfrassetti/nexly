@@ -29,6 +29,15 @@ interface SubscriptionData {
     maxIntegrations: number;
     stripeSubscriptionId?: string;
   };
+  freeTrial?: {
+    used: boolean;
+    canUse: boolean;
+    isActive: boolean;
+    startDate?: string;
+    endDate?: string;
+    timeRemaining: number;
+    hoursRemaining: number;
+  };
 }
 
 type SubscriptionStatus = {
@@ -55,6 +64,9 @@ interface SubscriptionContextType {
   reactivateSubscription: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
   updateAfterPayment: (newSubscriptionData: SubscriptionData) => void;
+  startFreeTrial: () => Promise<void>;
+  canUseFreeTrial: () => boolean;
+  isFreeTrialActive: () => boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -324,6 +336,42 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setError(null);
   }, []);
 
+  const startFreeTrial = useCallback(async (): Promise<void> => {
+    if (!token) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/subscriptions/start-free-trial`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al activar período de prueba gratuito');
+      }
+
+      // Refrescar el estado de suscripción
+      await fetchSubscriptionStatus();
+    } catch (error) {
+      console.error('Error starting free trial:', error);
+      throw error;
+    }
+  }, [token, fetchSubscriptionStatus]);
+
+  const canUseFreeTrial = useCallback((): boolean => {
+    return subscription?.freeTrial?.canUse ?? false;
+  }, [subscription]);
+
+  const isFreeTrialActive = useCallback((): boolean => {
+    return subscription?.freeTrial?.isActive ?? false;
+  }, [subscription]);
+
   const value: SubscriptionContextType = useMemo(() => ({
     subscription,
     loading,
@@ -336,6 +384,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     reactivateSubscription,
     cancelSubscription,
     updateAfterPayment,
+    startFreeTrial,
+    canUseFreeTrial,
+    isFreeTrialActive,
   }), [
     subscription,
     loading,
@@ -348,6 +399,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     reactivateSubscription,
     cancelSubscription,
     updateAfterPayment,
+    startFreeTrial,
+    canUseFreeTrial,
+    isFreeTrialActive,
   ]);
 
   return (
