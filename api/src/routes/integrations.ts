@@ -103,14 +103,289 @@ async function checkIntegrationLimits(userId: string): Promise<IntegrationLimits
   }
 }
 
+/**
+ * GET /integrations/debug/simple-test
+ * Endpoint simple para probar que el router funciona - DEBE IR ANTES del middleware de auth
+ */
+router.get("/debug/simple-test", (req: Request, res: Response) => {
+  console.log("🧪 Simple test endpoint hit");
+  res.json({ 
+    message: "Router funciona correctamente",
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    method: req.method
+  });
+});
+
+/**
+ * GET /integrations/debug/callback-test
+ * Endpoint de prueba para el callback - DEBE IR ANTES del middleware de auth
+ */
+router.get("/debug/callback-test", (req: Request, res: Response) => {
+  console.log("🧪 Callback test endpoint hit");
+  console.log("  - Query params:", req.query);
+  console.log("  - Code:", req.query.code);
+  console.log("  - State:", req.query.state);
+  
+  res.json({ 
+    message: "Callback test funciona",
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    method: req.method,
+    query: req.query
+  });
+});
+
+/**
+ * GET /integrations/oauth/whatsapp/callback
+ * Callback del OAuth de WhatsApp - DEBE IR ANTES del middleware de auth
+ */
+router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
+  console.log("🚀 INICIO: OAuth Callback recibido");
+  console.log("  - Timestamp:", new Date().toISOString());
+  console.log("  - URL completa:", req.url);
+  console.log("  - Path:", req.path);
+  console.log("  - Method:", req.method);
+  console.log("  - Headers:", req.headers);
+  console.log("  - Query:", req.query);
+  
+  // Log del inicio del callback
+  logger.info('WhatsApp OAuth Callback Started', {
+    endpoint: req.path,
+    method: req.method,
+    query: req.query,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip || req.connection.remoteAddress,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Asegurar que siempre se haga una redirección
+  try {
+    console.log("🔍 OAuth Callback recibido:");
+    console.log("  - URL completa:", req.url);
+    console.log("  - Path:", req.path);
+    console.log("  - Query params:", req.query);
+    console.log("  - Code:", req.query.code);
+    console.log("  - State:", req.query.state);
+    console.log("  - Error:", req.query.error);
+    console.log("  - Headers:", req.headers);
+    
+    const { code, state, error } = req.query;
+
+    if (error) {
+      console.log("❌ Error en OAuth:", error);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_denied`);
+    }
+
+    if (!code || !state) {
+      console.log("❌ Missing code or state:", { code: !!code, state: !!state });
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=missing_code`);
+    }
+
+    // Extraer userId del state
+    const userId = state.toString().split('_')[0];
+    if (!userId) {
+      console.log("❌ Invalid state format:", state);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=invalid_state`);
+    }
+
+    console.log("✅ Validando configuración Meta:", {
+      hasAppId: !!config.metaAppId,
+      hasAppSecret: !!config.metaAppSecret,
+      apiUrl: config.apiUrl,
+      frontendUrl: config.frontendUrl
+    });
+
+    // Verificar que las credenciales estén configuradas
+    if (!config.metaAppId || !config.metaAppSecret) {
+      console.error("❌ Credenciales de Meta no configuradas:", {
+        hasAppId: !!config.metaAppId,
+        hasAppSecret: !!config.metaAppSecret
+      });
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=meta_not_configured&errorMessage=${encodeURIComponent('Credenciales de Meta no configuradas')}`);
+    }
+
+    // Intercambiar código por token de acceso
+    console.log("🔄 Intercambiando código por token...");
+    const tokenResponse = await axios.post(
+      'https://graph.facebook.com/v19.0/oauth/access_token',
+      {
+        client_id: config.metaAppId,
+        client_secret: config.metaAppSecret,
+        redirect_uri: `${config.apiUrl}/integrations/oauth/whatsapp/callback`,
+        code: code
+      }
+    );
+
+    console.log("✅ Token recibido:", tokenResponse.data);
+    const { access_token } = tokenResponse.data;
+
+    // Obtener información del token (para verificar permisos)
+    console.log("🔍 Verificando token...");
+    const tokenInfo = await axios.get(
+      `https://graph.facebook.com/v19.0/me`,
+      {
+        params: { 
+          access_token,
+          appsecret_proof: generateAppSecretProof(access_token)
+        }
+      }
+    );
+
+    console.log("✅ Token verificado:", tokenInfo.data);
+
+    // Obtener WhatsApp Business Account ID
+    console.log("🔍 Obteniendo WhatsApp Business Account...");
+    const wabaResponse = await axios.get(
+      `https://graph.facebook.com/v19.0/me/businesses`,
+      {
+        params: { 
+          access_token,
+          fields: 'id,name,whatsapp_business_accounts',
+          appsecret_proof: generateAppSecretProof(access_token)
+        }
+      }
+    );
+
+    console.log("✅ WABA response:", wabaResponse.data);
+
+    // Por ahora, usamos el primer WABA disponible
+    const waba = wabaResponse.data.data?.[0];
+    if (!waba) {
+      console.log("❌ No WABA found in response:", wabaResponse.data);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_waba_found`);
+    }
+
+    console.log("✅ WABA encontrado:", waba);
+
+    // Obtener phone number ID
+    console.log("🔍 Obteniendo phone numbers...");
+    const phoneNumbersResponse = await axios.get(
+      `https://graph.facebook.com/v19.0/${waba.whatsapp_business_accounts.data[0].id}/phone_numbers`,
+      {
+        params: { 
+          access_token,
+          appsecret_proof: generateAppSecretProof(access_token)
+        }
+      }
+    );
+
+    console.log("✅ Phone numbers response:", phoneNumbersResponse.data);
+
+    const phoneNumber = phoneNumbersResponse.data.data?.[0];
+    if (!phoneNumber) {
+      console.log("❌ No phone number found:", phoneNumbersResponse.data);
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_phone_number`);
+    }
+
+    console.log("✅ Phone number encontrado:", phoneNumber);
+
+    // Crear o actualizar integración
+    console.log("🔍 Creando/actualizando integración...");
+    const integration = await Integration.findOneAndUpdate(
+      { userId, provider: "whatsapp" },
+      {
+        userId: new Types.ObjectId(userId),
+        provider: "whatsapp",
+        externalId: waba.whatsapp_business_accounts.data[0].id,
+        phoneNumberId: phoneNumber.id,
+        accessToken: access_token,
+        name: `WhatsApp Business - ${phoneNumber.display_phone_number}`,
+        status: "pending"
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log("✅ Integración creada/actualizada:", integration);
+
+    // Sincronizar para obtener metadata
+    console.log("🔍 Sincronizando integración...");
+    await syncIntegration(integration);
+
+    // Log successful WhatsApp integration
+    logIntegrationSuccess('whatsapp_oauth_callback', userId, {
+      integrationId: (integration as any)._id?.toString() || 'unknown',
+      externalId: waba.whatsapp_business_accounts.data[0].id,
+      phoneNumberId: phoneNumber.id,
+      phoneNumber: phoneNumber.display_phone_number,
+      endpoint: req.path,
+      method: req.method,
+      provider: 'whatsapp'
+    });
+
+    console.log("✅ ÉXITO: Redirigiendo al frontend con éxito");
+    const successUrl = `${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`;
+    console.log("🔗 URL de redirección:", successUrl);
+    res.redirect(successUrl);
+  } catch (err: any) {
+    const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
+    
+    // Log detallado del error
+    console.error("❌ ERROR en callback de WhatsApp:", {
+      message: err?.message,
+      response: err?.response?.data,
+      status: err?.response?.status,
+      config: {
+        url: err?.config?.url,
+        method: err?.config?.method,
+        data: err?.config?.data
+      },
+      query: req.query,
+      userId: userId
+    });
+    
+    // Log WhatsApp callback error
+    logIntegrationError(err, userId, "whatsapp_oauth_callback", {
+      endpoint: req.path,
+      method: req.method,
+      provider: 'whatsapp',
+      errorResponse: err?.response?.data,
+      errorMessage: err?.message,
+      query: req.query
+    });
+    
+    console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
+    
+    // Determinar el tipo de error específico
+    let errorType = "whatsapp_oauth_failed";
+    let errorMessage = "Error al conectar WhatsApp";
+    
+    if (err?.response?.status === 401) {
+      errorType = "whatsapp_unauthorized";
+      errorMessage = "No autorizado para conectar WhatsApp";
+    } else if (err?.response?.status === 400) {
+      errorType = "whatsapp_invalid_request";
+      errorMessage = "Solicitud inválida a WhatsApp";
+    } else if (err?.message?.includes("ENOTFOUND") || err?.message?.includes("ECONNREFUSED")) {
+      errorType = "whatsapp_network_error";
+      errorMessage = "Error de conexión con WhatsApp";
+    } else if (err?.message?.includes("no WABA")) {
+      errorType = "whatsapp_no_business_account";
+      errorMessage = "No se encontró cuenta de WhatsApp Business";
+    } else if (err?.message?.includes("no phone number")) {
+      errorType = "whatsapp_no_phone_number";
+      errorMessage = "No se encontró número de teléfono en WhatsApp Business";
+    }
+    
+    const redirectUrl = `${config.frontendUrl}/dashboard/integrations?error=${errorType}&errorMessage=${encodeURIComponent(errorMessage)}`;
+    console.log("❌ Redirigiendo con error:", redirectUrl);
+    res.redirect(redirectUrl);
+  }
+});
+
 // Middleware de auth para todas las rutas EXCEPTO los callbacks OAuth
 router.use((req, res, next) => {
   // Excluir los callbacks OAuth del middleware de autenticación
+  // Nota: req.path ya no incluye /integrations porque se monta en app.use("/integrations", ...)
   if (req.path === "/oauth/whatsapp/callback" || 
       req.path === "/oauth/instagram/callback" ||
-      req.path === "/test-callback") {
+      req.path === "/test-callback" ||
+      req.path === "/debug/simple-test" ||
+      req.path === "/debug/callback-test") {
+    console.log("🔓 Excluyendo de auth:", req.path);
     return next();
   }
+  console.log("🔒 Aplicando auth a:", req.path);
   return handleAuth(req, res, next);
 });
 
@@ -252,7 +527,7 @@ router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
           message: `Durante el período de prueba gratuito solo puedes conectar ${config.freeTrialMaxIntegrations} integraciones`,
           details: {
             maxIntegrations: config.freeTrialMaxIntegrations,
-            currentIntegrations: limitsCheck.currentIntegrations,
+          currentIntegrations: limitsCheck.currentIntegrations,
             allowedProviders: config.freeTrialAllowedProviders
           }
         };
@@ -263,8 +538,8 @@ router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
         error: "integration_limit_exceeded",
         message: limitsCheck.reason,
         details: {
-          maxIntegrations: limitsCheck.maxIntegrations,
-          currentIntegrations: limitsCheck.currentIntegrations
+        maxIntegrations: limitsCheck.maxIntegrations,
+        currentIntegrations: limitsCheck.currentIntegrations
         }
       };
       return res.status(403).json(errorResponse);
@@ -363,7 +638,7 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
           message: `Durante el período de prueba gratuito solo puedes conectar ${config.freeTrialMaxIntegrations} integraciones`,
           details: {
             maxIntegrations: config.freeTrialMaxIntegrations,
-            currentIntegrations: limitsCheck.currentIntegrations,
+          currentIntegrations: limitsCheck.currentIntegrations,
             allowedProviders: config.freeTrialAllowedProviders
           }
         };
@@ -374,8 +649,8 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
         error: "integration_limit_exceeded",
         message: limitsCheck.reason,
         details: {
-          maxIntegrations: limitsCheck.maxIntegrations,
-          currentIntegrations: limitsCheck.currentIntegrations
+        maxIntegrations: limitsCheck.maxIntegrations,
+        currentIntegrations: limitsCheck.currentIntegrations
         }
       };
       return res.status(403).json(errorResponse);
@@ -834,10 +1109,10 @@ router.get("/test-callback", async (req: Request, res: Response) => {
 });
 
 /**
- * GET /integrations/oauth/whatsapp/callback
- * Callback del OAuth de WhatsApp
+ * GET /integrations/oauth/instagram/callback
+ * Callback del OAuth de Instagram
  */
-router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
+router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
   console.log("🚀 INICIO: OAuth Callback recibido");
   console.log("  - Timestamp:", new Date().toISOString());
   console.log("  - URL completa:", req.url);
@@ -854,6 +1129,7 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     timestamp: new Date().toISOString()
   });
   
+  // Asegurar que siempre se haga una redirección
   try {
     console.log("🔍 OAuth Callback recibido:");
     console.log("  - URL completa:", req.url);
@@ -889,6 +1165,15 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
       apiUrl: config.apiUrl,
       frontendUrl: config.frontendUrl
     });
+
+    // Verificar que las credenciales estén configuradas
+    if (!config.metaAppId || !config.metaAppSecret) {
+      console.error("❌ Credenciales de Meta no configuradas:", {
+        hasAppId: !!config.metaAppId,
+        hasAppSecret: !!config.metaAppSecret
+      });
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=meta_not_configured&errorMessage=${encodeURIComponent('Credenciales de Meta no configuradas')}`);
+    }
 
     // Intercambiar código por token de acceso
     console.log("🔄 Intercambiando código por token...");
@@ -999,7 +1284,9 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     });
 
     console.log("✅ ÉXITO: Redirigiendo al frontend con éxito");
-    res.redirect(`${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`);
+    const successUrl = `${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`;
+    console.log("🔗 URL de redirección:", successUrl);
+    res.redirect(successUrl);
   } catch (err: any) {
     const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
     
@@ -1028,7 +1315,31 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     });
     
     console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
-            res.redirect(`${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`);
+    
+    // Determinar el tipo de error específico
+    let errorType = "whatsapp_oauth_failed";
+    let errorMessage = "Error al conectar WhatsApp";
+    
+    if (err?.response?.status === 401) {
+      errorType = "whatsapp_unauthorized";
+      errorMessage = "No autorizado para conectar WhatsApp";
+    } else if (err?.response?.status === 400) {
+      errorType = "whatsapp_invalid_request";
+      errorMessage = "Solicitud inválida a WhatsApp";
+    } else if (err?.message?.includes("ENOTFOUND") || err?.message?.includes("ECONNREFUSED")) {
+      errorType = "whatsapp_network_error";
+      errorMessage = "Error de conexión con WhatsApp";
+    } else if (err?.message?.includes("no WABA")) {
+      errorType = "whatsapp_no_business_account";
+      errorMessage = "No se encontró cuenta de WhatsApp Business";
+    } else if (err?.message?.includes("no phone number")) {
+      errorType = "whatsapp_no_phone_number";
+      errorMessage = "No se encontró número de teléfono en WhatsApp Business";
+    }
+    
+    const redirectUrl = `${config.frontendUrl}/dashboard/integrations?error=${errorType}&errorMessage=${encodeURIComponent(errorMessage)}`;
+    console.log("❌ Redirigiendo con error:", redirectUrl);
+    res.redirect(redirectUrl);
   }
 });
 

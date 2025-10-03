@@ -8,6 +8,13 @@ export async function middleware(req: NextRequest) {
   const isApp = req.nextUrl.pathname.startsWith("/dashboard");
   const isCheckout = req.nextUrl.pathname.startsWith("/checkout");
   
+  // Excluir callbacks OAuth del middleware de autenticación
+  if (req.nextUrl.pathname.includes("/oauth/") || 
+      req.nextUrl.pathname.includes("/callback") ||
+      req.nextUrl.pathname.startsWith("/integrations/")) {
+    return NextResponse.next();
+  }
+  
   // Solo proteger rutas que requieren autenticación
   if (!isApp && !isCheckout) return NextResponse.next();
   
