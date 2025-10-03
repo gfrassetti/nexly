@@ -2,20 +2,28 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { connectWhatsApp } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ConnectWhatsAppPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { token } = useAuth();
 
   const handleConnect = async () => {
+    if (!token) {
+      setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
+      return;
+    }
+
     setLoading(true);
     setError("");
     
     try {
-      const response = await connectWhatsApp();
+      const response = await connectWhatsApp(token);
       // Redirigir a la URL de autorización de Meta
       window.location.href = response.authUrl;
     } catch (err: any) {
+      console.error("Error connecting WhatsApp:", err);
       setError(err.message || "Error al conectar WhatsApp");
     } finally {
       setLoading(false);

@@ -3,19 +3,22 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
 
-export default function requireAuth(req: Request, res: Response, next: NextFunction) {
+function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
   const clientIP = req.ip || req.connection.remoteAddress;
   
+  console.log(`Auth check for ${req.method} ${req.path} from IP ${clientIP}`);
+  console.log(`Authorization header: ${authHeader ? 'Present' : 'Missing'}`);
+  
   if (!authHeader) {
     console.warn(`Auth failed: No token provided from IP ${clientIP}`);
-    return res.status(401).send("No token provided");
+    return res.status(401).json({ error: "no_token_provided", message: "Token de autenticación requerido" });
   }
 
   const [scheme, token] = authHeader.split(" ");
   if (scheme !== "Bearer" || !token) {
     console.warn(`Auth failed: Invalid token format from IP ${clientIP}`);
-    return res.status(401).send("Invalid token format");
+    return res.status(401).json({ error: "invalid_token_format", message: "Formato de token inválido" });
   }
 
   try {
@@ -30,6 +33,8 @@ export default function requireAuth(req: Request, res: Response, next: NextFunct
     next();
   } catch (err) {
     console.warn(`Auth failed: JWT verify failed from IP ${clientIP}:`, err);
-    return res.status(403).send("Forbidden");
+    return res.status(401).json({ error: "invalid_token", message: "Token inválido o expirado" });
   }
 }
+
+export default requireAuth;
