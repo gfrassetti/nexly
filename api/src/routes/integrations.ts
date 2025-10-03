@@ -914,7 +914,7 @@ router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
     });
     
     console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
-    res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_failed`);
+            res.redirect(`${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`);
   }
 });
 
