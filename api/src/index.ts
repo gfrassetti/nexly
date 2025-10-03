@@ -140,7 +140,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// Middleware de manejo de rutas no encontradas
+// Middleware de manejo de rutas no encontradass
 app.use((req, res) => {
   res.status(404).json({
     error: "Route not found",
