@@ -381,7 +381,8 @@ router.use((req, res, next) => {
       req.path === "/oauth/instagram/callback" ||
       req.path === "/test-callback" ||
       req.path === "/debug/simple-test" ||
-      req.path === "/debug/callback-test") {
+      req.path === "/debug/callback-test" ||
+      req.path === "/debug/simulate-callback") {
     console.log("🔓 Excluyendo de auth:", req.path);
     return next();
   }
