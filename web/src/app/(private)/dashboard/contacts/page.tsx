@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useContacts } from "@/hooks/useContacts";
+import { useDataRefresh } from "@/hooks/useDataRefresh";
 import ContactList, { ContactItem } from "@/components/ContactList";
 import { deleteContact } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +15,7 @@ const ALL_INTEGRATIONS = [
 
 export default function ContactsPage() {
   const { token } = useAuth();
+  const { refreshContacts } = useDataRefresh();
   const [integrationId, setIntegrationId] = useState("whatsapp");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function ContactsPage() {
     try {
       await deleteContact(id, token);
       showSuccess("Contacto eliminado", "Contacto eliminado exitosamente");
-      refetch();
+      refreshContacts();
     } catch (error) {
       handleError(error, 'eliminar contacto');
     } finally {

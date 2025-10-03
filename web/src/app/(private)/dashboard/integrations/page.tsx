@@ -5,6 +5,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useNotificationHelpers } from "@/hooks/useNotification";
+import { useDataRefresh } from "@/hooks/useDataRefresh";
 import FreeTrialBanner from "@/components/FreeTrialBanner";
 import { useAuth } from "@/hooks/useAuth";
 import useSWR from "swr";
@@ -17,6 +18,7 @@ function IntegrationsContent() {
   const { createPaymentLink } = usePaymentLink();
   const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick } = useIntegrations();
   const { showSuccess, showError } = useNotificationHelpers();
+  const { refreshAll } = useDataRefresh();
   const { token } = useAuth();
 
   // Fetch integraciones conectadas del usuario
@@ -37,13 +39,13 @@ function IntegrationsContent() {
     if (success === "whatsapp_connected") {
       showSuccess("¡WhatsApp conectado!", "WhatsApp se ha conectado exitosamente");
       setMessage("¡WhatsApp conectado exitosamente!");
-      // Refrescar integraciones
-      refreshIntegrations();
+      // Refrescar todos los datos
+      refreshAll();
     } else if (success === "instagram_connected") {
       showSuccess("¡Instagram conectado!", "Instagram se ha conectado exitosamente");
       setMessage("¡Instagram conectado exitosamente!");
-      // Refrescar integraciones
-      refreshIntegrations();
+      // Refrescar todos los datos
+      refreshAll();
     } else if (error) {
       let errorTitle = "Error de conexión";
       let errorMessage = "Error al conectar WhatsApp. Intenta de nuevo.";

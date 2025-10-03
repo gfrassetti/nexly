@@ -1,15 +1,17 @@
 "use client";
 import useSWR from "swr";
 import { useAuth } from "@/hooks/useAuth";
+import { useDataRefresh } from "@/hooks/useDataRefresh";
 import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sendMessage } from "@/hooks/sendMessage";
 import { CHANNELS } from "@/lib/constants";
 
 export default function InboxPage() {
   const { token } = useAuth();
+  const { refreshInbox } = useDataRefresh();
   const [channel, setChannel] = useState<(typeof CHANNELS)[number]>("whatsapp");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,6 +25,11 @@ export default function InboxPage() {
       return res.json();
     }
   );
+
+  // Refrescar datos cuando se cambie el canal
+  useEffect(() => {
+    refreshInbox();
+  }, [channel, refreshInbox]);
 
   async function handleSend(text: string) {
     if (!token || !activeId) return;
@@ -42,7 +49,7 @@ export default function InboxPage() {
       }
       
       // Refrescar la conversación
-      window.location.reload();
+      refreshInbox();
     } catch (error) {
       console.error('Error:', error);
     }
