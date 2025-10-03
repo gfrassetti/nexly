@@ -43,4 +43,8 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || "development",
   isProduction: process.env.NODE_ENV === "production",
   isDevelopment: process.env.NODE_ENV === "development",
+  
+  // Integration Limits
+  freeTrialMaxIntegrations: parseInt(process.env.FREE_TRIAL_MAX_INTEGRATIONS || "2"),
+  freeTrialAllowedProviders: (process.env.FREE_TRIAL_ALLOWED_PROVIDERS || "whatsapp,instagram").split(","),
 };

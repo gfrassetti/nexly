@@ -144,6 +144,64 @@ router.post("/send", async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Marcar mensaje como leído en WhatsApp
+router.post("/mark-read", async (req: AuthRequest, res: Response) => {
+  try {
+    const rawUserId = req.user?.id || req.user?._id;
+    if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { messageId } = req.body;
+    if (!messageId) {
+      return res.status(400).json({ error: "message_id_required" });
+    }
+
+    // Buscar el mensaje en la base de datos
+    const message = await Message.findOne({
+      _id: messageId,
+      userId: buildUserIdFilter(rawUserId),
+      direction: "in" // Solo mensajes entrantes pueden ser marcados como leídos
+    });
+
+    if (!message) {
+      return res.status(404).json({ error: "message_not_found" });
+    }
+
+    // Buscar la integración para obtener credenciales de WhatsApp
+    const integration = await Integration.findById(message.integrationId);
+    if (!integration || integration.provider !== 'whatsapp') {
+      return res.status(400).json({ error: "invalid_integration" });
+    }
+
+    if (!integration.accessToken || !integration.phoneNumberId) {
+      return res.status(400).json({ 
+        error: "whatsapp_config_missing", 
+        detail: "Faltan credenciales de WhatsApp" 
+      });
+    }
+
+    // Marcar como leído en WhatsApp
+    try {
+      const whatsappService = createWhatsAppService(
+        integration.accessToken, 
+        integration.phoneNumberId
+      );
+      await whatsappService.markMessageAsRead(message.externalMessageId || '');
+      
+      return res.json({ success: true, message: "Mensaje marcado como leído" });
+    } catch (error: any) {
+      console.error('Error marcando mensaje como leído en WhatsApp:', error.message);
+      return res.status(500).json({ 
+        error: "whatsapp_mark_read_failed", 
+        detail: error.message 
+      });
+    }
+
+  } catch (err: any) {
+    console.error("mark_read_failed:", err?.message || err);
+    return res.status(500).json({ error: "mark_read_failed", detail: err?.message });
+  }
+});
+
 // Obtener límites de mensajes del usuario
 router.get("/limits", async (req: AuthRequest, res: Response) => {
   try {

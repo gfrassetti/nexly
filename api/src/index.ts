@@ -9,6 +9,7 @@ import contactsRouter from "./routes/contacts";
 import integrationsRouter from "./routes/integrations";
 import { verifyMetaSignature } from "./middleware/verifyMetaSignature";
 import messageRoutes from "./routes/messages";
+import conversationsRouter from "./routes/conversations";
 import subscriptionsRouter from "./routes/subscriptions";
 import stripeRouter from "./routes/stripe";
 import aiRouter from "./routes/ai";
@@ -120,6 +121,7 @@ app.use("/webhook", validateWebhookOrigin, webhookRouter);
 app.use("/contacts", contactsRouter);
 app.use("/integrations", integrationLogging, integrationsRouter);
 app.use("/messages", messageRoutes);
+app.use("/conversations", conversationsRouter);
 app.use("/subscriptions", subscriptionRateLimit, sanitizePaymentData, subscriptionsRouter);
 app.use("/stripe", sanitizePaymentData, stripeRouter);
 app.use("/ai", aiRouter);
@@ -150,6 +152,7 @@ app.use((req, res) => {
       "/contacts",
       "/integrations",
       "/messages",
+      "/conversations",
       "/subscriptions",
       "/stripe",
       "/ai",
