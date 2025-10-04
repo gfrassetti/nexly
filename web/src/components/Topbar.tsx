@@ -28,11 +28,18 @@ export default function Topbar() {
     const sub = subscription.subscription;
     const rawStatus = sub.status;
     
+    
     let planText = '';
     let badgeColor = '';
     
-    // Priorizar el estado real de la suscripción sobre los estados calculados
-    if (rawStatus === 'trialing') {
+    // Lógica mejorada: Si tiene stripeSubscriptionId, significa que ya pagó
+    const hasStripeSubscription = sub.stripeSubscriptionId;
+    
+    // Si tiene Stripe subscription ID, significa que ya pagó, independientemente del status
+    if (hasStripeSubscription) {
+      planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
+      badgeColor = 'text-accent-green border border-accent-green/30';
+    } else if (rawStatus === 'trialing') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} Trial`;
       badgeColor = 'text-accent-blue border border-accent-blue/30';
     } else if (rawStatus === 'active') {

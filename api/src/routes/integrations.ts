@@ -1750,4 +1750,59 @@ router.get("/admin/system-status", async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * Endpoint temporal para arreglar suscripciones con estado incorrecto
+ * Solo disponible en desarrollo
+ */
+router.post("/fix-subscription-status", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    if (!config.isDevelopment) {
+      return res.status(400).json({
+        success: false,
+        message: "Esta función solo está disponible en modo desarrollo"
+      });
+    }
+
+    const Subscription = require('../models/Subscription').default;
+    
+    // Buscar suscripciones con stripeSubscriptionId pero status 'trialing'
+    const subscriptions = await Subscription.find({
+      userId,
+      stripeSubscriptionId: { $exists: true, $ne: null },
+      status: 'trialing'
+    });
+
+    if (subscriptions.length === 0) {
+      return res.json({
+        success: true,
+        message: "No hay suscripciones que necesiten corrección"
+      });
+    }
+
+    // Actualizar todas las suscripciones encontradas
+    const updatePromises = subscriptions.map((sub: any) => 
+      Subscription.findByIdAndUpdate(sub._id, { status: 'active' })
+    );
+
+    await Promise.all(updatePromises);
+
+    res.json({
+      success: true,
+      message: `Se corrigieron ${subscriptions.length} suscripciones`,
+      subscriptionsFixed: subscriptions.length
+    });
+
+  } catch (error: any) {
+    console.error("Error fixing subscription status:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error al corregir estado de suscripciones",
+      details: error.message
+    });
+  }
+});
+
 export default router;

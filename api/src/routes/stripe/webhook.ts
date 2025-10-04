@@ -224,7 +224,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const subscription = new Subscription({
       userId: user._id.toString(),
       planType: planType as 'basic' | 'premium',
-      status: 'trialing', // Ahora sí es correcto crear con status 'trialing'
+      status: 'active', // Cuando el pago se completa, la suscripción debe estar activa
       startDate,
       trialEndDate,
       autoRenew: false,
@@ -235,7 +235,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     await subscription.save();
 
     // Actualizar el estado del usuario
-    user.subscription_status = 'trial_pending_payment_method';
+    user.subscription_status = 'active_paid';
     await user.save();
 
     console.log(`✅ Subscription created for user ${user._id} after successful payment`);
