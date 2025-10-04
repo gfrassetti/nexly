@@ -92,22 +92,41 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 // Manejar pago fallido de factura
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   console.log('Invoice payment failed:', invoice.id);
+  console.log('Invoice details:', {
+    id: invoice.id,
+    subscription: (invoice as any).subscription,
+    status: invoice.status,
+    payment_intent: (invoice as any).payment_intent,
+    last_payment_attempt: (invoice as any).last_payment_attempt,
+    next_payment_attempt: invoice.next_payment_attempt
+  });
   
   if ((invoice as any).subscription && typeof (invoice as any).subscription === 'string') {
     const subscriptionId = (invoice as any).subscription as string;
     
-    // Actualizar el estado de la suscripción
-    await Subscription.findOneAndUpdate(
-      { stripeSubscriptionId: subscriptionId },
-      { 
-        status: 'past_due',
-        // Estados se calculan dinámicamente con métodos
-        lastPaymentAttempt: new Date()
-      },
-      { new: true }
-    );
+    // Buscar la suscripción en la base de datos
+    const subscription = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
     
-    console.log(`Subscription ${subscriptionId} marked as past due`);
+    if (subscription) {
+      // Actualizar el estado de la suscripción
+      await Subscription.findOneAndUpdate(
+        { stripeSubscriptionId: subscriptionId },
+        { 
+          status: 'past_due',
+          lastPaymentAttempt: new Date(),
+          // Si es el primer intento de pago después del trial, marcar como expired
+          ...(subscription.status === 'trialing' && {
+            status: 'past_due',
+            trialEndDate: new Date().toISOString() // Marcar trial como terminado
+          })
+        },
+        { new: true }
+      );
+      
+      console.log(`Subscription ${subscriptionId} marked as past_due after payment failure`);
+    } else {
+      console.log(`Subscription ${subscriptionId} not found in database`);
+    }
   }
 }
 

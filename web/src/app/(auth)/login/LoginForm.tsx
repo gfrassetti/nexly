@@ -59,12 +59,12 @@ export default function LoginForm() {
             <div className="flex justify-center mb-4">
               <Logo size="md" />
             </div>
-            <h1 className="text-3xl font-bold text-white">Iniciar sesión</h1>
-            <p className="text-neutral-400 mt-2">Bienvenido de vuelta</p>
+            <h1 className="text-lg font-medium text-foreground">Iniciar sesión</h1>
+            <p className="text-muted-foreground text-sm mt-2">Bienvenido de vuelta</p>
           </div>
       
-      <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
-        {error && <p className="text-sm text-red-500">{error}</p>}
+      <form onSubmit={onSubmit} className="space-y-6 bg-muted border border-border p-8 rounded-lg">
+        {error && <p className="text-sm text-destructive">{error}</p>}
         
         {/* Google Auth Button - TEMPORALMENTE DESHABILITADO */}
         {/* <GoogleAuthButton className="mb-4" />
@@ -80,7 +80,7 @@ export default function LoginForm() {
         
         <div>
           <input
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+            className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent-green focus:border-transparent transition-colors"
             placeholder="Email o Username"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
@@ -88,7 +88,7 @@ export default function LoginForm() {
         </div>
         <div>
           <input
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+            className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent-green focus:border-transparent transition-colors"
             placeholder="Contraseña"
             type="password"
             value={password}
@@ -97,22 +97,22 @@ export default function LoginForm() {
         </div>
         <button
           disabled={loading}
-          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors duration-300"
+          className="w-full bg-accent-green/20 hover:bg-accent-green/30 disabled:bg-muted text-accent-green border border-accent-green/30 hover:border-accent-green/50 font-medium py-3 rounded-lg disabled:opacity-50 transition-colors duration-300"
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
       
         <div className="text-center space-y-3">
           <div>
-            <Link href="/forgot-password" className="text-nexly-azul hover:text-nexly-light-blue text-sm transition-colors duration-300">
+            <Link href="/forgot-password" className="text-accent-blue hover:text-accent-blue/80 text-sm transition-colors duration-300">
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
           <div>
-            <span className="text-neutral-400 text-sm">
+            <span className="text-muted-foreground text-sm">
               ¿No estás registrado?{" "}
             </span>
-            <Link href={getRegisterUrl()} className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors duration-300">
+            <Link href={getRegisterUrl()} className="text-accent-green hover:text-accent-green/80 text-sm font-medium transition-colors duration-300">
               Regístrate aquí
             </Link>
           </div>

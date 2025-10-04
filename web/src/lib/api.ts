@@ -196,11 +196,43 @@ export function linkIntegration(body: {
 }
 
 /**
- * Iniciar flujo OAuth para conectar WhatsApp
+ * Obtener instrucciones para conectar WhatsApp Business
  */
 export function connectWhatsApp(token?: string) {
-  return apiFetch<{ authUrl: string; state: string }>("/integrations/connect/whatsapp", {
+  return apiFetch<{ 
+    message: string; 
+    instructions: {
+      step1: string;
+      step2: string;
+      step3: string;
+      step4: string;
+    }
+  }>("/integrations/connect/whatsapp", {
     method: "GET",
+  }, token);
+}
+
+/**
+ * Conectar WhatsApp Business usando credenciales de Meta
+ */
+export function connectWhatsAppCredentials(body: {
+  phoneNumberId: string;
+  accessToken: string;
+  phoneNumber?: string;
+}, token?: string) {
+  return apiFetch<{
+    success: boolean;
+    message: string;
+    integration: {
+      _id: string;
+      provider: string;
+      name: string;
+      status: string;
+      phoneNumberId: string;
+    };
+  }>("/integrations/whatsapp/credentials", {
+    method: "POST",
+    body: JSON.stringify(body),
   }, token);
 }
 

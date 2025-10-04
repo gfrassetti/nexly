@@ -111,36 +111,37 @@ function IntegrationsContent() {
 
 
   return (
-    <div className="p-6">
+    <div className="p-6 text-foreground" style={{ background: 'var(--background-gradient)' }}>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Integraciones</h1>
+        <div>
+          <h1 className="text-lg font-medium text-foreground">Integrations</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Connect your messaging platforms
+          </p>
+        </div>
       </div>
       
       {/* Banner del período de prueba gratuito */}
       <FreeTrialBanner />
 
-      {/* Información específica para período de prueba gratuito */}
+      {/* Trial period info */}
       {subscription?.freeTrial?.isActive && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
-                Integraciones Disponibles en Período de Prueba
+        <div className="bg-accent-blue/10 border border-accent-blue/20 rounded-lg p-4 mb-6">
+          <div className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-accent-blue rounded-full mt-2"></div>
+            <div>
+              <h3 className="text-sm font-medium text-foreground">
+                Available During Trial Period
               </h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>Durante tu período de prueba gratuito de 24 horas, solo puedes conectar:</p>
+              <div className="mt-2 text-xs text-muted-foreground">
+                <p>During your free trial, you can connect:</p>
                 <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li><strong>WhatsApp Business</strong> - Para gestionar mensajes de WhatsApp</li>
-                  <li><strong>Instagram Business</strong> - Para gestionar mensajes directos de Instagram</li>
+                  <li><strong>WhatsApp Business</strong> - Manage WhatsApp messages</li>
+                  <li><strong>Instagram Business</strong> - Manage Instagram DMs</li>
                 </ul>
                 <p className="mt-2">
-                  <a href="/pricing" className="font-medium underline hover:no-underline">
-                    Suscríbete para acceder a todas las integraciones
+                  <a href="/pricing" className="font-medium text-accent-blue hover:underline">
+                    Subscribe to access all integrations
                   </a>
                 </p>
               </div>
@@ -149,58 +150,55 @@ function IntegrationsContent() {
         </div>
       )}
 
-      {/* Estado pendiente de método de pago - SOLO si realmente está pendiente */}
+      {/* Pending Payment Method */}
       {status.pendingPaymentMethod && !status.trialActive && !status.active && (
-        <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4 mb-6">
+        <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-yellow-400 font-medium">Método de Pago Pendiente</p>
+            <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 bg-warning rounded-full"></div>
+              <div>
+                <p className="text-warning font-medium text-sm">Payment Method Pending</p>
+                <p className="text-muted-foreground text-xs">
+                  Complete your payment method to start your 7-day free trial
+                </p>
               </div>
-              <p className="text-yellow-300 text-sm">
-                Completa tu método de pago para comenzar tu prueba gratuita de 7 días
-              </p>
             </div>
             <button
               onClick={() => createPaymentLink()}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+              className="bg-warning/20 border border-warning/30 text-warning px-3 py-2 rounded-md text-xs font-medium hover:bg-warning/30 transition-colors"
             >
-              Completar Pago
+              Complete Payment
             </button>
           </div>
         </div>
       )}
 
-      {/* Información del plan actual */}
+      {/* Current Plan Info */}
       {subscription?.subscription && (
-        <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 mb-6">
+        <div className="bg-muted/30 border border-border rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-white font-medium">
-                Plan actual: {subscription.subscription.planType === 'basic' ? 'Basic' : 'Premium'}
+              <p className="text-foreground font-medium text-sm">
+                Current plan: {subscription.subscription.planType === 'basic' ? 'Basic' : 'Premium'}
               </p>
-              <p className="text-neutral-400 text-sm">
-                Integraciones disponibles: {getMaxIntegrations() === 999 ? 'Todas disponibles' : `Hasta ${getMaxIntegrations()}`}
-                {/* Debug: {JSON.stringify({maxIntegrations: getMaxIntegrations(), isTrialActive: status.trialActive, isActive: status.active, planType: subscription.subscription.planType})} */}
+              <p className="text-muted-foreground text-xs">
+                Available integrations: {getMaxIntegrations() === 999 ? 'All available' : `Up to ${getMaxIntegrations()}`}
               </p>
             </div>
             {status.pendingPaymentMethod && !status.trialActive && !status.active && (
               <button
                 onClick={() => createPaymentLink()}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                className="bg-warning/20 border border-warning/30 text-warning px-3 py-2 rounded-md text-xs font-medium hover:bg-warning/30 transition-colors"
               >
-Completar Pago
+                Complete Payment
               </button>
             )}
             {!status.active && !status.trialActive && !status.pendingPaymentMethod && (
               <button
                 onClick={() => window.location.href = '/pricing'}
-                className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                className="bg-accent-blue/20 border border-accent-blue/30 text-accent-blue px-3 py-2 rounded-md text-xs font-medium hover:bg-accent-blue/30 transition-colors"
               >
-                Actualizar Plan
+                Upgrade Plan
               </button>
             )}
           </div>
@@ -208,62 +206,68 @@ Completar Pago
       )}
       
       {message && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {message}
+        <div className="bg-success/10 border border-success/20 rounded-lg p-4 mb-4 flex items-center space-x-3">
+          <div className="w-2 h-2 bg-success rounded-full"></div>
+          <p className="text-sm text-foreground">{message}</p>
         </div>
       )}
       
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4 flex items-center space-x-3">
+          <div className="w-2 h-2 bg-destructive rounded-full"></div>
+          <p className="text-sm text-foreground">{error}</p>
         </div>
       )}
 
-      {/* Integraciones conectadas */}
+      {/* Connected Integrations */}
       {connectedIntegrations && connectedIntegrations.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">Integraciones Conectadas</h2>
+          <h2 className="text-sm font-medium text-foreground mb-4">Connected Integrations</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {connectedIntegrations.map((integration: any) => (
-              <div key={integration._id} className="bg-neutral-800 border border-neutral-700 rounded-lg p-4">
+              <div key={integration._id} className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                      integration.provider === 'whatsapp' ? 'bg-green-500' : 
-                      integration.provider === 'instagram' ? 'bg-gradient-to-br from-purple-500 to-pink-500' : 
-                      'bg-blue-500'
+                    <div className={`w-8 h-8 rounded-md flex items-center justify-center mr-3 ${
+                      integration.provider === 'whatsapp' ? 'bg-accent-green/20' : 
+                      integration.provider === 'instagram' ? 'bg-accent-blue/20' : 
+                      'bg-accent-blue/20'
                     }`}>
-                      <span className="text-white text-sm font-bold">
+                      <span className={`text-sm font-medium ${
+                        integration.provider === 'whatsapp' ? 'text-accent-green' : 
+                        integration.provider === 'instagram' ? 'text-accent-blue' : 
+                        'text-accent-blue'
+                      }`}>
                         {integration.provider === 'whatsapp' ? 'W' : 
                          integration.provider === 'instagram' ? 'I' : 
                          integration.provider.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-white font-medium">{integration.name}</h3>
-                      <p className="text-neutral-400 text-sm capitalize">{integration.provider}</p>
+                      <h3 className="text-foreground font-medium text-sm">{integration.name}</h3>
+                      <p className="text-muted-foreground text-xs capitalize">{integration.provider}</p>
                     </div>
                   </div>
                   <div className="flex items-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      integration.status === 'linked' ? 'bg-green-900 text-green-300' :
-                      integration.status === 'pending' ? 'bg-yellow-900 text-yellow-300' :
-                      'bg-red-900 text-red-300'
+                    <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                      integration.status === 'linked' ? 'bg-success/20 text-success' :
+                      integration.status === 'pending' ? 'bg-warning/20 text-warning' :
+                      'bg-destructive/20 text-destructive'
                     }`}>
-                      {integration.status === 'linked' ? 'Conectado' : 
-                       integration.status === 'pending' ? 'Pendiente' : 
+                      {integration.status === 'linked' ? 'Connected' : 
+                       integration.status === 'pending' ? 'Pending' : 
                        'Error'}
                     </span>
                   </div>
                 </div>
                 {integration.status === 'pending' && (
-                  <p className="text-neutral-400 text-sm">
-                    La integración está siendo configurada. Esto puede tomar unos minutos.
+                  <p className="text-muted-foreground text-xs">
+                    Integration is being configured. This may take a few minutes.
                   </p>
                 )}
                 {integration.status === 'error' && (
-                  <p className="text-red-400 text-sm">
-                    Error al conectar. Intenta reconectar la integración.
+                  <p className="text-destructive text-xs">
+                    Connection error. Try reconnecting the integration.
                   </p>
                 )}
               </div>
@@ -272,26 +276,40 @@ Completar Pago
         </div>
       )}
 
-      {/* Integraciones disponibles */}
-      <h2 className="text-xl font-semibold text-white mb-4">
-        {connectedIntegrations && connectedIntegrations.length > 0 ? 'Conectar Más Integraciones' : 'Integraciones Disponibles'}
+      {/* Available Integrations */}
+      <h2 className="text-sm font-medium text-foreground mb-4">
+        {connectedIntegrations && connectedIntegrations.length > 0 ? 'Connect More Integrations' : 'Available Integrations'}
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {integrations.map((integration) => (
-          <div key={integration.id} className="bg-white rounded-lg shadow p-6">
+          <div key={integration.id} className="bg-muted/30 border border-border rounded-lg p-6 hover:bg-muted/50 transition-colors">
             <div className="flex items-center mb-4">
-              <div className={`w-8 h-8 ${integration.color} rounded-full flex items-center justify-center mr-3`}>
-                <span className="text-white text-sm font-bold">
+              <div className={`w-8 h-8 rounded-md flex items-center justify-center mr-3 ${
+                integration.id === 'whatsapp' ? 'bg-accent-green/20' :
+                integration.id === 'instagram' ? 'bg-accent-blue/20' :
+                'bg-accent-blue/20'
+              }`}>
+                <span className={`text-sm font-medium ${
+                  integration.id === 'whatsapp' ? 'text-accent-green' :
+                  integration.id === 'instagram' ? 'text-accent-blue' :
+                  'text-accent-blue'
+                }`}>
                   {integration.label.charAt(0)}
                 </span>
               </div>
-              <h2 className="text-lg font-semibold text-black">{integration.label}</h2>
+              <h2 className="text-sm font-medium text-foreground">{integration.label}</h2>
             </div>
-            <p className="text-gray-600 mb-4 text-sm">
+            <p className="text-muted-foreground mb-4 text-xs">
               {integration.description}
             </p>
             <button 
-              className={getButtonStyle(integration.id)}
+              className={`w-full px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                !isIntegrationAvailable(integration.id) 
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                  : getButtonText(integration.id).includes('Connect') || getButtonText(integration.id).includes('Conectar')
+                    ? 'bg-accent-green/10 border border-accent-green/20 text-accent-green hover:bg-accent-green/20'
+                    : 'bg-muted text-muted-foreground'
+              }`}
               onClick={() => handleIntegrationClick(integration.id)}
               disabled={!isIntegrationAvailable(integration.id)}
             >

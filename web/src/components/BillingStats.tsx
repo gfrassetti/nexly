@@ -38,16 +38,16 @@ export default function BillingStats() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Estadísticas de facturación</h2>
+      <div className="bg-muted border border-border rounded-lg">
+        <div className="p-6 border-b border-border">
+          <h2 className="text-sm font-medium text-foreground">Estadísticas de facturación</h2>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded w-20"></div>
+                <div className="h-4 bg-background rounded w-16 mb-2"></div>
+                <div className="h-6 bg-background rounded w-20"></div>
               </div>
             ))}
           </div>
@@ -61,45 +61,45 @@ export default function BillingStats() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-xl font-bold text-gray-900">Estadísticas de facturación</h2>
-        <p className="text-sm text-gray-500 mt-1">Resumen de tu actividad de facturación</p>
+    <div className="bg-muted border border-border rounded-lg">
+      <div className="p-6 border-b border-border">
+        <h2 className="text-sm font-medium text-foreground">Estadísticas de facturación</h2>
+        <p className="text-xs text-muted-foreground mt-1">Resumen de tu actividad de facturación</p>
       </div>
       <div className="p-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{stats.totalInvoices}</div>
-            <div className="text-sm text-gray-500">Total facturas</div>
+            <div className="text-lg font-semibold text-foreground">{stats.totalInvoices}</div>
+            <div className="text-xs text-muted-foreground">Total facturas</div>
           </div>
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-lg font-semibold text-accent-green">
               {formatInvoiceAmount(stats.totalPaid)}
             </div>
-            <div className="text-sm text-gray-500">Total pagado</div>
+            <div className="text-xs text-muted-foreground">Total pagado</div>
           </div>
           
           {stats.totalPending > 0 && (
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-lg font-semibold text-accent-orange">
                 {formatInvoiceAmount(stats.totalPending)}
               </div>
-              <div className="text-sm text-gray-500">Pendiente</div>
+              <div className="text-xs text-muted-foreground">Pendiente</div>
             </div>
           )}
           
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-lg font-semibold text-accent-blue">
               {formatInvoiceAmount(stats.averageAmount)}
             </div>
-            <div className="text-sm text-gray-500">Promedio</div>
+            <div className="text-xs text-muted-foreground">Promedio</div>
           </div>
         </div>
         
         {stats.lastInvoiceDate && (
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <div className="flex items-center justify-center text-sm text-gray-500">
+          <div className="mt-6 pt-6 border-t border-border">
+            <div className="flex items-center justify-center text-xs text-muted-foreground">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>

@@ -136,249 +136,13 @@ router.get("/debug/callback-test", (req: Request, res: Response) => {
   });
 });
 
-/**
- * GET /integrations/oauth/whatsapp/callback
- * Callback del OAuth de WhatsApp - DEBE IR ANTES del middleware de auth
- */
-router.get("/oauth/whatsapp/callback", async (req: Request, res: Response) => {
-  console.log("🚀 INICIO: OAuth Callback recibido");
-  console.log("  - Timestamp:", new Date().toISOString());
-  console.log("  - URL completa:", req.url);
-  console.log("  - Path:", req.path);
-  console.log("  - Method:", req.method);
-  console.log("  - Headers:", req.headers);
-  console.log("  - Query:", req.query);
-  
-  // Log del inicio del callback
-  logger.info('WhatsApp OAuth Callback Started', {
-    endpoint: req.path,
-    method: req.method,
-    query: req.query,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip || req.connection.remoteAddress,
-    timestamp: new Date().toISOString()
-  });
-  
-  // Asegurar que siempre se haga una redirección
-  try {
-    console.log("🔍 OAuth Callback recibido:");
-    console.log("  - URL completa:", req.url);
-    console.log("  - Path:", req.path);
-    console.log("  - Query params:", req.query);
-    console.log("  - Code:", req.query.code);
-    console.log("  - State:", req.query.state);
-    console.log("  - Error:", req.query.error);
-    console.log("  - Headers:", req.headers);
-    
-    const { code, state, error } = req.query;
-
-    if (error) {
-      console.log("❌ Error en OAuth:", error);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_denied`);
-    }
-
-    if (!code || !state) {
-      console.log("❌ Missing code or state:", { code: !!code, state: !!state });
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=missing_code`);
-    }
-
-    // Extraer userId del state
-    const userId = state.toString().split('_')[0];
-    if (!userId) {
-      console.log("❌ Invalid state format:", state);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=invalid_state`);
-    }
-
-    console.log("✅ Validando configuración Meta:", {
-      hasAppId: !!config.metaAppId,
-      hasAppSecret: !!config.metaAppSecret,
-      apiUrl: config.apiUrl,
-      frontendUrl: config.frontendUrl
-    });
-
-    // Verificar que las credenciales estén configuradas
-    if (!config.metaAppId || !config.metaAppSecret) {
-      console.error("❌ Credenciales de Meta no configuradas:", {
-        hasAppId: !!config.metaAppId,
-        hasAppSecret: !!config.metaAppSecret
-      });
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=meta_not_configured&errorMessage=${encodeURIComponent('Credenciales de Meta no configuradas')}`);
-    }
-
-    // Intercambiar código por token de acceso
-    console.log("🔄 Intercambiando código por token...");
-    const tokenResponse = await axios.post(
-      'https://graph.facebook.com/v19.0/oauth/access_token',
-      {
-        client_id: config.metaAppId,
-        client_secret: config.metaAppSecret,
-        redirect_uri: `${config.apiUrl}/integrations/oauth/whatsapp/callback`,
-        code: code
-      }
-    );
-
-    console.log("✅ Token recibido:", tokenResponse.data);
-    const { access_token } = tokenResponse.data;
-
-    // Obtener información del token (para verificar permisos)
-    console.log("🔍 Verificando token...");
-    const tokenInfo = await axios.get(
-      `https://graph.facebook.com/v19.0/me`,
-      {
-        params: { 
-          access_token,
-          appsecret_proof: generateAppSecretProof(access_token)
-        }
-      }
-    );
-
-    console.log("✅ Token verificado:", tokenInfo.data);
-
-    // Obtener WhatsApp Business Account ID
-    console.log("🔍 Obteniendo WhatsApp Business Account...");
-    const wabaResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/me/businesses`,
-      {
-        params: { 
-          access_token,
-          fields: 'id,name,whatsapp_business_accounts',
-          appsecret_proof: generateAppSecretProof(access_token)
-        }
-      }
-    );
-
-    console.log("✅ WABA response:", wabaResponse.data);
-
-    // Por ahora, usamos el primer WABA disponible
-    const waba = wabaResponse.data.data?.[0];
-    if (!waba) {
-      console.log("❌ No WABA found in response:", wabaResponse.data);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_waba_found`);
-    }
-
-    console.log("✅ WABA encontrado:", waba);
-
-    // Obtener phone number ID
-    console.log("🔍 Obteniendo phone numbers...");
-    const phoneNumbersResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/${waba.whatsapp_business_accounts.data[0].id}/phone_numbers`,
-      {
-        params: { 
-          access_token,
-          appsecret_proof: generateAppSecretProof(access_token)
-        }
-      }
-    );
-
-    console.log("✅ Phone numbers response:", phoneNumbersResponse.data);
-
-    const phoneNumber = phoneNumbersResponse.data.data?.[0];
-    if (!phoneNumber) {
-      console.log("❌ No phone number found:", phoneNumbersResponse.data);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_phone_number`);
-    }
-
-    console.log("✅ Phone number encontrado:", phoneNumber);
-
-    // Crear o actualizar integración
-    console.log("🔍 Creando/actualizando integración...");
-    const integration = await Integration.findOneAndUpdate(
-      { userId, provider: "whatsapp" },
-      {
-        userId: new Types.ObjectId(userId),
-        provider: "whatsapp",
-        externalId: waba.whatsapp_business_accounts.data[0].id,
-        phoneNumberId: phoneNumber.id,
-        accessToken: access_token,
-        name: `WhatsApp Business - ${phoneNumber.display_phone_number}`,
-        status: "pending"
-      },
-      { upsert: true, new: true }
-    );
-
-    console.log("✅ Integración creada/actualizada:", integration);
-
-    // Sincronizar para obtener metadata
-    console.log("🔍 Sincronizando integración...");
-    await syncIntegration(integration);
-
-    // Log successful WhatsApp integration
-    logIntegrationSuccess('whatsapp_oauth_callback', userId, {
-      integrationId: (integration as any)._id?.toString() || 'unknown',
-      externalId: waba.whatsapp_business_accounts.data[0].id,
-      phoneNumberId: phoneNumber.id,
-      phoneNumber: phoneNumber.display_phone_number,
-      endpoint: req.path,
-      method: req.method,
-      provider: 'whatsapp'
-    });
-
-    console.log("✅ ÉXITO: Redirigiendo al frontend con éxito");
-    const successUrl = `${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`;
-    console.log("🔗 URL de redirección:", successUrl);
-    res.redirect(successUrl);
-  } catch (err: any) {
-    const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
-    
-    // Log detallado del error
-    console.error("❌ ERROR en callback de WhatsApp:", {
-      message: err?.message,
-      response: err?.response?.data,
-      status: err?.response?.status,
-      config: {
-        url: err?.config?.url,
-        method: err?.config?.method,
-        data: err?.config?.data
-      },
-      query: req.query,
-      userId: userId
-    });
-    
-    // Log WhatsApp callback error
-    logIntegrationError(err, userId, "whatsapp_oauth_callback", {
-      endpoint: req.path,
-      method: req.method,
-      provider: 'whatsapp',
-      errorResponse: err?.response?.data,
-      errorMessage: err?.message,
-      query: req.query
-    });
-    
-    console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
-    
-    // Determinar el tipo de error específico
-    let errorType = "whatsapp_oauth_failed";
-    let errorMessage = "Error al conectar WhatsApp";
-    
-    if (err?.response?.status === 401) {
-      errorType = "whatsapp_unauthorized";
-      errorMessage = "No autorizado para conectar WhatsApp";
-    } else if (err?.response?.status === 400) {
-      errorType = "whatsapp_invalid_request";
-      errorMessage = "Solicitud inválida a WhatsApp";
-    } else if (err?.message?.includes("ENOTFOUND") || err?.message?.includes("ECONNREFUSED")) {
-      errorType = "whatsapp_network_error";
-      errorMessage = "Error de conexión con WhatsApp";
-    } else if (err?.message?.includes("no WABA")) {
-      errorType = "whatsapp_no_business_account";
-      errorMessage = "No se encontró cuenta de WhatsApp Business";
-    } else if (err?.message?.includes("no phone number")) {
-      errorType = "whatsapp_no_phone_number";
-      errorMessage = "No se encontró número de teléfono en WhatsApp Business";
-    }
-    
-    const redirectUrl = `${config.frontendUrl}/dashboard/integrations?error=${errorType}&errorMessage=${encodeURIComponent(errorMessage)}`;
-    console.log("❌ Redirigiendo con error:", redirectUrl);
-    res.redirect(redirectUrl);
-  }
-});
+// WhatsApp Meta API callback removed - migrating to Twilio
 
 // Middleware de auth para todas las rutas EXCEPTO los callbacks OAuth
 router.use((req, res, next) => {
   // Excluir los callbacks OAuth del middleware de autenticación
   // Nota: req.path ya no incluye /integrations porque se monta en app.use("/integrations", ...)
-  if (req.path === "/oauth/whatsapp/callback" || 
-      req.path === "/oauth/instagram/callback" ||
+  if (req.path === "/oauth/instagram/callback" ||
       req.path === "/test-callback" ||
       req.path === "/debug/simple-test" ||
       req.path === "/debug/callback-test" ||
@@ -603,7 +367,7 @@ router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /integrations/connect/whatsapp
- * Inicia el flujo OAuth para conectar WhatsApp Business
+ * Inicia la conexión de WhatsApp Business usando Twilio
  */
 router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
   try {
@@ -616,14 +380,16 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
       return res.status(401).json(errorResponse);
     }
 
-    if (!config.metaAppId) {
-      logIntegrationError(new Error('Meta App ID not configured'), userId, 'whatsapp_connect_start', {
-        hasAppId: !!config.metaAppId
+    // Verificar configuración de Twilio
+    if (!config.twilioAccountSid || !config.twilioAuthToken) {
+      logIntegrationError(new Error('Twilio not configured'), userId, 'whatsapp_connect_start', {
+        hasAccountSid: !!config.twilioAccountSid,
+        hasAuthToken: !!config.twilioAuthToken
       });
       
       const errorResponse: ApiErrorResponse = { 
-        error: "meta_app_not_configured",
-        message: "META_APP_ID no está configurado"
+        error: "twilio_not_configured",
+        message: "Twilio no está configurado"
       };
       return res.status(500).json(errorResponse);
     }
@@ -631,27 +397,12 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
     // Verificar límites de integraciones
     const limitsCheck = await checkIntegrationLimits(userId);
     if (!limitsCheck.canConnect) {
-      // Verificar si está en período de prueba gratuito
-      const user = await User.findById(userId);
-      if (user && user.isFreeTrialActive()) {
-        const errorResponse: ApiErrorResponse = {
-          error: "free_trial_limit_reached",
-          message: `Durante el período de prueba gratuito solo puedes conectar ${config.freeTrialMaxIntegrations} integraciones`,
-          details: {
-            maxIntegrations: config.freeTrialMaxIntegrations,
-          currentIntegrations: limitsCheck.currentIntegrations,
-            allowedProviders: config.freeTrialAllowedProviders
-          }
-        };
-        return res.status(403).json(errorResponse);
-      }
-      
       const errorResponse: ApiErrorResponse = {
         error: "integration_limit_exceeded",
         message: limitsCheck.reason,
         details: {
-        maxIntegrations: limitsCheck.maxIntegrations,
-        currentIntegrations: limitsCheck.currentIntegrations
+          maxIntegrations: limitsCheck.maxIntegrations,
+          currentIntegrations: limitsCheck.currentIntegrations
         }
       };
       return res.status(403).json(errorResponse);
@@ -672,42 +423,128 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
       return res.status(409).json(errorResponse);
     }
 
-    // Generar state para seguridad OAuth
-    const state = `${userId}_${Date.now()}`;
-    
-    // URL de autorización de Meta - Permisos de WhatsApp Business
-    const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?` +
-      `client_id=${config.metaAppId}&` +
-      `redirect_uri=${config.apiUrl}/integrations/oauth/whatsapp/callback&` +
-      `scope=whatsapp_business_management,whatsapp_business_messaging&` +
-      `response_type=code&` +
-      `state=${state}`;
-
     // Log WhatsApp connect attempt
     logIntegrationActivity('whatsapp_connect_start', userId, {
       endpoint: req.path,
       method: req.method,
-      provider: 'whatsapp',
-      state: state,
-      authUrl: authUrl
+      provider: 'whatsapp_twilio'
     });
 
     res.json({ 
-      authUrl,
-      state 
+      message: "Para conectar WhatsApp Business, proporciona tu Phone Number ID y Access Token de Meta",
+      instructions: {
+        step1: "Ve a Meta for Developers",
+        step2: "Crea una App de WhatsApp Business",
+        step3: "Obtén tu Phone Number ID y Access Token",
+        step4: "Usa POST /integrations/whatsapp/credentials para conectarlo"
+      }
     });
+
   } catch (err: any) {
     const userId = req.user?.id || req.user?._id;
     logIntegrationError(err, userId || 'unknown', 'whatsapp_connect_start', {
       endpoint: req.path,
       method: req.method,
-      provider: 'whatsapp',
-      errorType: 'oauth_initialization_error'
+      provider: 'whatsapp_twilio',
+      errorType: 'connection_initialization_error'
     });
     
     const errorResponse: ApiErrorResponse = { 
       error: "whatsapp_connect_failed",
       message: "Error al iniciar conexión con WhatsApp",
+      details: config.isDevelopment ? err.message : undefined
+    };
+    res.status(500).json(errorResponse);
+  }
+});
+
+/**
+ * POST /integrations/whatsapp/credentials
+ * Conecta WhatsApp Business usando credenciales de Meta del usuario
+ */
+router.post("/whatsapp/credentials", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      const errorResponse: ApiErrorResponse = { 
+        error: "authentication_required",
+        message: "Token de autenticación requerido"
+      };
+      return res.status(401).json(errorResponse);
+    }
+
+    const { phoneNumberId, accessToken, phoneNumber } = req.body;
+
+    if (!phoneNumberId || !accessToken) {
+      const errorResponse: ApiErrorResponse = { 
+        error: "missing_credentials",
+        message: "Phone Number ID y Access Token son requeridos"
+      };
+      return res.status(400).json(errorResponse);
+    }
+
+    // Verificar límites de integraciones
+    const limitsCheck = await checkIntegrationLimits(userId);
+    if (!limitsCheck.canConnect) {
+      const errorResponse: ApiErrorResponse = {
+        error: "integration_limit_exceeded",
+        message: limitsCheck.reason,
+        details: {
+          maxIntegrations: limitsCheck.maxIntegrations,
+          currentIntegrations: limitsCheck.currentIntegrations
+        }
+      };
+      return res.status(403).json(errorResponse);
+    }
+
+    // Crear o actualizar integración
+    const integration = await Integration.findOneAndUpdate(
+      { userId, provider: "whatsapp" },
+      {
+        userId: new Types.ObjectId(userId),
+        provider: "whatsapp",
+        externalId: phoneNumberId,
+        phoneNumberId: phoneNumberId,
+        accessToken: accessToken,
+        name: phoneNumber ? `WhatsApp Business - ${phoneNumber}` : `WhatsApp Business - ${phoneNumberId}`,
+        status: "pending"
+      },
+      { upsert: true, new: true }
+    );
+
+    // Sincronizar para obtener metadata
+    await syncIntegration(integration);
+
+    // Log successful WhatsApp integration
+    logIntegrationSuccess('whatsapp_credentials_connected', userId, {
+      integrationId: (integration as any)._id?.toString() || 'unknown',
+      phoneNumberId: phoneNumberId,
+      phoneNumber: phoneNumber
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "WhatsApp Business conectado exitosamente",
+      integration: {
+        _id: integration._id,
+        provider: integration.provider,
+        name: integration.name,
+        status: integration.status,
+        phoneNumberId: integration.phoneNumberId
+      }
+    });
+
+  } catch (err: any) {
+    const userId = req.user?.id || req.user?._id;
+    logIntegrationError(err, userId || 'unknown', 'whatsapp_credentials_connect', {
+      endpoint: req.path,
+      method: req.method,
+      provider: 'whatsapp_twilio'
+    });
+    
+    const errorResponse: ApiErrorResponse = { 
+      error: "whatsapp_connect_failed",
+      message: "Error al conectar WhatsApp Business",
       details: config.isDevelopment ? err.message : undefined
     };
     res.status(500).json(errorResponse);
@@ -1035,7 +872,6 @@ router.get("/debug/flow-status", async (req: AuthRequest, res: Response) => {
     // 4. Generar URLs de prueba
     const testUrls = {
       connectInstagram: `${config.apiUrl}/integrations/connect/instagram`,
-      connectWhatsApp: `${config.apiUrl}/integrations/connect/whatsapp`,
       simulateSuccess: `${config.apiUrl}/integrations/debug/simulate-callback?userId=${userId}&provider=instagram&success=true`,
       simulateError: `${config.apiUrl}/integrations/debug/simulate-callback?userId=${userId}&provider=instagram&success=false&error=oauth_denied`
     };
@@ -1067,7 +903,7 @@ router.get("/debug/flow-status", async (req: AuthRequest, res: Response) => {
     }
 
     if (existingIntegrations.length === 0) {
-      result.nextSteps.push("🔄 No hay integraciones. Probar conectar Instagram/WhatsApp");
+      result.nextSteps.push("🔄 No hay integraciones. Probar conectar Instagram");
     }
 
     const pendingIntegrations = existingIntegrations.filter(i => i.status === 'pending');
@@ -1109,240 +945,7 @@ router.get("/test-callback", async (req: Request, res: Response) => {
   });
 });
 
-/**
- * GET /integrations/oauth/instagram/callback
- * Callback del OAuth de Instagram
- */
-router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
-  console.log("🚀 INICIO: OAuth Callback recibido");
-  console.log("  - Timestamp:", new Date().toISOString());
-  console.log("  - URL completa:", req.url);
-  console.log("  - Path:", req.path);
-  console.log("  - Method:", req.method);
-  
-  // Log del inicio del callback
-  logger.info('WhatsApp OAuth Callback Started', {
-    endpoint: req.path,
-    method: req.method,
-    query: req.query,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip || req.connection.remoteAddress,
-    timestamp: new Date().toISOString()
-  });
-  
-  // Asegurar que siempre se haga una redirección
-  try {
-    console.log("🔍 OAuth Callback recibido:");
-    console.log("  - URL completa:", req.url);
-    console.log("  - Path:", req.path);
-    console.log("  - Query params:", req.query);
-    console.log("  - Code:", req.query.code);
-    console.log("  - State:", req.query.state);
-    console.log("  - Error:", req.query.error);
-    console.log("  - Headers:", req.headers);
-    
-    const { code, state, error } = req.query;
-
-    if (error) {
-      console.log("❌ Error en OAuth:", error);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=oauth_denied`);
-    }
-
-    if (!code || !state) {
-      console.log("❌ Missing code or state:", { code: !!code, state: !!state });
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=missing_code`);
-    }
-
-    // Extraer userId del state
-    const userId = state.toString().split('_')[0];
-    if (!userId) {
-      console.log("❌ Invalid state format:", state);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=invalid_state`);
-    }
-
-    console.log("✅ Validando configuración Meta:", {
-      hasAppId: !!config.metaAppId,
-      hasAppSecret: !!config.metaAppSecret,
-      apiUrl: config.apiUrl,
-      frontendUrl: config.frontendUrl
-    });
-
-    // Verificar que las credenciales estén configuradas
-    if (!config.metaAppId || !config.metaAppSecret) {
-      console.error("❌ Credenciales de Meta no configuradas:", {
-        hasAppId: !!config.metaAppId,
-        hasAppSecret: !!config.metaAppSecret
-      });
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=meta_not_configured&errorMessage=${encodeURIComponent('Credenciales de Meta no configuradas')}`);
-    }
-
-    // Intercambiar código por token de acceso
-    console.log("🔄 Intercambiando código por token...");
-    const tokenResponse = await axios.post(
-      'https://graph.facebook.com/v19.0/oauth/access_token',
-      {
-        client_id: config.metaAppId,
-        client_secret: config.metaAppSecret,
-        redirect_uri: `${config.apiUrl}/integrations/oauth/whatsapp/callback`,
-        code: code
-      }
-    );
-
-    console.log("✅ Token recibido:", tokenResponse.data);
-    const { access_token } = tokenResponse.data;
-
-    // Obtener información del token (para verificar permisos)
-    console.log("🔍 Verificando token...");
-    const tokenInfo = await axios.get(
-      `https://graph.facebook.com/v19.0/me`,
-      {
-        params: { 
-          access_token,
-          appsecret_proof: generateAppSecretProof(access_token)
-        }
-      }
-    );
-
-    console.log("✅ Token verificado:", tokenInfo.data);
-
-    // Obtener WhatsApp Business Account ID
-    console.log("🔍 Obteniendo WhatsApp Business Account...");
-    const wabaResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/me/businesses`,
-      {
-        params: { 
-          access_token,
-          fields: 'id,name,whatsapp_business_accounts',
-          appsecret_proof: generateAppSecretProof(access_token)
-        }
-      }
-    );
-
-    console.log("✅ WABA response:", wabaResponse.data);
-
-    // Por ahora, usamos el primer WABA disponible
-    const waba = wabaResponse.data.data?.[0];
-    if (!waba) {
-      console.log("❌ No WABA found in response:", wabaResponse.data);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_waba_found`);
-    }
-
-    console.log("✅ WABA encontrado:", waba);
-
-    // Obtener phone number ID
-    console.log("🔍 Obteniendo phone numbers...");
-    const phoneNumbersResponse = await axios.get(
-      `https://graph.facebook.com/v19.0/${waba.whatsapp_business_accounts.data[0].id}/phone_numbers`,
-      {
-        params: { 
-          access_token,
-          appsecret_proof: generateAppSecretProof(access_token)
-        }
-      }
-    );
-
-    console.log("✅ Phone numbers response:", phoneNumbersResponse.data);
-
-    const phoneNumber = phoneNumbersResponse.data.data?.[0];
-    if (!phoneNumber) {
-      console.log("❌ No phone number found:", phoneNumbersResponse.data);
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=no_phone_number`);
-    }
-
-    console.log("✅ Phone number encontrado:", phoneNumber);
-
-    // Crear o actualizar integración
-    console.log("🔍 Creando/actualizando integración...");
-    const integration = await Integration.findOneAndUpdate(
-      { userId, provider: "whatsapp" },
-      {
-        userId: new Types.ObjectId(userId),
-        provider: "whatsapp",
-        externalId: waba.whatsapp_business_accounts.data[0].id,
-        phoneNumberId: phoneNumber.id,
-        accessToken: access_token,
-        name: `WhatsApp Business - ${phoneNumber.display_phone_number}`,
-        status: "pending"
-      },
-      { upsert: true, new: true }
-    );
-
-    console.log("✅ Integración creada/actualizada:", integration);
-
-    // Sincronizar para obtener metadata
-    console.log("🔍 Sincronizando integración...");
-    await syncIntegration(integration);
-
-    // Log successful WhatsApp integration
-    logIntegrationSuccess('whatsapp_oauth_callback', userId, {
-      integrationId: (integration as any)._id?.toString() || 'unknown',
-      externalId: waba.whatsapp_business_accounts.data[0].id,
-      phoneNumberId: phoneNumber.id,
-      phoneNumber: phoneNumber.display_phone_number,
-      endpoint: req.path,
-      method: req.method,
-      provider: 'whatsapp'
-    });
-
-    console.log("✅ ÉXITO: Redirigiendo al frontend con éxito");
-    const successUrl = `${config.frontendUrl}/dashboard/integrations?success=whatsapp_connected`;
-    console.log("🔗 URL de redirección:", successUrl);
-    res.redirect(successUrl);
-  } catch (err: any) {
-    const userId = req.query.state ? req.query.state.toString().split('_')[0] : "unknown";
-    
-    // Log detallado del error
-    console.error("❌ ERROR en callback de WhatsApp:", {
-      message: err?.message,
-      response: err?.response?.data,
-      status: err?.response?.status,
-      config: {
-        url: err?.config?.url,
-        method: err?.config?.method,
-        data: err?.config?.data
-      },
-      query: req.query,
-      userId: userId
-    });
-    
-    // Log WhatsApp callback error
-    logIntegrationError(err, userId, "whatsapp_oauth_callback", {
-      endpoint: req.path,
-      method: req.method,
-      provider: 'whatsapp',
-      errorResponse: err?.response?.data,
-      errorMessage: err?.message,
-      query: req.query
-    });
-    
-    console.error("whatsapp_oauth_callback_failed:", err?.response?.data || err?.message);
-    
-    // Determinar el tipo de error específico
-    let errorType = "whatsapp_oauth_failed";
-    let errorMessage = "Error al conectar WhatsApp";
-    
-    if (err?.response?.status === 401) {
-      errorType = "whatsapp_unauthorized";
-      errorMessage = "No autorizado para conectar WhatsApp";
-    } else if (err?.response?.status === 400) {
-      errorType = "whatsapp_invalid_request";
-      errorMessage = "Solicitud inválida a WhatsApp";
-    } else if (err?.message?.includes("ENOTFOUND") || err?.message?.includes("ECONNREFUSED")) {
-      errorType = "whatsapp_network_error";
-      errorMessage = "Error de conexión con WhatsApp";
-    } else if (err?.message?.includes("no WABA")) {
-      errorType = "whatsapp_no_business_account";
-      errorMessage = "No se encontró cuenta de WhatsApp Business";
-    } else if (err?.message?.includes("no phone number")) {
-      errorType = "whatsapp_no_phone_number";
-      errorMessage = "No se encontró número de teléfono en WhatsApp Business";
-    }
-    
-    const redirectUrl = `${config.frontendUrl}/dashboard/integrations?error=${errorType}&errorMessage=${encodeURIComponent(errorMessage)}`;
-    console.log("❌ Redirigiendo con error:", redirectUrl);
-    res.redirect(redirectUrl);
-  }
-});
+// Duplicate Instagram callback removed
 
 /**
  * POST /integrations
@@ -1727,8 +1330,7 @@ router.post("/send-instagram", async (req: AuthRequest, res: Response) => {
 
 /**
  * POST /integrations/send-whatsapp
- * Envía un mensaje de WhatsApp usando la integración del cliente
- * ARQUITECTURA SaaS: Usa el token del cliente, no el token de sistema
+ * Envía un mensaje de WhatsApp usando Twilio con las credenciales del usuario
  */
 router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
   try {
@@ -1741,7 +1343,7 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "missing_to_or_message" });
     }
 
-    // Buscar la integración de WhatsApp del cliente
+    // Buscar la integración de WhatsApp del usuario
     const integration = await Integration.findOne({
       userId,
       provider: "whatsapp",
@@ -1751,35 +1353,49 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
     if (!integration || !integration.accessToken || !integration.phoneNumberId) {
       return res.status(400).json({ 
         error: "whatsapp_not_connected",
-        message: "El cliente debe conectar su WhatsApp Business primero"
+        message: "El usuario debe conectar su WhatsApp Business primero"
       });
     }
 
-    // Usar el token del cliente (no el token de sistema)
-    const response = await axios.post(
-      `https://graph.facebook.com/v19.0/${integration.phoneNumberId}/messages`,
+    // Importar el servicio de Twilio
+    const { sendWhatsAppMessage } = await import('../services/twilioWhatsAppService');
+
+    // Enviar mensaje usando Twilio con las credenciales del usuario
+    const result = await sendWhatsAppMessage(
       {
-        messaging_product: "whatsapp",
         to: to,
-        type: "text",
-        text: {
-          body: message
-        }
+        body: message
       },
-      {
-        headers: {
-          'Authorization': `Bearer ${integration.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
+      integration.phoneNumberId
     );
 
-    res.json({ 
-      success: true, 
-      messageId: response.data.messages[0].id,
-      response: response.data 
-    });
+    if (result.success) {
+      // Log successful message send
+      logIntegrationActivity('whatsapp_message_sent', userId, {
+        messageId: result.messageId,
+        to: to,
+        provider: 'whatsapp_twilio'
+      });
+
+      res.json({ 
+        success: true, 
+        messageId: result.messageId,
+        sid: result.sid,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).json({ 
+        error: "whatsapp_send_failed",
+        message: result.error || "Error al enviar mensaje"
+      });
+    }
+
   } catch (err: any) {
+    const userId = req.user?.id || req.user?._id;
+    logIntegrationError(err, userId || 'unknown', 'whatsapp_send_message', {
+      provider: 'whatsapp_twilio'
+    });
+    
     console.error("whatsapp_send_failed:", err?.response?.data || err?.message);
     res.status(500).json({ 
       error: "whatsapp_send_failed",
@@ -1955,6 +1571,120 @@ router.post("/admin/create-test-phone", async (req: AuthRequest, res: Response) 
     res.status(500).json({ 
       error: "create_test_phone_failed",
       details: err?.response?.data || err?.message 
+    });
+  }
+});
+
+/**
+ * POST /integrations/fix-stripe-radar
+ * Endpoint para manejar problemas de Stripe Radar en modo test
+ */
+router.post("/fix-stripe-radar", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    // Buscar suscripciones con estado past_due o unpaid
+    const subscriptions = await Subscription.find({
+      userId,
+      status: { $in: ['past_due', 'unpaid'] }
+    });
+
+    if (subscriptions.length === 0) {
+      return res.json({
+        success: true,
+        message: "No hay suscripciones con problemas de pago"
+      });
+    }
+
+    // Actualizar suscripciones a estado activo (solo en modo test)
+    if (config.isDevelopment || config.nodeEnv === 'development') {
+      await Promise.all(subscriptions.map(sub => 
+        Subscription.findByIdAndUpdate(sub._id, {
+          status: 'active',
+          lastPaymentAttempt: new Date()
+        })
+      ));
+
+      res.json({
+        success: true,
+        message: "Suscripciones actualizadas a estado activo (modo test)",
+        subscriptionsFixed: subscriptions.length
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "Esta función solo está disponible en modo desarrollo"
+      });
+    }
+
+  } catch (error: any) {
+    console.error("Error fixing Stripe Radar issue:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error al arreglar problema de Stripe Radar",
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /integrations/twilio/test
+ * Endpoint de prueba para verificar configuración de Twilio
+ */
+router.get("/twilio/test", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    // Importar el servicio de Twilio
+    const { verifyTwilioConfig, sendWhatsAppMessage } = await import('../services/twilioWhatsAppService');
+
+    // Verificar configuración
+    const configResult = await verifyTwilioConfig();
+
+    if (!configResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: "Twilio configuration failed",
+        details: configResult.error
+      });
+    }
+
+    // Probar envío de mensaje (solo si se proporciona un número de prueba)
+    const { testNumber } = req.query;
+    let testResult = null;
+
+    if (testNumber) {
+      testResult = await sendWhatsAppMessage({
+        to: testNumber as string,
+        body: "🧪 Mensaje de prueba desde NEXLY - Twilio WhatsApp funcionando correctamente!"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Twilio WhatsApp configurado correctamente",
+      config: {
+        accountSid: configResult.accountSid,
+        phoneNumbers: configResult.phoneNumbers,
+        sandboxNumber: config.twilioWhatsAppNumber
+      },
+      test: testResult ? {
+        sent: testResult.success,
+        messageId: testResult.messageId,
+        error: testResult.error
+      } : {
+        message: "Usa ?testNumber=whatsapp:+tu_numero para probar envío"
+      }
+    });
+
+  } catch (error: any) {
+    console.error("Twilio test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: "Twilio test failed",
+      details: error.message
     });
   }
 });

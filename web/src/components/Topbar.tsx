@@ -32,20 +32,20 @@ export default function Topbar() {
     
     if (status.trialActive) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} Trial`;
-      badgeColor = 'bg-blue-600 text-white';
+      badgeColor = 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30';
     } else if (status.active) {
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
-      badgeColor = sub.planType === 'basic' ? 'bg-green-600 text-white' : 'bg-purple-600 text-white';
+      badgeColor = sub.planType === 'basic' ? 'bg-accent-green/20 text-accent-green border border-accent-green/30' : 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30';
     } else if (status.paused) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Pausado)`;
-      badgeColor = 'bg-orange-600 text-white';
+      badgeColor = 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30';
     } else if (status.inGracePeriod) {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Gracia)`;
-      badgeColor = 'bg-yellow-600 text-white';
+      badgeColor = 'bg-warning/20 text-warning border border-warning/30';
     } else {
       // Si no está en ningún estado activo, mostrar el plan base
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
-      badgeColor = 'bg-gray-600 text-white';
+      badgeColor = 'bg-muted text-muted-foreground border border-border';
     }
     
     return (

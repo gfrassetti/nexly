@@ -28,6 +28,11 @@ export const config = {
   metaWabaId: process.env.META_WABA_ID || "",
   
   
+  // Twilio Configuration
+  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || "AC8cee5d9e364a2931a091a96a645dee76",
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || "",
+  twilioWhatsAppNumber: process.env.TWILIO_WHATSAPP_NUMBER || "whatsapp:+14155238886",
+  
   // Stripe Configuration
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
   stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || "",
@@ -45,6 +50,6 @@ export const config = {
   isDevelopment: process.env.NODE_ENV === "development",
   
   // Integration Limits
-  freeTrialMaxIntegrations: parseInt(process.env.FREE_TRIAL_MAX_INTEGRATIONS || "2"),
-  freeTrialAllowedProviders: (process.env.FREE_TRIAL_ALLOWED_PROVIDERS || "whatsapp,instagram").split(","),
+  freeTrialMaxIntegrations: 2,
+  freeTrialAllowedProviders: ["whatsapp", "instagram"],
 };

@@ -12,21 +12,21 @@ export default function InvoiceHistory({ className = "" }: InvoiceHistoryProps) 
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
+      <div className={`bg-muted border border-border rounded-lg ${className}`}>
+        <div className="p-6 border-b border-border">
+          <h2 className="text-sm font-medium text-foreground">Historial de facturas</h2>
         </div>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+              <div key={i} className="flex justify-between items-center py-3 border-b border-border last:border-b-0">
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-32"></div>
-                  <div className="h-3 bg-gray-200 rounded w-24"></div>
+                  <div className="h-4 bg-background rounded w-32"></div>
+                  <div className="h-3 bg-background rounded w-24"></div>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-20"></div>
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                  <div className="h-4 bg-background rounded w-20"></div>
+                  <div className="h-3 bg-background rounded w-16"></div>
                 </div>
               </div>
             ))}
@@ -38,19 +38,19 @@ export default function InvoiceHistory({ className = "" }: InvoiceHistoryProps) 
 
   if (error) {
     return (
-      <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
+      <div className={`bg-muted border border-border rounded-lg ${className}`}>
+        <div className="p-6 border-b border-border">
+          <h2 className="text-sm font-medium text-foreground">Historial de facturas</h2>
         </div>
         <div className="p-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted-foreground">
             <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 mx-auto text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
             <p className="text-sm">Error al cargar las facturas</p>
-            <p className="text-xs text-gray-400 mt-1">{error}</p>
+            <p className="text-xs text-muted-foreground mt-1">{error}</p>
           </div>
         </div>
       </div>
@@ -59,19 +59,19 @@ export default function InvoiceHistory({ className = "" }: InvoiceHistoryProps) 
 
   if (!invoices || invoices.length === 0) {
     return (
-      <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
+      <div className={`bg-muted border border-border rounded-lg ${className}`}>
+        <div className="p-6 border-b border-border">
+          <h2 className="text-sm font-medium text-foreground">Historial de facturas</h2>
         </div>
         <div className="p-6">
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted-foreground">
             <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 mx-auto text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             <p className="text-sm">No hay facturas disponibles</p>
-            <p className="text-xs text-gray-400 mt-1">Las facturas aparecerán aquí una vez que comiences a usar el servicio</p>
+            <p className="text-xs text-muted-foreground mt-1">Las facturas aparecerán aquí una vez que comiences a usar el servicio</p>
           </div>
         </div>
       </div>
@@ -79,12 +79,12 @@ export default function InvoiceHistory({ className = "" }: InvoiceHistoryProps) 
   }
 
   return (
-    <div className={`bg-white rounded-xl shadow-lg border border-gray-100 ${className}`}>
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-xl font-bold text-gray-900">Historial de facturas</h2>
-        <p className="text-sm text-gray-500 mt-1">{invoices.length} factura{invoices.length !== 1 ? 's' : ''}</p>
+    <div className={`bg-muted border border-border rounded-lg ${className}`}>
+      <div className="p-6 border-b border-border">
+        <h2 className="text-sm font-medium text-foreground">Historial de facturas</h2>
+        <p className="text-xs text-muted-foreground mt-1">{invoices.length} factura{invoices.length !== 1 ? 's' : ''}</p>
       </div>
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-border">
         {invoices.map((invoice) => (
           <InvoiceItem key={invoice.id} invoice={invoice} />
         ))}
@@ -111,28 +111,28 @@ function InvoiceItem({ invoice }: InvoiceItemProps) {
   };
 
   return (
-    <div className="p-6 hover:bg-gray-50 transition-colors">
+    <div className="p-6 hover:bg-muted/50 transition-colors">
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-3">
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-foreground">
                 {invoice.number || `Factura ${invoice.id.slice(-8)}`}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {formatInvoiceDate(invoice.created)}
               </p>
             </div>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getInvoiceStatusColor(invoice.status)}`}>
+            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getInvoiceStatusColor(invoice.status)}`}>
               {getInvoiceStatusLabel(invoice.status)}
             </span>
           </div>
           
           {invoice.description && (
-            <p className="text-sm text-gray-600 mt-1">{invoice.description}</p>
+            <p className="text-xs text-muted-foreground mt-1">{invoice.description}</p>
           )}
           
-          <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+          <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
             <span>Período: {formatInvoiceDate(invoice.period_start)} - {formatInvoiceDate(invoice.period_end)}</span>
             {invoice.customer_email && (
               <span>• {invoice.customer_email}</span>
@@ -142,11 +142,11 @@ function InvoiceItem({ invoice }: InvoiceItemProps) {
 
         <div className="flex items-center space-x-4">
           <div className="text-right">
-            <p className="text-lg font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-foreground">
               {formatInvoiceAmount(invoice.total, invoice.currency)}
             </p>
             {invoice.amount_due > 0 && invoice.amount_paid < invoice.total && (
-              <p className="text-sm text-orange-600">
+              <p className="text-xs text-accent-orange">
                 Pendiente: {formatInvoiceAmount(invoice.amount_due, invoice.currency)}
               </p>
             )}
@@ -156,7 +156,7 @@ function InvoiceItem({ invoice }: InvoiceItemProps) {
             {invoice.hosted_invoice_url && (
               <button
                 onClick={handleView}
-                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-2 py-1 border border-border text-xs font-medium rounded-md text-foreground bg-muted hover:bg-muted/80 transition-colors"
               >
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -169,7 +169,7 @@ function InvoiceItem({ invoice }: InvoiceItemProps) {
             {invoice.invoice_pdf && (
               <button
                 onClick={handleDownload}
-                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-2 py-1 border border-border text-xs font-medium rounded-md text-foreground bg-muted hover:bg-muted/80 transition-colors"
               >
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

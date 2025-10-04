@@ -51,8 +51,8 @@ export default function SubscriptionStatus() {
               disabled={isRateLimited}
               className={`px-4 py-2 rounded-lg transition-colors text-sm ${
                 isRateLimited 
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                  : 'bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-white'
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed border border-border' 
+                  : 'bg-accent-blue/20 hover:bg-accent-blue/30 text-accent-blue border border-accent-blue/30'
               }`}
             >
               Reintentar
@@ -60,7 +60,7 @@ export default function SubscriptionStatus() {
             {/* {!isRateLimited && (
               <button
                 onClick={() => createPaymentLink()}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+                className="bg-warning/20 hover:bg-warning/30 text-warning border border-warning/30 px-4 py-2 rounded-lg transition-colors text-sm"
                 disabled={loading}
               >
                 {loading ? 'Procesando...' : 'Completar Pago'}
@@ -87,7 +87,7 @@ export default function SubscriptionStatus() {
                     console.error('Error resetting rate limit:', error);
                   }
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+                className="bg-accent-blue/20 hover:bg-accent-blue/30 text-accent-blue border border-accent-blue/30 px-4 py-2 rounded-lg transition-colors text-sm"
               >
                 Reset Rate Limit (Dev)
               </button>
@@ -101,15 +101,15 @@ export default function SubscriptionStatus() {
   // Estado de pago incompleto (requiere acción del usuario)
   if (status.incomplete && !status.trialActive && !status.active) {
     return (
-      <div className="bg-orange-900/20 border border-orange-700 rounded-lg p-6">
+      <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-lg p-6">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-accent-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
-            <h3 className="text-lg font-semibold text-orange-400">Pago Requiere Acción</h3>
+            <h3 className="text-lg font-semibold text-accent-orange">Pago Requiere Acción</h3>
           </div>
-          <p className="text-orange-300 mb-6">
+          <p className="text-accent-orange/80 mb-6">
             Tu pago requiere autenticación adicional (3D Secure) o hay un problema con tu método de pago.
           </p>
           
@@ -120,7 +120,7 @@ export default function SubscriptionStatus() {
                 createStripePaymentLink(selectedPlan as 'basic' | 'premium');
               }}
               disabled={stripeLoading}
-              className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+              className="bg-accent-orange/20 hover:bg-accent-orange/30 disabled:bg-accent-orange/10 disabled:opacity-50 text-accent-orange border border-accent-orange/30 px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
             >
               <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
               <div className="text-left">
@@ -137,15 +137,15 @@ export default function SubscriptionStatus() {
   // Estado de pago vencido
   if (status.pastDue && !status.trialActive && !status.active) {
     return (
-      <div className="bg-red-900/20 border border-red-700 rounded-lg p-6">
+      <div className="bg-accent-red/10 border border-accent-red/20 rounded-lg p-6">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-accent-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="text-lg font-semibold text-red-400">Pago Vencido</h3>
+            <h3 className="text-lg font-semibold text-accent-red">Pago Vencido</h3>
           </div>
-          <p className="text-red-300 mb-6">
+          <p className="text-accent-red/80 mb-6">
             Tu último pago falló. Actualiza tu método de pago para reactivar tu suscripción.
           </p>
           
@@ -162,7 +162,7 @@ export default function SubscriptionStatus() {
                 }
               }}
               disabled={stripeLoading}
-              className="bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+              className="bg-accent-red/20 hover:bg-accent-red/30 disabled:bg-accent-red/10 disabled:opacity-50 text-accent-red border border-accent-red/30 px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
             >
               <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
               <div className="text-left">
@@ -179,15 +179,15 @@ export default function SubscriptionStatus() {
   // Estado pendiente de método de pago - SOLO si realmente está pendiente
   if (status.pendingPaymentMethod && !status.trialActive && !status.active) {
     return (
-      <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-6">
+      <div className="bg-warning/10 border border-warning/20 rounded-lg p-6">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="text-lg font-semibold text-yellow-400">Pago Pendiente</h3>
+            <h3 className="text-lg font-semibold text-warning">Pago Pendiente</h3>
           </div>
-          <p className="text-yellow-300 mb-6">
+          <p className="text-warning/80 mb-6">
             Tu cuenta está registrada pero necesitas completar el método de pago para comenzar tu prueba gratuita.
           </p>
           
@@ -241,11 +241,11 @@ export default function SubscriptionStatus() {
   return (
     <div className={`rounded-lg p-6 border ${
       isExpired ? 'bg-nexly-light-blue/20 border-nexly-light-blue/50' :
-      sub.isPaused ? 'bg-orange-900/20 border-orange-700' :
-      sub.isInGracePeriod ? 'bg-yellow-900/20 border-yellow-700' :
-      isTrialExpiring ? 'bg-yellow-900/20 border-yellow-700' :
-      sub.isActive ? 'bg-green-900/20 border-green-700' :
-      'bg-neutral-800 border-neutral-700'
+      sub.isPaused ? 'bg-accent-orange/10 border-accent-orange/20' :
+      sub.isInGracePeriod ? 'bg-warning/10 border-warning/20' :
+      isTrialExpiring ? 'bg-warning/10 border-warning/20' :
+      sub.isActive ? 'bg-accent-green/10 border-accent-green/20' :
+      'bg-muted border-border'
     }`}>
       <div className="flex items-center justify-between">
         <div>
@@ -253,15 +253,15 @@ export default function SubscriptionStatus() {
             <h3 className="text-lg font-semibold text-white">
 {sub.planType === 'basic' ? 'Plan Básico' : 'Plan Premium'}
             </h3>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              sub.status === 'active' ? 'bg-green-600 text-white' :
-              sub.status === 'trialing' || (sub.status as any) === 'trial' ? 'bg-blue-600 text-white' :
-              sub.status === 'paused' ? 'bg-orange-600 text-white' :
-              sub.status === 'incomplete' ? 'bg-yellow-600 text-white' :
-              sub.status === 'past_due' ? 'bg-red-600 text-white' :
-              sub.status === 'canceled' ? 'bg-nexly-light-blue text-white' :
-              sub.status === 'unpaid' ? 'bg-red-500 text-white' :
-              'bg-gray-600 text-white'
+            <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+              sub.status === 'active' ? 'bg-accent-green/20 text-accent-green border border-accent-green/30' :
+              sub.status === 'trialing' || (sub.status as any) === 'trial' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
+              sub.status === 'paused' ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30' :
+              sub.status === 'incomplete' ? 'bg-warning/20 text-warning border border-warning/30' :
+              sub.status === 'past_due' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
+              sub.status === 'canceled' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
+              sub.status === 'unpaid' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
+              'bg-muted text-muted-foreground border border-border'
             }`}>
               {
                sub.status === 'active' ? 'Activo' :
@@ -285,7 +285,7 @@ export default function SubscriptionStatus() {
                 )}
               </p>
               {isTrialExpiring && (
-                <p className="text-yellow-400 mt-1">
+                <p className="text-warning mt-1">
                   ⚠️ Tu prueba gratuita está por terminar
                 </p>
               )}
@@ -293,19 +293,19 @@ export default function SubscriptionStatus() {
           )}
 
           {sub.isActive && (
-            <p className="text-sm text-green-400">
+            <p className="text-sm text-accent-green">
               ✅ Suscripción activa y renovando automáticamente
             </p>
           )}
 
           {sub.isPaused && (
-            <p className="text-sm text-orange-400">
+            <p className="text-sm text-accent-orange">
               ⏸️ Suscripción pausada. Puedes reactivarla cuando quieras
             </p>
           )}
 
           {sub.isInGracePeriod && (
-            <p className="text-sm text-yellow-400">
+            <p className="text-sm text-warning">
               ⏰ Período de gracia: {sub.gracePeriodDaysRemaining} días restantes
             </p>
           )}
@@ -333,7 +333,7 @@ export default function SubscriptionStatus() {
           {isExpired && (
             <button
               onClick={() => createPaymentLink()}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green border border-accent-green/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Volver a comprar
             </button>
@@ -343,7 +343,7 @@ export default function SubscriptionStatus() {
           {status.paused && (
             <button
               onClick={reactivateSubscription}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green border border-accent-green/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Reactivar
             </button>
@@ -353,7 +353,7 @@ export default function SubscriptionStatus() {
           {status.active && (
             <button
               onClick={pauseSubscription}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              className="bg-accent-orange/20 hover:bg-accent-orange/30 text-accent-orange border border-accent-orange/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Pausar
             </button>
@@ -391,7 +391,7 @@ export default function SubscriptionStatus() {
           <div className="w-full bg-neutral-700 rounded-full h-2">
             <div 
               className={`h-2 rounded-full transition-all duration-300 ${
-                isTrialExpiring ? 'bg-yellow-500' : 'bg-blue-500'
+                isTrialExpiring ? 'bg-warning' : 'bg-accent-blue'
               }`}
               style={{ width: `${Math.max(0, ((7 - sub.daysRemaining) / 7) * 100)}%` }}
             ></div>
@@ -408,7 +408,7 @@ export default function SubscriptionStatus() {
           </div>
           <div className="w-full bg-neutral-700 rounded-full h-2">
             <div 
-              className="h-2 rounded-full transition-all duration-300 bg-yellow-500"
+              className="h-2 rounded-full transition-all duration-300 bg-warning"
               style={{ width: `${Math.max(0, ((7 - sub.gracePeriodDaysRemaining) / 7) * 100)}%` }}
             ></div>
           </div>

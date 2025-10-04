@@ -36,20 +36,20 @@ export default function BillingInfo() {
 
   // Función para obtener el color del badge
   const getStatusColor = useMemo(() => {
-    if (!subscription?.subscription) return "bg-gray-100 text-gray-800";
+    if (!subscription?.subscription) return "bg-muted text-muted-foreground border border-border";
     
     const statusColors: Record<string, string> = {
-      'trialing': 'bg-blue-100 text-blue-800',
-      'active': 'bg-green-100 text-green-800',
-      'incomplete': 'bg-yellow-100 text-yellow-800',
-      'incomplete_expired': 'bg-red-100 text-red-800',
-      'past_due': 'bg-orange-100 text-orange-800',
-      'canceled': 'bg-red-100 text-red-800',
-      'unpaid': 'bg-red-100 text-red-800',
-      'paused': 'bg-gray-100 text-gray-800'
+      'trialing': 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30',
+      'active': 'bg-accent-green/20 text-accent-green border border-accent-green/30',
+      'incomplete': 'bg-warning/20 text-warning border border-warning/30',
+      'incomplete_expired': 'bg-accent-red/20 text-accent-red border border-accent-red/30',
+      'past_due': 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30',
+      'canceled': 'bg-accent-red/20 text-accent-red border border-accent-red/30',
+      'unpaid': 'bg-accent-red/20 text-accent-red border border-accent-red/30',
+      'paused': 'bg-muted text-muted-foreground border border-border'
     };
     
-    return statusColors[subscription.subscription.status] || "bg-gray-100 text-gray-800";
+    return statusColors[subscription.subscription.status] || "bg-muted text-muted-foreground border border-border";
   }, [subscription?.subscription?.status]);
 
   // Función para formatear la fecha
@@ -76,13 +76,13 @@ export default function BillingInfo() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-muted border border-border rounded-lg p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-4 bg-background rounded w-1/4"></div>
             <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-background rounded"></div>
+              <div className="h-4 bg-background rounded w-3/4"></div>
+              <div className="h-4 bg-background rounded w-1/2"></div>
             </div>
           </div>
         </div>
@@ -97,9 +97,9 @@ export default function BillingInfo() {
   if (!subscription?.subscription) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="text-center text-gray-500">
-            <p>No hay suscripción activa</p>
+        <div className="bg-muted border border-border rounded-lg p-6">
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">No hay suscripción activa</p>
           </div>
         </div>
       </div>
@@ -109,49 +109,49 @@ export default function BillingInfo() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Información de facturación actual */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900">Facturación actual</h2>
+        <div className="bg-muted border border-border rounded-lg">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-sm font-medium text-foreground">Facturación actual</h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Estado</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor}`}>
+              <span className="text-xs text-muted-foreground">Estado</span>
+              <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor}`}>
                 {getStatusLabel}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Plan</span>
-              <span className="font-medium text-gray-900">{getPlanName}</span>
+              <span className="text-xs text-muted-foreground">Plan</span>
+              <span className="font-medium text-sm text-foreground">{getPlanName}</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Monto</span>
-              <span className="font-medium text-gray-900">{formatAmount()}</span>
+              <span className="text-xs text-muted-foreground">Monto</span>
+              <span className="font-medium text-sm text-foreground">{formatAmount()}</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Próxima factura</span>
-              <span className="font-medium text-gray-900">
+              <span className="text-xs text-muted-foreground">Próxima factura</span>
+              <span className="font-medium text-sm text-foreground">
                 {formatDate(subscription.subscription.trialEndDate)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Método de pago</span>
-              <span className="font-medium text-gray-900">Método de pago configurado</span>
+              <span className="text-xs text-muted-foreground">Método de pago</span>
+              <span className="font-medium text-sm text-foreground">Método de pago configurado</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Email cliente</span>
-              <span className="font-medium text-gray-900">{user?.email || "-"}</span>
+              <span className="text-xs text-muted-foreground">Email cliente</span>
+              <span className="font-medium text-sm text-foreground">{user?.email || "-"}</span>
             </div>
             
-            <div className="border-t border-gray-100 pt-4">
+            <div className="border-t border-border pt-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">ID de suscripción</span>
-                <span className="font-mono text-sm text-gray-500">
+                <span className="text-xs text-muted-foreground">ID de suscripción</span>
+                <span className="font-mono text-xs text-muted-foreground">
                   {subscription.subscription.stripeSubscriptionId || subscription.subscription.id}
                 </span>
               </div>
@@ -160,22 +160,22 @@ export default function BillingInfo() {
         </div>
 
         {/* Información adicional */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900">Detalles adicionales</h2>
+        <div className="bg-muted border border-border rounded-lg">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-sm font-medium text-foreground">Detalles adicionales</h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Período actual</span>
-              <span className="font-medium text-gray-900">
+              <span className="text-xs text-muted-foreground">Período actual</span>
+              <span className="font-medium text-sm text-foreground">
                 {formatDate(subscription.subscription.trialEndDate)}
               </span>
             </div>
             
             {subscription.subscription.trialEndDate && (
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Fin de prueba</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-xs text-muted-foreground">Fin de prueba</span>
+                <span className="font-medium text-sm text-foreground">
                   {formatDate(subscription.subscription.trialEndDate)}
                 </span>
               </div>
@@ -183,8 +183,8 @@ export default function BillingInfo() {
             
             {subscription.subscription.cancelledAt && (
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Cancelado el</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-xs text-muted-foreground">Cancelado el</span>
+                <span className="font-medium text-sm text-foreground">
                   {formatDate(subscription.subscription.cancelledAt)}
                 </span>
               </div>

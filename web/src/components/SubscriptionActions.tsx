@@ -77,8 +77,8 @@ export default function SubscriptionActions({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-600 text-sm">{error}</p>
+      <div className="bg-accent-red/10 border border-accent-red/20 rounded-lg p-4">
+        <p className="text-accent-red text-sm">{error}</p>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function SubscriptionActions({
           <button
             onClick={handlePause}
             disabled={loading || actionLoading === "pause"}
-            className="w-full px-4 py-2 text-sm font-medium text-orange-700 bg-orange-100 hover:bg-orange-200 disabled:bg-gray-300 rounded-lg transition-colors"
+            className="w-full px-4 py-2 text-sm font-medium text-accent-orange bg-accent-orange/10 hover:bg-accent-orange/20 disabled:bg-muted rounded-lg transition-colors border border-accent-orange/20"
           >
             {actionLoading === "pause" ? "Pausando..." : "Pausar Suscripción"}
           </button>
@@ -98,7 +98,7 @@ export default function SubscriptionActions({
           <button
             onClick={handleCancel}
             disabled={loading || actionLoading === "cancel"}
-            className="w-full px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 disabled:bg-gray-300 rounded-lg transition-colors"
+            className="w-full px-4 py-2 text-sm font-medium text-accent-red bg-accent-red/10 hover:bg-accent-red/20 disabled:bg-muted disabled:text-muted-foreground rounded-lg transition-colors"
           >
             {actionLoading === "cancel" ? "Cancelando..." : "Cancelar Suscripción"}
           </button>
@@ -109,14 +109,14 @@ export default function SubscriptionActions({
         <button
           onClick={handleResume}
           disabled={loading || actionLoading === "resume"}
-          className="w-full px-4 py-2 text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 disabled:bg-gray-300 rounded-lg transition-colors"
+          className="w-full px-4 py-2 text-sm font-medium text-accent-green bg-accent-green/10 hover:bg-accent-green/20 disabled:bg-muted disabled:text-muted-foreground rounded-lg transition-colors"
         >
           {actionLoading === "resume" ? "Reanudando..." : "Reanudar Suscripción"}
         </button>
       )}
 
       {status === "trialing" && (
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-sm text-muted-foreground text-center">
           <p>Tu período de prueba está activo</p>
           <p className="text-xs mt-1">Las opciones de pausa/cancelación estarán disponibles después del período de prueba</p>
         </div>

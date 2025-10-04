@@ -63,7 +63,7 @@ const getStatusColor = (status: string) => {
     case "trialing": return "text-blue-600 bg-blue-50 border-blue-200";
     case "paused": return "text-yellow-600 bg-yellow-50 border-yellow-200";
     case "canceled": return "text-red-600 bg-red-50 border-red-200";
-    case "past_due": return "text-orange-600 bg-orange-50 border-orange-200";
+    case "past_due": return "text-accent-orange bg-accent-orange/10 border-accent-orange/20";
     case "incomplete": return "text-purple-600 bg-purple-50 border-purple-200";
     case "unpaid": return "text-gray-600 bg-gray-50 border-gray-200";
     default: return "text-gray-600 bg-gray-50 border-gray-200";
@@ -193,7 +193,7 @@ export default function SubscriptionInfo() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
-        <span className="ml-2 text-gray-600">Cargando Suscripción...</span>
+        <span className="ml-2 text-muted-foreground text-sm">Cargando Suscripción...</span>
       </div>
     );
   }
@@ -206,17 +206,17 @@ export default function SubscriptionInfo() {
 
   if (!hasActiveSubscription) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="min-h-screen p-6" style={{ background: 'var(--background-gradient)' }}>
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl text-gray-400">●</span>
+          <div className="bg-muted border border-border rounded-lg p-8 text-center">
+            <div className="w-16 h-16 bg-background border border-border rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl text-muted-foreground">●</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Sin Suscripción Activa</h2>
-            <p className="text-gray-600 mb-6">No tienes una suscripción activa. Elige un plan para comenzar.</p>
+            <h2 className="text-lg font-medium text-foreground mb-2">Sin Suscripción Activa</h2>
+            <p className="text-muted-foreground text-sm mb-6">No tienes una suscripción activa. Elige un plan para comenzar.</p>
             <button
               onClick={handleUpgrade}
-              className="bg-gradient-to-r from-nexly-green to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="bg-accent-green/20 border border-accent-green/30 text-accent-green hover:bg-accent-green/30 px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Ver Planes Disponibles
             </button>
@@ -259,21 +259,21 @@ export default function SubscriptionInfo() {
   const actualStatus = stripeSub?.status || sub?.status;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="min-h-screen p-6" style={{ background: 'var(--background-gradient)' }}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mi Suscripción</h1>
-          <p className="text-gray-600">Gestiona tu suscripción y método de pago</p>
+          <h1 className="text-lg font-medium text-foreground mb-2">Mi Suscripción</h1>
+          <p className="text-muted-foreground text-sm">Gestiona tu suscripción y método de pago</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Panel principal de suscripción */}
           <div className="lg:col-span-2 space-y-6">
             {/* Card de estado de suscripción */}
-            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div className="bg-muted border border-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Estado de Suscripción</h2>
+                <h2 className="text-sm font-medium text-foreground">Estado de Suscripción</h2>
                 <div className={`px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(actualStatus)}`}>
                   {getSubscriptionLabel({ ...sub, status: actualStatus })}
                 </div>
@@ -282,14 +282,14 @@ export default function SubscriptionInfo() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">ID de Suscripción</label>
-                    <p className="text-gray-900 font-mono text-sm mt-1 bg-gray-50 px-3 py-2 rounded-lg">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">ID de Suscripción</label>
+                    <p className="text-foreground font-mono text-xs mt-1 bg-background px-3 py-2 rounded-md">
                       {stripeData?.subscription?.id || subscription.subscription?.id || "N/A"}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Plan</label>
-                    <p className="text-lg font-semibold text-gray-900 mt-1 capitalize">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Plan</label>
+                    <p className="text-sm font-semibold text-foreground mt-1 capitalize">
                       {sub?.planType === "basic" ? "Básico" : "Premium"}
                     </p>
                   </div>
@@ -297,15 +297,15 @@ export default function SubscriptionInfo() {
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Monto</label>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Monto</label>
+                    <p className="text-lg font-semibold text-foreground mt-1">
                       ${amount}
-                      <span className="text-sm font-normal text-gray-500 ml-1">/mes</span>
+                      <span className="text-xs font-normal text-muted-foreground ml-1">/mes</span>
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Próxima Renovación</label>
-                    <p className="text-gray-900 mt-1">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Próxima Renovación</label>
+                    <p className="text-sm text-foreground mt-1">
                       {renewalDate}
                     </p>
                   </div>
@@ -314,11 +314,11 @@ export default function SubscriptionInfo() {
             </div>
 
             {/* Card de método de pago */}
-            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Método de Pago</h3>
+            <div className="bg-muted border border-border rounded-lg p-6">
+              <h3 className="text-sm font-medium text-foreground mb-4">Método de Pago</h3>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
+                  <div className="w-12 h-8 bg-background border border-border rounded flex items-center justify-center">
                     <img
                       src={paymentIcons[normalized as keyof typeof paymentIcons] || paymentIcons.default}
                       alt={normalized}
@@ -326,16 +326,16 @@ export default function SubscriptionInfo() {
                     />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-sm text-foreground">
                       {normalized === "visa" ? "Visa" : normalized === "mastercard" ? "Mastercard" : normalized === "amex" ? "American Express" : "Tarjeta"} terminada en {card?.last4 || "****"}
                     </p>
-                    <p className="text-sm text-gray-500">Método de pago por defecto</p>
+                    <p className="text-xs text-muted-foreground">Método de pago por defecto</p>
                   </div>
                 </div>
                 <button
                   onClick={handleOpenPortal}
                   disabled={stripeOperationsLoading}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-300 rounded-lg transition-colors"
+                  className="px-3 py-2 text-xs font-medium text-foreground bg-muted hover:bg-muted/80 disabled:bg-muted/50 rounded-md transition-colors border border-border"
                 >
                   {stripeOperationsLoading ? "Cargando..." : "Cambiar"}
                 </button>
@@ -346,8 +346,8 @@ export default function SubscriptionInfo() {
           {/* Panel lateral de acciones */}
           <div className="space-y-6">
             {/* Acciones de suscripción */}
-            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Acciones</h3>
+            <div className="bg-muted border border-border rounded-lg p-6">
+              <h3 className="text-sm font-medium text-foreground mb-4">Acciones</h3>
               <SubscriptionActions
                 subscriptionId={sub?.stripeSubscriptionId || sub?.id || ""}
                 status={actualStatus}
@@ -360,9 +360,9 @@ export default function SubscriptionInfo() {
             </div>
 
             {/* Información adicional */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-              <h4 className="font-semibold text-blue-900 mb-2">Información</h4>
-              <ul className="text-sm text-blue-800 space-y-2">
+            <div className="bg-muted border border-border rounded-lg p-6">
+              <h4 className="font-medium text-foreground mb-2 text-sm">Información</h4>
+              <ul className="text-xs text-muted-foreground space-y-2">
                 <li>• Pausar mantiene tus datos</li>
                 <li>• Cancelar elimina acceso inmediato</li>
                 <li>• Puedes reactivar en cualquier momento</li>

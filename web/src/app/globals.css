@@ -1,52 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,body,#__next { 
+html, body, #__next { 
   height: 100%; 
   scroll-behavior: smooth;
 }
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Cursor-inspired color palette */
+  --background: linear-gradient(to bottom, #121315, #17191D);
+  --background-solid: #121315; /* Fallback solid color */
+  --foreground: #e6edf3;
+  --muted: rgba(255, 255, 255, 0.03);
+  --muted-foreground: #8b949e;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #238636;
+  --accent-foreground: #ffffff;
+  --destructive: #da3633;
+  --destructive-foreground: #ffffff;
+  --warning: #d29922;
+  --warning-foreground: #ffffff;
+  --success: #238636;
+  --success-foreground: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-background: var(--background-solid);
+  --color-background-gradient: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #191919;
-    --foreground: #ededed;
-  }
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 }
 
 body {
   background: var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-variation-settings: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth scroll mejorado */
+/* Smooth scroll */
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px; /* Offset para sticky navigation */
+  scroll-padding-top: 60px;
 }
 
-/* Mejorar la experiencia de scroll en móviles */
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
-
-/* Respetar preferencias de accesibilidad */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Selection colors */
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+

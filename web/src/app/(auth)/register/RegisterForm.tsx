@@ -66,19 +66,19 @@ export default function RegisterForm() {
             <div className="flex justify-center mb-4">
               <Logo size="md" />
             </div>
-            <h1 className="text-3xl font-bold text-white">Crear cuenta</h1>
-            <p className="text-neutral-400 mt-2">Únete a Nexly hoy</p>
+            <h1 className="text-lg font-medium text-foreground">Crear cuenta</h1>
+            <p className="text-muted-foreground text-sm mt-2">Únete a Nexly hoy</p>
           </div>
       
-      <form onSubmit={onSubmit} className="space-y-6 bg-neutral-800 p-8 rounded-lg border border-neutral-700">
+      <form onSubmit={onSubmit} className="space-y-6 bg-muted border border-border p-8 rounded-lg">
         
         {success && (
-          <div className="p-3 bg-nexly-green/20 border border-nexly-green/50 text-nexly-green rounded">
+          <div className="p-3 bg-accent-green/10 border border-accent-green/20 text-accent-green rounded-lg">
             ✅ Cuenta creada exitosamente.
           </div>
         )}
         
-        {error && <p className="text-sm text-nexly-light-blue">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
         {/* Google Auth Button - TEMPORALMENTE DESHABILITADO */}
         {/* <GoogleAuthButton className="mb-4" />
@@ -94,7 +94,7 @@ export default function RegisterForm() {
 
         <div>
           <input
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+            className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent-green focus:border-transparent transition-colors"
             placeholder="Nombre de usuario"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -103,7 +103,7 @@ export default function RegisterForm() {
 
         <div>
           <input
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+            className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent-green focus:border-transparent transition-colors"
             placeholder="Email"
             type="email"
             value={email}
@@ -113,7 +113,7 @@ export default function RegisterForm() {
 
         <div>
           <input
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+            className="w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent-green focus:border-transparent transition-colors"
             placeholder="Contraseña"
             type="password"
             value={password}
@@ -123,16 +123,16 @@ export default function RegisterForm() {
 
         <button
           disabled={loading || success}
-          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors duration-300"
+          className="w-full bg-accent-green/20 hover:bg-accent-green/30 disabled:bg-muted text-accent-green border border-accent-green/30 hover:border-accent-green/50 font-medium py-3 rounded-lg disabled:opacity-50 transition-colors duration-300"
         >
           {loading ? "Creando cuenta..." : success ? "¡Cuenta creada!" : "Registrarse"}
         </button>
       
         <div className="text-center">
-          <span className="text-neutral-400 text-sm">
+          <span className="text-muted-foreground text-sm">
             ¿Ya tienes cuenta?{" "}
           </span>
-          <Link href="/login" className="text-nexly-teal hover:text-nexly-green text-sm font-medium transition-colors duration-300">
+          <Link href="/login" className="text-accent-green hover:text-accent-green/80 text-sm font-medium transition-colors duration-300">
             Inicia sesión aquí
           </Link>
         </div>

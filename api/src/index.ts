@@ -17,6 +17,7 @@ import analyticsRouter from "./routes/analytics";
 import stripeWebhookRouter from "./routes/stripe/webhook";
 import stripePauseRouter from "./routes/stripe/pause";
 import loggerTestRouter from "./routes/loggerTest";
+import twilioWebhookRouter from "./routes/twilioWebhook";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -129,6 +130,7 @@ app.use("/analytics", analyticsRouter);
 app.use("/stripe/webhook", validateWebhookOrigin, stripeWebhookRouter);
 app.use("/stripe/pause", stripePauseRouter);
 app.use("/loggerTest", loggerTestRouter);
+app.use("/twilio-webhook", twilioWebhookRouter);
 
 // Endpoint raíz
 app.get("/", (req, res) => {
@@ -149,6 +151,7 @@ app.use((req, res) => {
       "/health",
       "/auth",
       "/webhook", 
+      "/twilio-webhook",
       "/contacts",
       "/integrations",
       "/messages",
