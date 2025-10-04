@@ -1330,7 +1330,7 @@ router.post("/send-instagram", async (req: AuthRequest, res: Response) => {
 
 /**
  * POST /integrations/send-whatsapp
- * Envía un mensaje de WhatsApp usando Twilio con las credenciales del usuario
+ * Envía un mensaje de WhatsApp usando Twilio (sin credenciales de Meta)
  */
 router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
   try {
@@ -1343,45 +1343,84 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "missing_to_or_message" });
     }
 
-    // Buscar la integración de WhatsApp del usuario
-    const integration = await Integration.findOne({
-      userId,
-      provider: "whatsapp",
-      status: "linked"
-    });
-
-    if (!integration || !integration.accessToken || !integration.phoneNumberId) {
-      return res.status(400).json({ 
-        error: "whatsapp_not_connected",
-        message: "El usuario debe conectar su WhatsApp Business primero"
-      });
-    }
-
     // Importar el servicio de Twilio
     const { sendWhatsAppMessage } = await import('../services/twilioWhatsAppService');
 
-    // Enviar mensaje usando Twilio con las credenciales del usuario
+    // Enviar mensaje usando Twilio (sin credenciales de usuario)
     const result = await sendWhatsAppMessage(
       {
         to: to,
         body: message
       },
-      integration.phoneNumberId
+      null // No necesitamos phoneNumberId del usuario para Twilio
     );
 
     if (result.success) {
+      // Crear o actualizar contacto
+      const Contact = require('../models/Contact').default;
+      const Conversation = require('../models/Conversation').default;
+      const Message = require('../models/Message').default;
+      const { Types } = require('mongoose');
+
+      // Buscar o crear contacto
+      let contact = await Contact.findOne({ userId, phoneNumber: to });
+      if (!contact) {
+        contact = await Contact.create({
+          userId: new Types.ObjectId(userId),
+          phoneNumber: to,
+          name: to, // Usar número como nombre por defecto
+          provider: 'whatsapp'
+        });
+      }
+
+      // Buscar o crear conversación
+      let conversation = await Conversation.findOne({ 
+        userId, 
+        contactId: contact._id, 
+        provider: 'whatsapp' 
+      });
+      if (!conversation) {
+        conversation = await Conversation.create({
+          userId: new Types.ObjectId(userId),
+          contactId: contact._id,
+          provider: 'whatsapp',
+          lastMessageAt: new Date(),
+          unreadCount: 0,
+          externalId: `twilio_${to}_${config.twilioWhatsAppNumber}`
+        });
+      } else {
+        conversation.lastMessageAt = new Date();
+        await conversation.save();
+      }
+
+      // Guardar mensaje en la base de datos
+      await Message.create({
+        userId: new Types.ObjectId(userId),
+        conversationId: conversation._id,
+        contactId: contact._id,
+        externalId: result.messageId,
+        from: config.twilioWhatsAppNumber?.replace('whatsapp:', '') || 'nexly',
+        to: to,
+        body: message,
+        direction: 'outbound',
+        status: 'sent',
+        timestamp: new Date()
+      });
+
       // Log successful message send
       logIntegrationActivity('whatsapp_message_sent', userId, {
         messageId: result.messageId,
         to: to,
-        provider: 'whatsapp_twilio'
+        provider: 'whatsapp_twilio',
+        conversationId: conversation._id.toString()
       });
 
       res.json({ 
         success: true, 
         messageId: result.messageId,
         sid: result.sid,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        conversationId: conversation._id
       });
     } else {
       res.status(500).json({ 

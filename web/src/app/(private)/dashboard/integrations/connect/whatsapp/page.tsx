@@ -7,42 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 export default function ConnectWhatsAppPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [credentials, setCredentials] = useState({
-    phoneNumberId: "",
-    accessToken: "",
-    phoneNumber: ""
-  });
-  const [instructions, setInstructions] = useState<any>(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
   const { token } = useAuth();
   const router = useRouter();
-
-  // Cargar instrucciones al montar el componente
-  useEffect(() => {
-    const loadInstructions = async () => {
-      if (!token) return;
-      
-      try {
-        console.log("Loading WhatsApp instructions...");
-        const response = await connectWhatsApp(token);
-        console.log("WhatsApp instructions response:", response);
-        setInstructions(response);
-      } catch (err: any) {
-        console.error("Error loading instructions:", err);
-        // Fallback instructions si falla la API
-        setInstructions({
-          message: "Para conectar WhatsApp Business, proporciona tu Phone Number ID y Access Token de Meta",
-          instructions: {
-            step1: "Ve a Meta for Developers (developers.facebook.com)",
-            step2: "Crea una App de WhatsApp Business",
-            step3: "En la sección WhatsApp, obtén tu Phone Number ID y Access Token",
-            step4: "Pega esos valores en los campos de abajo y haz clic en 'Conectar'"
-          }
-        });
-      }
-    };
-
-    loadInstructions();
-  }, [token]);
 
   const handleConnect = async () => {
     if (!token) {
@@ -50,8 +17,8 @@ export default function ConnectWhatsAppPage() {
       return;
     }
 
-    if (!credentials.phoneNumberId || !credentials.accessToken) {
-      setError("Por favor, completa todos los campos requeridos.");
+    if (!phoneNumber) {
+      setError("Por favor, ingresa tu número de WhatsApp.");
       return;
     }
 
@@ -59,11 +26,25 @@ export default function ConnectWhatsAppPage() {
     setError("");
     
     try {
-      const response = await connectWhatsAppCredentials(credentials, token);
-      
-      if (response.success) {
+      // Para Twilio, simplemente enviamos un mensaje de verificación
+      const response = await fetch('https://nexly-production.up.railway.app/integrations/send-whatsapp', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          to: phoneNumber,
+          message: "¡Hola! Este es un mensaje de verificación de NEXLY. Tu WhatsApp está conectado correctamente. 🎉"
+        })
+      });
+
+      if (response.ok) {
         // Redirigir al dashboard de integraciones con mensaje de éxito
         router.push("/dashboard/integrations?success=whatsapp_connected");
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al enviar mensaje de verificación");
       }
     } catch (err: any) {
       console.error("Error connecting WhatsApp:", err);
@@ -74,92 +55,64 @@ export default function ConnectWhatsAppPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-white">Conectar WhatsApp Business</h1>
+    <div className="p-6" style={{ background: 'var(--background-gradient)' }}>
+      <h1 className="text-2xl font-bold mb-6 text-foreground">Conectar WhatsApp</h1>
       
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-accent-red/10 border border-accent-red/20 text-accent-red px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
+      <div className="bg-muted border border-border rounded-lg p-6 max-w-2xl">
         <div className="flex items-center mb-6">
-          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
-            <span className="text-white text-xl font-bold">W</span>
+          <div className="w-12 h-12 bg-accent-green/20 border border-accent-green/30 rounded-full flex items-center justify-center mr-4">
+            <span className="text-accent-green text-xl font-bold">W</span>
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-black">WhatsApp Business</h2>
-            <p className="text-sm text-gray-600">Conecta tu cuenta usando credenciales de Meta</p>
+            <h2 className="text-lg font-semibold text-foreground">WhatsApp</h2>
+            <p className="text-sm text-muted-foreground">Conecta tu WhatsApp de forma fácil y segura</p>
           </div>
         </div>
         
-        {instructions && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="font-medium text-blue-900 mb-2">Instrucciones:</h3>
-            <div className="space-y-2 text-sm text-blue-800">
-              <p><strong>1.</strong> {instructions.instructions?.step1}</p>
-              <p><strong>2.</strong> {instructions.instructions?.step2}</p>
-              <p><strong>3.</strong> {instructions.instructions?.step3}</p>
-              <p><strong>4.</strong> {instructions.instructions?.step4}</p>
-            </div>
+        <div className="bg-accent-blue/10 border border-accent-blue/20 rounded-lg p-4 mb-6">
+          <h3 className="font-medium text-accent-blue mb-2">¿Cómo funciona?</h3>
+          <div className="space-y-2 text-sm text-accent-blue/80">
+            <p><strong>1.</strong> Ingresa tu número de WhatsApp</p>
+            <p><strong>2.</strong> Te enviaremos un mensaje de verificación</p>
+            <p><strong>3.</strong> ¡Listo! Ya puedes recibir y enviar mensajes</p>
           </div>
-        )}
+        </div>
         
         <div className="space-y-4 mb-6">
           <div>
-            <label htmlFor="phoneNumberId" className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number ID *
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground mb-2">
+              Tu número de WhatsApp *
             </label>
             <input
-              type="text"
-              id="phoneNumberId"
-              value={credentials.phoneNumberId}
-              onChange={(e) => setCredentials(prev => ({ ...prev, phoneNumberId: e.target.value }))}
-              placeholder="Ej: 123456789012345"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="accessToken" className="block text-sm font-medium text-gray-700 mb-2">
-              Access Token *
-            </label>
-            <input
-              type="password"
-              id="accessToken"
-              value={credentials.accessToken}
-              onChange={(e) => setCredentials(prev => ({ ...prev, accessToken: e.target.value }))}
-              placeholder="Tu access token de Meta"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-              Número de Teléfono (opcional)
-            </label>
-            <input
-              type="text"
+              type="tel"
               id="phoneNumber"
-              value={credentials.phoneNumber}
-              onChange={(e) => setCredentials(prev => ({ ...prev, phoneNumber: e.target.value }))}
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Ej: +1234567890"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-green text-foreground placeholder-muted-foreground"
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Incluye el código de país (ej: +1 para Estados Unidos, +34 para España)
+            </p>
           </div>
         </div>
         
         <button 
           onClick={handleConnect}
-          disabled={loading || !credentials.phoneNumberId || !credentials.accessToken}
-          className="w-full bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 font-medium"
+          disabled={loading || !phoneNumber}
+          className="w-full bg-accent-green/20 hover:bg-accent-green/30 text-accent-green border border-accent-green/30 px-4 py-3 rounded-lg disabled:opacity-50 font-medium transition-colors"
         >
-          {loading ? "Conectando..." : "Conectar WhatsApp Business"}
+          {loading ? "Conectando..." : "Conectar WhatsApp"}
         </button>
         
-        <p className="text-xs text-gray-500 mt-4 text-center">
-          Tus credenciales se almacenan de forma segura y solo se usan para conectar con WhatsApp Business
+        <p className="text-xs text-muted-foreground mt-4 text-center">
+          Solo necesitamos tu número para enviarte mensajes. No accedemos a tu cuenta.
         </p>
       </div>
     </div>
