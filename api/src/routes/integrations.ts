@@ -1352,7 +1352,7 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
         to: to,
         body: message
       },
-      null // No necesitamos phoneNumberId del usuario para Twilio
+      undefined // No necesitamos phoneNumberId del usuario para Twilio
     );
 
     if (result.success) {
