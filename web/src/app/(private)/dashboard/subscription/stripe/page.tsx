@@ -42,31 +42,40 @@ const getSubscriptionLabel = (subscription: any) => {
   const status = subscription.status;
   const icon = StatusIcons[status as keyof typeof StatusIcons] || "?";
   
-  if (status === "trialing") {
+  // Lógica mejorada: Si tiene stripeSubscriptionId, significa que ya pagó
+  const hasStripeSubscription = subscription.stripeSubscriptionId;
+  
+  if (hasStripeSubscription) {
+    return `Activa`;
+  } else if (status === "trialing") {
     const trialEnd = new Date(subscription.trialEndDate);
     const now = new Date();
     const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return `Prueba Gratuita (${daysLeft} días restantes)`;
-  }
-  if (status === "active") return `Activa`;
-  if (status === "paused") return `Pausada`;
-  if (status === "canceled") return `Cancelada`;
-  if (status === "past_due") return `Vencida`;
-  if (status === "incomplete") return `Pago Pendiente`;
-  if (status === "unpaid") return `Sin Pagar`;
+  } else if (status === "active") return `Activa`;
+  else if (status === "paused") return `Pausada`;
+  else if (status === "canceled") return `Cancelada`;
+  else if (status === "past_due") return `Vencida`;
+  else if (status === "incomplete") return `Pago Pendiente`;
+  else if (status === "unpaid") return `Sin Pagar`;
   return `Desconocida`;
 };
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, hasStripeSubscription?: boolean) => {
+  // Si tiene stripeSubscriptionId, usar color verde (activa)
+  if (hasStripeSubscription) {
+    return "bg-transparent text-accent-green border border-accent-green/30";
+  }
+  
   switch (status) {
-    case "active": return "text-green-600 bg-green-50 border-green-200";
-    case "trialing": return "text-blue-600 bg-blue-50 border-blue-200";
-    case "paused": return "text-yellow-600 bg-yellow-50 border-yellow-200";
-    case "canceled": return "text-red-600 bg-red-50 border-red-200";
-    case "past_due": return "text-accent-orange bg-accent-orange/10 border-accent-orange/20";
-    case "incomplete": return "text-purple-600 bg-purple-50 border-purple-200";
-    case "unpaid": return "text-gray-600 bg-gray-50 border-gray-200";
-    default: return "text-gray-600 bg-gray-50 border-gray-200";
+    case "active": return "bg-transparent text-accent-green border border-accent-green/30";
+    case "trialing": return "bg-transparent text-accent-blue border border-accent-blue/30";
+    case "paused": return "bg-transparent text-accent-orange border border-accent-orange/30";
+    case "canceled": return "bg-transparent text-accent-red border border-accent-red/30";
+    case "past_due": return "bg-transparent text-accent-orange border border-accent-orange/30";
+    case "incomplete": return "bg-transparent text-warning border border-warning/30";
+    case "unpaid": return "bg-transparent text-accent-red border border-accent-red/30";
+    default: return "bg-transparent text-muted-foreground border border-border";
   }
 };
 
@@ -274,7 +283,7 @@ export default function SubscriptionInfo() {
             <div className="bg-muted border border-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-sm font-medium text-foreground">Estado de Suscripción</h2>
-                <div className={`px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(actualStatus)}`}>
+                <div className={`px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(actualStatus, !!sub?.stripeSubscriptionId)}`}>
                   {getSubscriptionLabel({ ...sub, status: actualStatus })}
                 </div>
               </div>
