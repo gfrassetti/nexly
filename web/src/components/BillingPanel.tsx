@@ -71,22 +71,22 @@ export default function BillingPanel() {
   const getStatusColor = () => {
     switch (subscriptionStatus) {
       case 'active':
-        return 'bg-accent-green/20 text-accent-green border border-accent-green/30';
+        return 'bg-transparent text-accent-green border border-accent-green/30';
       case 'trialing':
       case 'trial' as any:
-        return 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30';
+        return 'bg-transparent text-accent-blue border border-accent-blue/30';
       case 'paused':
-        return 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30';
+        return 'bg-transparent text-accent-orange border border-accent-orange/30';
       case 'incomplete':
-        return 'bg-warning/20 text-warning border border-warning/30';
+        return 'bg-transparent text-warning border border-warning/30';
       case 'past_due':
-        return 'bg-accent-red/20 text-accent-red border border-accent-red/30';
+        return 'bg-transparent text-accent-red border border-accent-red/30';
       case 'canceled':
-        return 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30';
+        return 'bg-transparent text-accent-blue border border-accent-blue/30';
       case 'unpaid':
-        return 'bg-accent-red/20 text-accent-red border border-accent-red/30';
+        return 'bg-transparent text-accent-red border border-accent-red/30';
       default:
-        return 'bg-muted text-muted-foreground border border-border';
+        return 'bg-transparent text-muted-foreground border border-border';
     }
   };
 

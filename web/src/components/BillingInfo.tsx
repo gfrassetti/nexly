@@ -36,20 +36,20 @@ export default function BillingInfo() {
 
   // Función para obtener el color del badge
   const getStatusColor = useMemo(() => {
-    if (!subscription?.subscription) return "bg-muted text-muted-foreground border border-border";
+    if (!subscription?.subscription) return "bg-transparent text-muted-foreground border border-border";
     
     const statusColors: Record<string, string> = {
-      'trialing': 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30',
-      'active': 'bg-accent-green/20 text-accent-green border border-accent-green/30',
-      'incomplete': 'bg-warning/20 text-warning border border-warning/30',
-      'incomplete_expired': 'bg-accent-red/20 text-accent-red border border-accent-red/30',
-      'past_due': 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30',
-      'canceled': 'bg-accent-red/20 text-accent-red border border-accent-red/30',
-      'unpaid': 'bg-accent-red/20 text-accent-red border border-accent-red/30',
-      'paused': 'bg-muted text-muted-foreground border border-border'
+      'trialing': 'bg-transparent text-accent-blue border border-accent-blue/30',
+      'active': 'bg-transparent text-accent-green border border-accent-green/30',
+      'incomplete': 'bg-transparent text-warning border border-warning/30',
+      'incomplete_expired': 'bg-transparent text-accent-red border border-accent-red/30',
+      'past_due': 'bg-transparent text-accent-orange border border-accent-orange/30',
+      'canceled': 'bg-transparent text-accent-red border border-accent-red/30',
+      'unpaid': 'bg-transparent text-accent-red border border-accent-red/30',
+      'paused': 'bg-transparent text-muted-foreground border border-border'
     };
     
-    return statusColors[subscription.subscription.status] || "bg-muted text-muted-foreground border border-border";
+    return statusColors[subscription.subscription.status] || "bg-transparent text-muted-foreground border border-border";
   }, [subscription?.subscription?.status]);
 
   // Función para formatear la fecha

@@ -253,15 +253,15 @@ export default function SubscriptionStatus() {
             <h3 className="text-lg font-semibold text-white">
 {sub.planType === 'basic' ? 'Plan Básico' : 'Plan Premium'}
             </h3>
-            <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-              sub.status === 'active' ? 'bg-accent-green/20 text-accent-green border border-accent-green/30' :
-              sub.status === 'trialing' || (sub.status as any) === 'trial' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
-              sub.status === 'paused' ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30' :
-              sub.status === 'incomplete' ? 'bg-warning/20 text-warning border border-warning/30' :
-              sub.status === 'past_due' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
-              sub.status === 'canceled' ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30' :
-              sub.status === 'unpaid' ? 'bg-accent-red/20 text-accent-red border border-accent-red/30' :
-              'bg-muted text-muted-foreground border border-border'
+            <span className={`px-2 py-1 rounded-md text-xs font-medium bg-transparent ${
+              sub.status === 'active' ? 'text-accent-green border border-accent-green/30' :
+              sub.status === 'trialing' || (sub.status as any) === 'trial' ? 'text-accent-blue border border-accent-blue/30' :
+              sub.status === 'paused' ? 'text-accent-orange border border-accent-orange/30' :
+              sub.status === 'incomplete' ? 'text-warning border border-warning/30' :
+              sub.status === 'past_due' ? 'text-accent-red border border-accent-red/30' :
+              sub.status === 'canceled' ? 'text-accent-blue border border-accent-blue/30' :
+              sub.status === 'unpaid' ? 'text-accent-red border border-accent-red/30' :
+              'text-muted-foreground border border-border'
             }`}>
               {
                sub.status === 'active' ? 'Activo' :

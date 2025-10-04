@@ -26,30 +26,35 @@ export default function Topbar() {
     if (!subscription?.subscription) return null;
     
     const sub = subscription.subscription;
+    const rawStatus = sub.status;
     
     let planText = '';
     let badgeColor = '';
     
-    if (status.trialActive) {
+    // Priorizar el estado real de la suscripción sobre los estados calculados
+    if (rawStatus === 'trialing') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} Trial`;
-      badgeColor = 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30';
-    } else if (status.active) {
+      badgeColor = 'text-accent-blue border border-accent-blue/30';
+    } else if (rawStatus === 'active') {
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
-      badgeColor = sub.planType === 'basic' ? 'bg-accent-green/20 text-accent-green border border-accent-green/30' : 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30';
-    } else if (status.paused) {
+      badgeColor = 'text-accent-green border border-accent-green/30';
+    } else if (rawStatus === 'paused') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Pausado)`;
-      badgeColor = 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30';
-    } else if (status.inGracePeriod) {
+      badgeColor = 'text-accent-orange border border-accent-orange/30';
+    } else if (rawStatus === 'past_due' || rawStatus === 'unpaid') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Gracia)`;
-      badgeColor = 'bg-warning/20 text-warning border border-warning/30';
+      badgeColor = 'text-warning border border-warning/30';
+    } else if (rawStatus === 'canceled') {
+      planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Cancelado)`;
+      badgeColor = 'text-muted-foreground border border-border';
     } else {
-      // Si no está en ningún estado activo, mostrar el plan base
+      // Estado por defecto - mostrar el plan
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
-      badgeColor = 'bg-muted text-muted-foreground border border-border';
+      badgeColor = 'text-muted-foreground border border-border';
     }
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badgeColor}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium bg-transparent ${badgeColor}`}>
         {planText}
       </span>
     );
