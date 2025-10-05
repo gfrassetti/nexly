@@ -1389,7 +1389,7 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
           externalId: `twilio_${to}_${config.twilioWhatsAppNumber}`
         });
       } else {
-        conversation.lastMessageAt = new Date();
+        (conversation as any).lastMessageAt = new Date();
         await conversation.save();
       }
 
