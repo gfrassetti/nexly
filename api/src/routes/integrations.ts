@@ -583,13 +583,13 @@ router.get("/connect/whatsapp", async (req: AuthRequest, res: Response) => {
     res.json({ 
       success: true,
       message: "Redirigiendo a Meta para configurar WhatsApp Business",
-      onboardingUrl: onboardingResult.signupUrl,
+      signupUrl: onboardingResult.signupUrl,
       instructions: {
-        step1: "Serás redirigido a Meta para configurar WhatsApp Business",
+        step1: "Se abrirá una ventana emergente de Meta para configurar WhatsApp Business",
         step2: "Inicia sesión en tu cuenta de Meta Business Manager",
-        step3: "Configura tu número de WhatsApp Business",
-        step4: "Acepta los términos y condiciones",
-        step5: "Serás redirigido de vuelta a NEXLY automáticamente"
+        step3: "Crea o selecciona una cuenta de WhatsApp Business (WABA)",
+        step4: "Registra y verifica tu número de teléfono con código OTP",
+        step5: "Acepta los términos y condiciones y serás redirigido de vuelta a NEXLY"
       }
     });
 

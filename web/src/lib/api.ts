@@ -202,7 +202,7 @@ export function connectWhatsApp(token?: string) {
   return apiFetch<{ 
     success: boolean;
     message: string; 
-    onboardingUrl?: string;
+    signupUrl?: string;
     instructions: {
       step1: string;
       step2: string;
