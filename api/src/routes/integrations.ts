@@ -1357,9 +1357,9 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
 
     if (result.success) {
       // Crear o actualizar contacto
-      const Contact = require('../models/Contact').default;
-      const Conversation = require('../models/Conversation').default;
-      const Message = require('../models/Message').default;
+      const Contact = require('../models/Contact');
+      const Conversation = require('../models/Conversation');
+      const Message = require('../models/Message');
       const { Types } = require('mongoose');
 
       // Buscar o crear contacto
