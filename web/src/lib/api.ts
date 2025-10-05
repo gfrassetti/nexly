@@ -200,12 +200,15 @@ export function linkIntegration(body: {
  */
 export function connectWhatsApp(token?: string) {
   return apiFetch<{ 
+    success: boolean;
     message: string; 
+    onboardingUrl?: string;
     instructions: {
       step1: string;
       step2: string;
       step3: string;
       step4: string;
+      step5?: string;
     }
   }>("/integrations/connect/whatsapp", {
     method: "GET",
