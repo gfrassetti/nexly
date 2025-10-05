@@ -1356,11 +1356,11 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
     );
 
     if (result.success) {
-      // Crear o actualizar contacto
-      const Contact = require('../models/Contact');
-      const Conversation = require('../models/Conversation');
-      const Message = require('../models/Message');
-      const { Types } = require('mongoose');
+      // Importar modelos correctamente
+      const { Contact } = await import('../models/Contact');
+      const { Conversation } = await import('../models/Conversation');
+      const { Message } = await import('../models/Message');
+      const { Types } = await import('mongoose');
 
       // Buscar o crear contacto
       let contact = await Contact.findOne({ userId, phoneNumber: to });
