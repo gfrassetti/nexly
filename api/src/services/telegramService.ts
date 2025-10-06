@@ -1,9 +1,10 @@
 import axios from 'axios';
+import FormData from 'form-data';
 import { config } from '../config';
 import logger from '../utils/logger';
 
 export interface TelegramUser {
-  id: string;
+  id: number;
   username?: string;
   first_name?: string;
   last_name?: string;
@@ -14,8 +15,8 @@ export interface TelegramMessage {
   message_id: number;
   from: TelegramUser;
   chat: {
-    id: string;
-    type: string;
+    id: number;
+    type: 'private' | 'group' | 'supergroup' | 'channel';
   };
   text?: string;
   date: number;
@@ -31,7 +32,14 @@ export interface TelegramWebhookUpdate {
 
 export interface SendMessageResult {
   success: boolean;
-  messageId?: string;
+  messageId?: number;
+  error?: string;
+}
+
+export interface SendDocumentResult {
+  success: boolean;
+  messageId?: number;
+  fileId?: string;
   error?: string;
 }
 
@@ -58,6 +66,25 @@ export class TelegramService {
   }
 
   /**
+   * Método privado para manejar errores de forma centralizada (DRY)
+   */
+  private handleError(methodName: string, error: unknown, context: Record<string, any> = {}): SendMessageResult {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorData = (error as any)?.response?.data?.description || errorMessage;
+
+    logger.error(`Error en el servicio de Telegram (${methodName})`, {
+      ...context,
+      error: errorMessage,
+      response: (error as any)?.response?.data
+    });
+
+    return {
+      success: false,
+      error: errorData
+    };
+  }
+
+  /**
    * Verifica que el bot token sea válido
    */
   async verifyBotToken(): Promise<{ success: boolean; botInfo?: TelegramBotInfo; error?: string }> {
@@ -79,15 +106,11 @@ export class TelegramService {
           error: response.data.description || 'Error desconocido'
         };
       }
-    } catch (error: any) {
-      logger.error('Error verificando bot token de Telegram', {
-        error: error.message,
-        response: error.response?.data
-      });
-      
+    } catch (error: unknown) {
+      const errorResult = this.handleError('verifyBotToken', error);
       return {
         success: false,
-        error: error.response?.data?.description || error.message
+        error: errorResult.error
       };
     }
   }
@@ -105,18 +128,24 @@ export class TelegramService {
         return { success: false, error: 'Bot token no configurado' };
       }
 
-      const response = await axios.post(`${this.baseUrl}/sendMessage`, {
+      const payload: any = {
         chat_id: chatId,
         text: text,
-        parse_mode: options?.parse_mode || 'HTML',
         reply_to_message_id: options?.reply_to_message_id,
         disable_web_page_preview: options?.disable_web_page_preview || false
-      });
+      };
+
+      // Solo agregar parse_mode si se especifica explícitamente
+      if (options?.parse_mode) {
+        payload.parse_mode = options.parse_mode;
+      }
+
+      const response = await axios.post(`${this.baseUrl}/sendMessage`, payload);
 
       if (response.data.ok) {
         return {
           success: true,
-          messageId: response.data.result.message_id.toString()
+          messageId: response.data.result.message_id
         };
       } else {
         return {
@@ -124,16 +153,69 @@ export class TelegramService {
           error: response.data.description || 'Error enviando mensaje'
         };
       }
-    } catch (error: any) {
-      logger.error('Error enviando mensaje de Telegram', {
-        chatId,
-        error: error.message,
-        response: error.response?.data
-      });
+    } catch (error: unknown) {
+      return this.handleError('sendMessage', error, { chatId });
+    }
+  }
+
+  /**
+   * Envía un documento (archivo) a un usuario de Telegram
+   */
+  async sendDocument(chatId: string, document: string | Buffer, options?: {
+    caption?: string;
+    parse_mode?: 'HTML' | 'Markdown' | 'MarkdownV2';
+    reply_to_message_id?: number;
+    filename?: string;
+  }): Promise<SendDocumentResult> {
+    try {
+      if (!this.botToken) {
+        return { success: false, error: 'Bot token no configurado' };
+      }
+
+      const formData = new FormData();
+      formData.append('chat_id', chatId);
       
+      if (typeof document === 'string') {
+        formData.append('document', document);
+      } else {
+        formData.append('document', document, options?.filename || 'document');
+      }
+
+      if (options?.caption) {
+        formData.append('caption', options.caption);
+      }
+      
+      if (options?.parse_mode) {
+        formData.append('parse_mode', options.parse_mode);
+      }
+      
+      if (options?.reply_to_message_id) {
+        formData.append('reply_to_message_id', options.reply_to_message_id.toString());
+      }
+
+      const response = await axios.post(`${this.baseUrl}/sendDocument`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.ok) {
+        return {
+          success: true,
+          messageId: response.data.result.message_id,
+          fileId: response.data.result.document?.file_id
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data.description || 'Error enviando documento'
+        };
+      }
+    } catch (error: unknown) {
+      const errorResult = this.handleError('sendDocument', error, { chatId });
       return {
         success: false,
-        error: error.response?.data?.description || error.message
+        error: errorResult.error
       };
     }
   }
@@ -320,8 +402,8 @@ export class TelegramService {
    */
   processWebhookUpdate(update: TelegramWebhookUpdate): {
     message?: TelegramMessage;
-    chatId?: string;
-    userId?: string;
+    chatId?: number;
+    userId?: number;
     text?: string;
     messageId?: number;
   } {
@@ -333,11 +415,55 @@ export class TelegramService {
 
     return {
       message,
-      chatId: message.chat.id.toString(),
-      userId: message.from.id.toString(),
+      chatId: message.chat.id,
+      userId: message.from.id,
       text: message.text,
       messageId: message.message_id
     };
+  }
+
+  /**
+   * Edita el texto de un mensaje enviado por el bot
+   */
+  async editMessageText(chatId: string, messageId: number, text: string, options?: {
+    parse_mode?: 'HTML' | 'Markdown' | 'MarkdownV2';
+    reply_markup?: any;
+  }): Promise<SendMessageResult> {
+    try {
+      if (!this.botToken) {
+        return { success: false, error: 'Bot token no configurado' };
+      }
+
+      const payload: any = {
+        chat_id: chatId,
+        message_id: messageId,
+        text: text
+      };
+
+      if (options?.parse_mode) {
+        payload.parse_mode = options.parse_mode;
+      }
+
+      if (options?.reply_markup) {
+        payload.reply_markup = options.reply_markup;
+      }
+
+      const response = await axios.post(`${this.baseUrl}/editMessageText`, payload);
+
+      if (response.data.ok) {
+        return {
+          success: true,
+          messageId: response.data.result.message_id
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data.description || 'Error editando mensaje'
+        };
+      }
+    } catch (error: unknown) {
+      return this.handleError('editMessageText', error, { chatId, messageId });
+    }
   }
 
   /**
@@ -385,8 +511,14 @@ export const telegramService = new TelegramService();
 export const sendTelegramMessage = (chatId: string, text: string, options?: any) => 
   telegramService.sendMessage(chatId, text, options);
 
+export const sendTelegramDocument = (chatId: string, document: string | Buffer, options?: any) => 
+  telegramService.sendDocument(chatId, document, options);
+
 export const sendTelegramMessageWithKeyboard = (chatId: string, text: string, keyboard: any) => 
   telegramService.sendMessageWithKeyboard(chatId, text, keyboard);
+
+export const editTelegramMessage = (chatId: string, messageId: number, text: string, options?: any) => 
+  telegramService.editMessageText(chatId, messageId, text, options);
 
 export const verifyTelegramBot = () => telegramService.verifyBotToken();
 
