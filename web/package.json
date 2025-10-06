@@ -14,6 +14,7 @@
         "clsx": "2.1.1",
         "framer-motion": "^12.23.18",
         "jsonwebtoken": "^9.0.2",
+        "lucide-react": "^0.544.0",
         "mercadopago": "^2.9.0",
         "next": "15.0.0",
         "react": "^18.3.1",

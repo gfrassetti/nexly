@@ -806,7 +806,7 @@ router.post("/whatsapp/credentials", async (req: AuthRequest, res: Response) => 
       success: true,
       message: "WhatsApp Business conectado exitosamente",
       integration: {
-        _id: integration._id,
+        _id: (integration._id as Types.ObjectId),
         provider: integration.provider,
         name: integration.name,
         status: integration.status,
@@ -2610,7 +2610,7 @@ router.post("/telegram/send", async (req: AuthRequest, res: Response) => {
         messageId: result.messageId,
         to: to,
         provider: 'telegram',
-        integrationId: integration._id.toString()
+        integrationId: (integration._id as Types.ObjectId).toString()
       });
 
       res.json({ 
@@ -2810,7 +2810,7 @@ router.post("/whatsapp/complete-subaccount-setup", async (req: AuthRequest, res:
       success: true,
       message: "Configuración de subcuenta completada exitosamente",
       integration: {
-        id: integration._id,
+        id: (integration._id as Types.ObjectId),
         status: integration.status,
         setupComplete: (integration.meta as any)?.setupComplete
       }

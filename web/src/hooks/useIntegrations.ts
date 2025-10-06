@@ -1,6 +1,7 @@
 "use client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { INTEGRATIONS, type Integration } from "@/lib/constants";
+import { showToast } from "./use-toast";
 
 interface UseIntegrationsReturn {
   integrations: readonly Integration[];
@@ -58,7 +59,7 @@ export function useIntegrations(): UseIntegrationsReturn {
       window.location.href = '/dashboard/integrations/connect/telegram';
     } else if (isIntegrationAvailable(integrationName)) {
       // Aquí iría la lógica para conectar otras plataformas
-      alert(`${integrationName} aún no está implementado`);
+      showToast.error(`${integrationName} aún no está implementado`);
     } else {
       // Redirigir a pricing
       window.location.href = '/pricing';
