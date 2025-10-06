@@ -2,7 +2,7 @@
 
 import { sendMessageApi } from "@/lib/api";
 
-type Provider = "whatsapp" | "instagram" | "messenger";
+type Provider = "whatsapp" | "instagram" | "messenger" | "telegram";
 
 type SendMessagePayload =
   | { provider: Provider; contactId: string; body: string; to?: string }
