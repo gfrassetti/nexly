@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Users, MessageCircle, Settings, Trash2, RefreshCw, Loader2 } from 'lucide-react';
 import { showToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TelegramChat {
   id: number;
@@ -39,6 +40,7 @@ interface TelegramMTProtoStatusProps {
 }
 
 export default function TelegramMTProtoStatus({ integration, onDisconnect }: TelegramMTProtoStatusProps) {
+  const { token } = useAuth();
   const [chats, setChats] = useState<TelegramChat[]>([]);
   const [selectedChat, setSelectedChat] = useState<TelegramChat | null>(null);
   const [messages, setMessages] = useState<TelegramMessage[]>([]);
@@ -49,7 +51,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
   const loadChats = async () => {
     setIsLoadingChats(true);
     try {
-      const response = await apiFetch('/telegram/chats');
+      const response = await apiFetch('/telegram/chats', {}, token);
       if (response.success) {
         setChats(response.chats || []);
       } else {
@@ -66,7 +68,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
   const loadMessages = async (chatId: number) => {
     setIsLoadingMessages(true);
     try {
-      const response = await apiFetch(`/telegram/messages/${chatId}?limit=20`);
+      const response = await apiFetch(`/telegram/messages/${chatId}?limit=20`, {}, token);
       if (response.success) {
         setMessages(response.messages || []);
       } else {
@@ -89,7 +91,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
     try {
       const response = await apiFetch('/telegram/disconnect', {
         method: 'DELETE'
-      });
+      }, token || undefined);
       
       if (response.success) {
         showToast.success('Telegram desconectado exitosamente');

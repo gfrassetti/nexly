@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Phone, MessageSquare, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { showToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TelegramMTProtoConnectProps {
   onConnect?: () => void;
@@ -16,6 +17,7 @@ export default function TelegramMTProtoConnect({
   onError, 
   disabled = false 
 }: TelegramMTProtoConnectProps) {
+  const { token } = useAuth();
   const [step, setStep] = useState<'phone' | 'code' | 'password' | 'success'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [code, setCode] = useState('');
@@ -37,7 +39,7 @@ export default function TelegramMTProtoConnect({
       const response = await apiFetch('/telegram/send-code', {
         method: 'POST',
         body: JSON.stringify({ phoneNumber: phoneNumber.trim() })
-      });
+      }, token || undefined);
 
       if (response.success) {
         setMaskedPhone(response.phoneNumber);
@@ -73,7 +75,7 @@ export default function TelegramMTProtoConnect({
           code: code.trim(),
           password: password.trim() || undefined
         })
-      });
+      }, token || undefined);
 
       if (response.success) {
         setStep('success');
@@ -114,7 +116,7 @@ export default function TelegramMTProtoConnect({
           code: code.trim(),
           password: password.trim()
         })
-      });
+      }, token || undefined);
 
       if (response.success) {
         setStep('success');

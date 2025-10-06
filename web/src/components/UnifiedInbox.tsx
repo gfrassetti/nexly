@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { showToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Conversation {
   _id: string;
@@ -62,6 +63,7 @@ interface UnifiedInboxProps {
 }
 
 export default function UnifiedInbox({ className = '' }: UnifiedInboxProps) {
+  const { token } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -76,7 +78,7 @@ export default function UnifiedInbox({ className = '' }: UnifiedInboxProps) {
   const loadConversations = async () => {
     try {
       setIsLoadingConversations(true);
-      const response = await apiFetch(`/unified-inbox/conversations?status=${statusFilter}&search=${searchTerm}`);
+      const response = await apiFetch(`/unified-inbox/conversations?status=${statusFilter}&search=${searchTerm}`, {}, token);
       
       if (response.success) {
         setConversations(response.conversations || []);
@@ -95,7 +97,7 @@ export default function UnifiedInbox({ className = '' }: UnifiedInboxProps) {
   const loadMessages = async (conversationId: string) => {
     try {
       setIsLoadingMessages(true);
-      const response = await apiFetch(`/unified-inbox/conversations/${conversationId}/messages`);
+      const response = await apiFetch(`/unified-inbox/conversations/${conversationId}/messages`, {}, token);
       
       if (response.success) {
         setMessages(response.messages || []);
@@ -124,7 +126,7 @@ export default function UnifiedInbox({ className = '' }: UnifiedInboxProps) {
             type: 'text'
           }
         })
-      });
+      }, token || undefined);
 
       if (response.success) {
         setNewMessage('');
@@ -147,7 +149,7 @@ export default function UnifiedInbox({ className = '' }: UnifiedInboxProps) {
     try {
       await apiFetch(`/unified-inbox/conversations/${conversationId}/read`, {
         method: 'PUT'
-      });
+      }, token || undefined);
       // Actualizar estado local
       setConversations(prev => prev.map(conv => 
         conv.conversationId === conversationId 

@@ -4,6 +4,7 @@ export interface TelegramSessionDoc extends Document {
   userId: Types.ObjectId;
   phoneNumber: string;
   sessionString: string; // String de sesión de Telegram
+  phoneCodeHash?: string; // Hash del código de verificación de Telegram
   isActive: boolean;
   lastActivity: Date;
   userInfo?: {
@@ -36,6 +37,9 @@ const telegramSessionSchema = new Schema<TelegramSessionDoc>(
       type: String, 
       required: true,
       unique: true // String de sesión único
+    },
+    phoneCodeHash: { 
+      type: String 
     },
     isActive: { 
       type: Boolean, 
