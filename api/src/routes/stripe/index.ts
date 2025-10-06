@@ -1,12 +1,8 @@
-// api/src/routes/stripe.ts
-
-/* "Endpoint principal que crea sesiones de Stripe SIN crear suscripciones en la DB"
-Endpoint /create-payment-link que solo crea la sesión de Stripe
-NO crea suscripción en la DB (eso lo hace el webhook)
-Devuelve la URL de checkout para redirigir al usuario */
+// api/src/routes/stripe/index.ts
+// Endpoints para gestión de suscripciones con Stripe
 
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import authenticateToken from '../../middleware/auth';
 import { stripeService } from '../../services/stripe';
 import Subscription from '../../models/Subscription';
@@ -15,12 +11,31 @@ import { asyncHandler, CustomError } from '../../utils/errorHandler';
 import { validateSubscriptionData, paymentRateLimit } from '../../middleware/security';
 import { stripeWebhookVerification } from '../../middleware/verifyStripeSignature';
 
+// Tipos para mejor type safety
+interface AuthenticatedRequest extends Request {
+  user?: { 
+    id: string; 
+    email: string; 
+    subscription_status?: string;
+    selectedPlan?: string;
+  };
+}
+
+// Constantes para URLs y configuración
+const STRIPE_CONFIG = {
+  SUCCESS_URL: '/dashboard',
+  CANCEL_URL: '/pricing',
+  PLAN_AMOUNTS: {
+    basic: 100000, // $1000 ARS en centavos
+    premium: 150000 // $1500 ARS en centavos
+  },
+  CURRENCY: 'ars'
+} as const;
+
 const router = express.Router();
 
-/**
- * Obtener información completa de la suscripción desde Stripe
- */
-router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any, res: any) => {
+// Obtener información completa de la suscripción desde Stripe
+router.get('/subscription-info', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
 
@@ -44,15 +59,15 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any
           planType: subscription.planType,
           trialEndDate: subscription.trialEndDate,
           currentPeriodEnd: subscription.endDate || null,
-          amount: subscription.planType === 'basic' ? 2999 : 4999, // en centavos
-          currency: 'usd'
+          amount: STRIPE_CONFIG.PLAN_AMOUNTS[subscription.planType as keyof typeof STRIPE_CONFIG.PLAN_AMOUNTS] || STRIPE_CONFIG.PLAN_AMOUNTS.basic,
+          currency: STRIPE_CONFIG.CURRENCY
         },
         customer: null
       });
     }
 
     // Obtener información completa desde Stripe
-    const stripeSubscription = await stripeService.getSubscription(subscription.stripeSubscriptionId);
+    const stripeSubscription = await stripeService.getSubscription(subscription.stripeSubscriptionId) as any;
     
     // Obtener información del customer
     let customer = null;
@@ -76,8 +91,8 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any
         status: stripeSubscription.status,
         planType: subscription.planType,
         trialEndDate: subscription.trialEndDate,
-        currentPeriodEnd: (stripeSubscription as any).current_period_end ? new Date((stripeSubscription as any).current_period_end * 1000).toISOString() : null,
-        currentPeriodStart: (stripeSubscription as any).current_period_start ? new Date((stripeSubscription as any).current_period_start * 1000).toISOString() : null,
+        currentPeriodEnd: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000).toISOString() : null,
+        currentPeriodStart: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000).toISOString() : null,
         amount: stripeSubscription.items?.data?.[0]?.price?.unit_amount || 0,
         currency: stripeSubscription.currency || 'usd',
         cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
@@ -108,8 +123,8 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: any
   }
 }));
 
-// GET /api/stripe/invoices - Obtener facturas del usuario
-router.get('/invoices', authenticateToken, asyncHandler(async (req: any, res: any) => {
+// Obtener facturas del usuario
+router.get('/invoices', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
@@ -129,10 +144,8 @@ router.get('/invoices', authenticateToken, asyncHandler(async (req: any, res: an
   }
 }));
 
-/**
- * Crear enlace de pago para activar suscripción con Stripe
- */
-router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHandler(async (req: any, res: any) => {
+// Crear enlace de pago para activar suscripción con Stripe
+router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { planType } = req.body;
     const userId = req.user?.id;
@@ -169,8 +182,8 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
 
     console.log('🔄 Creando nueva suscripción en Stripe');
     
-    const successUrl = `${process.env.FRONTEND_URL}/dashboard`;
-    const cancelUrl = `${process.env.FRONTEND_URL}/pricing`;
+    const successUrl = `${process.env.FRONTEND_URL}${STRIPE_CONFIG.SUCCESS_URL}`;
+    const cancelUrl = `${process.env.FRONTEND_URL}${STRIPE_CONFIG.CANCEL_URL}`;
     let stripeSession;
     
     if (finalPlanType === 'basic') {
@@ -192,7 +205,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
       success: true,
       paymentUrl: stripeSession.url,
       sessionId: stripeSession.id,
-      subscriptionId: stripeSession.subscription,
+      stripeSubscriptionId: stripeSession.subscription, // Más claro que subscriptionId
     });
 
   } catch (error) {
@@ -203,10 +216,8 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
 
 // Webhook movido a /stripe/webhook.ts para evitar duplicación
 
-/**
- * Cancelar suscripción de Stripe
- */
-router.put('/cancel-subscription', authenticateToken, asyncHandler(async (req: any, res: any) => {
+// Cancelar suscripción de Stripe
+router.put('/cancel-subscription', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -214,8 +225,8 @@ router.put('/cancel-subscription', authenticateToken, asyncHandler(async (req: a
     }
 
     const subscription = await Subscription.findOne({ userId });
-    if (!subscription) {
-      throw new CustomError('No tienes una suscripción activa para cancelar', 404);
+    if (!subscription || !subscription.stripeSubscriptionId) {
+      throw new CustomError('No tienes una suscripción activa o no vinculada a Stripe', 404);
     }
 
     // Si tiene ID de Stripe, cancelar allí también
@@ -258,10 +269,8 @@ router.put('/cancel-subscription', authenticateToken, asyncHandler(async (req: a
   }
 }));
 
-/**
- * Cancelar suscripción de Stripe (endpoint legacy)
- */
-router.post('/cancel', authenticateToken, asyncHandler(async (req: any, res: any) => {
+// Cancelar suscripción de Stripe (endpoint legacy)
+router.post('/cancel', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
 
@@ -317,10 +326,8 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: any, res: any
   }
 }));
 
-/**
- * Pausar suscripción de Stripe
- */
-router.post('/pause', authenticateToken, asyncHandler(async (req: any, res: any) => {
+// Pausar suscripción de Stripe
+router.post('/pause', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
 
@@ -375,10 +382,8 @@ router.post('/pause', authenticateToken, asyncHandler(async (req: any, res: any)
   }
 }));
 
-/**
- * Reactivar suscripción pausada de Stripe
- */
-router.post('/reactivate', authenticateToken, asyncHandler(async (req: any, res: any) => {
+// Reactivar suscripción pausada de Stripe
+router.post('/reactivate', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
 
@@ -433,10 +438,8 @@ router.post('/reactivate', authenticateToken, asyncHandler(async (req: any, res:
   }
 }));
 
-/**
- * Obtener configuración pública de Stripe
- */
-router.get('/config', (req, res) => {
+// Obtener configuración pública de Stripe
+router.get('/config', (req: Request, res: Response) => {
   try {
     const config = stripeService.getPublicConfig();
     res.json(config);

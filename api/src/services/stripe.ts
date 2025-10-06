@@ -15,6 +15,26 @@ interface StripeConfig {
   publishableKey: string;
 }
 
+// Constantes para planes y configuración
+const STRIPE_CONSTANTS = {
+  PLAN_BASIC_NAME: 'Nexly - Plan Básico',
+  PLAN_BASIC_DESCRIPTION: 'Plan básico de Nexly para emprendedores y pequeñas empresas',
+  PLAN_BASIC_AMOUNT: 100000, // $1000 ARS
+  
+  PLAN_PREMIUM_NAME: 'Nexly - Plan Premium',
+  PLAN_PREMIUM_DESCRIPTION: 'Plan premium de Nexly para empresas que necesitan más integraciones',
+  PLAN_PREMIUM_AMOUNT: 150000, // $1500 ARS
+  
+  DEFAULT_TRIAL_DAYS: 7,
+  DEFAULT_CURRENCY: 'ars',
+  API_VERSION: '2025-08-27.basil',
+  
+  // Límites optimizados para pocos productos
+  PRODUCTS_LIMIT: 10,
+  PRICES_LIMIT: 10,
+  INVOICES_LIMIT: 10
+} as const;
+
 class StripeService {
   private stripe: Stripe;
   private config: StripeConfig;
@@ -28,17 +48,65 @@ class StripeService {
     this.validateConfig();
     
     this.stripe = new Stripe(this.config.secretKey, {
-      apiVersion: '2025-08-27.basil',
+      apiVersion: STRIPE_CONSTANTS.API_VERSION,
       typescript: true,
     });
   }
 
   private validateConfig() {
     if (!this.config.secretKey) {
-      throw new CustomError('STRIPE_SECRET_KEY es requerido', 500);
+      throw new CustomError('Error de configuración: STRIPE_SECRET_KEY es requerido', 500);
     }
+    // publishableKey solo se usa en frontend, no es crítico para operaciones backend
     if (!this.config.publishableKey) {
-      throw new CustomError('STRIPE_PUBLISHABLE_KEY es requerido', 500);
+      console.warn('STRIPE_PUBLISHABLE_KEY no está configurado - solo necesario para frontend');
+    }
+  }
+
+  /**
+   * Método auxiliar para obtener o crear producto y precio
+   */
+  private async getOrCreateProductAndPrice(
+    productName: string,
+    productDescription: string,
+    priceAmount: number,
+    currency: string = STRIPE_CONSTANTS.DEFAULT_CURRENCY
+  ) {
+    try {
+      // Buscar producto existente
+      const products = await this.stripe.products.list({ 
+        active: true, 
+        limit: STRIPE_CONSTANTS.PRODUCTS_LIMIT 
+      });
+      let product = products.data.find(p => p.name === productName);
+
+      if (!product) {
+        console.log(`Creando nuevo producto: ${productName}`);
+        product = await this.createProduct(productName, productDescription);
+      }
+
+      // Buscar precio existente
+      const prices = await this.stripe.prices.list({ 
+        product: product.id, 
+        active: true,
+        limit: STRIPE_CONSTANTS.PRICES_LIMIT
+      });
+      let price = prices.data.find(p => p.unit_amount === priceAmount);
+
+      if (!price) {
+        console.log(`Creando nuevo precio: ${priceAmount} ${currency} para producto ${productName}`);
+        price = await this.createPrice(product.id, priceAmount, currency);
+      }
+
+      return { product, price };
+    } catch (error: any) {
+      console.error(`Error in getOrCreateProductAndPrice for ${productName}:`, {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al obtener/crear producto y precio: ${error.message}`, 500);
     }
   }
 
@@ -55,15 +123,20 @@ class StripeService {
       
       return product;
     } catch (error: any) {
-      console.error('Error creating Stripe product:', error);
-      throw new CustomError('Error al crear el producto en Stripe', 500);
+      console.error(`Error creating Stripe product ${name}:`, {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al crear el producto en Stripe: ${error.message}`, 500);
     }
   }
 
   /**
    * Crear un precio en Stripe
    */
-  async createPrice(productId: string, amount: number, currency: string = 'ars') {
+  async createPrice(productId: string, amount: number, currency: string = STRIPE_CONSTANTS.DEFAULT_CURRENCY) {
     try {
       const price = await this.stripe.prices.create({
         product: productId,
@@ -76,8 +149,15 @@ class StripeService {
       
       return price;
     } catch (error: any) {
-      console.error('Error creating Stripe price:', error);
-      throw new CustomError('Error al crear el precio en Stripe', 500);
+      console.error(`Error creating Stripe price for product ${productId}:`, {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        amount,
+        currency,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al crear el precio en Stripe: ${error.message}`, 500);
     }
   }
 
@@ -107,9 +187,9 @@ class StripeService {
         cancel_url: data.cancelUrl,
         allow_promotion_codes: true,
         billing_address_collection: 'required',
-        subscription_data: {
-          trial_period_days: data.trialPeriodDays || 7,
-        },
+        // subscription_data: {
+        //   trial_period_days: data.trialPeriodDays || STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
+        // },
         metadata: {
           planType: data.planType || 'basic',
         },
@@ -119,8 +199,15 @@ class StripeService {
       
       return session;
     } catch (error: any) {
-      console.error('Error creating Stripe checkout session:', error);
-      throw new CustomError('Error al crear la sesión de checkout', 500);
+      console.error('Error creating Stripe checkout session:', {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        priceId: data.priceId,
+        customerEmail: data.customerEmail,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al crear la sesión de checkout: ${error.message}`, 500);
     }
   }
 
@@ -129,44 +216,27 @@ class StripeService {
    */
   async createBasicPlan(userEmail: string, successUrl: string, cancelUrl: string) {
     try {
-      // Verificar si ya existe el producto básico
-      const products = await this.stripe.products.list({
-        active: true,
-        limit: 100,
-      });
-
-      let basicProduct = products.data.find(p => p.name === 'Nexly - Plan Básico');
-      
-      if (!basicProduct) {
-        basicProduct = await this.createProduct(
-          'Nexly - Plan Básico',
-          'Plan básico de Nexly para emprendedores y pequeñas empresas'
-        );
-      }
-
-      // Verificar si ya existe el precio básico
-      const prices = await this.stripe.prices.list({
-        product: basicProduct.id,
-        active: true,
-      });
-
-      let basicPrice = prices.data.find(p => p.unit_amount === 100000); // $1000 ARS
-      
-      if (!basicPrice) {
-        basicPrice = await this.createPrice(basicProduct.id, 100000, 'ars'); // $1000 ARS
-      }
+      const { product, price } = await this.getOrCreateProductAndPrice(
+        STRIPE_CONSTANTS.PLAN_BASIC_NAME,
+        STRIPE_CONSTANTS.PLAN_BASIC_DESCRIPTION,
+        STRIPE_CONSTANTS.PLAN_BASIC_AMOUNT
+      );
 
       return await this.createCheckoutSession({
-        priceId: basicPrice.id,
+        priceId: price.id,
         customerEmail: userEmail,
         successUrl,
         cancelUrl,
-        trialPeriodDays: 7,
+        // trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS, // Comentado para testing sin trial
         planType: 'basic',
       });
     } catch (error: any) {
-      console.error('Error creating basic plan:', error);
-      throw new CustomError('Error al crear el plan básico', 500);
+      console.error('Error creating basic plan:', {
+        message: error.message,
+        userEmail,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al crear el plan básico: ${error.message}`, 500);
     }
   }
 
@@ -175,44 +245,27 @@ class StripeService {
    */
   async createPremiumPlan(userEmail: string, successUrl: string, cancelUrl: string) {
     try {
-      // Verificar si ya existe el producto premium
-      const products = await this.stripe.products.list({
-        active: true,
-        limit: 100,
-      });
-
-      let premiumProduct = products.data.find(p => p.name === 'Nexly - Plan Premium');
-      
-      if (!premiumProduct) {
-        premiumProduct = await this.createProduct(
-          'Nexly - Plan Premium',
-          'Plan premium de Nexly para empresas que necesitan más integraciones'
-        );
-      }
-
-      // Verificar si ya existe el precio premium
-      const prices = await this.stripe.prices.list({
-        product: premiumProduct.id,
-        active: true,
-      });
-
-      let premiumPrice = prices.data.find(p => p.unit_amount === 150000); // $1500 ARS
-      
-      if (!premiumPrice) {
-        premiumPrice = await this.createPrice(premiumProduct.id, 150000, 'ars'); // $1500 ARS
-      }
+      const { product, price } = await this.getOrCreateProductAndPrice(
+        STRIPE_CONSTANTS.PLAN_PREMIUM_NAME,
+        STRIPE_CONSTANTS.PLAN_PREMIUM_DESCRIPTION,
+        STRIPE_CONSTANTS.PLAN_PREMIUM_AMOUNT
+      );
 
       return await this.createCheckoutSession({
-        priceId: premiumPrice.id,
+        priceId: price.id,
         customerEmail: userEmail,
         successUrl,
         cancelUrl,
-        trialPeriodDays: 7,
+        // trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS, // Comentado para testing sin trial
         planType: 'premium',
       });
     } catch (error: any) {
-      console.error('Error creating premium plan:', error);
-      throw new CustomError('Error al crear el plan premium', 500);
+      console.error('Error creating premium plan:', {
+        message: error.message,
+        userEmail,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al crear el plan premium: ${error.message}`, 500);
     }
   }
 
@@ -224,8 +277,14 @@ class StripeService {
       const subscription = await this.stripe.subscriptions.retrieve(subscriptionId);
       return subscription;
     } catch (error: any) {
-      console.error('Error getting Stripe subscription:', error);
-      throw new CustomError('Error al obtener la suscripción', 500);
+      console.error('Error getting Stripe subscription:', {
+        message: error.message,
+        subscriptionId,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al obtener la suscripción: ${error.message}`, 500);
     }
   }
 
@@ -237,8 +296,14 @@ class StripeService {
       const customer = await this.stripe.customers.retrieve(customerId);
       return customer;
     } catch (error: any) {
-      console.error('Error getting Stripe customer:', error);
-      throw new CustomError('Error al obtener el customer', 500);
+      console.error('Error getting Stripe customer:', {
+        message: error.message,
+        customerId,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al obtener el customer: ${error.message}`, 500);
     }
   }
 
@@ -250,8 +315,14 @@ class StripeService {
       const paymentMethod = await this.stripe.paymentMethods.retrieve(paymentMethodId);
       return paymentMethod;
     } catch (error: any) {
-      console.error('Error getting Stripe payment method:', error);
-      throw new CustomError('Error al obtener el método de pago', 500);
+      console.error('Error getting Stripe payment method:', {
+        message: error.message,
+        paymentMethodId,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al obtener el método de pago: ${error.message}`, 500);
     }
   }
 
@@ -259,12 +330,18 @@ class StripeService {
     try {
       const invoices = await this.stripe.invoices.list({
         subscription: subscriptionId,
-        limit: 10, // Obtener las últimas 10 facturas
+        limit: STRIPE_CONSTANTS.INVOICES_LIMIT,
       });
       return invoices.data;
     } catch (error: any) {
-      console.error('Error getting Stripe invoices:', error);
-      throw new CustomError('Error al obtener las facturas', 500);
+      console.error('Error getting Stripe invoices:', {
+        message: error.message,
+        subscriptionId,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al obtener las facturas: ${error.message}`, 500);
     }
   }
 
@@ -276,8 +353,14 @@ class StripeService {
       const subscription = await this.stripe.subscriptions.cancel(subscriptionId);
       return subscription;
     } catch (error: any) {
-      console.error('Error cancelling Stripe subscription:', error);
-      throw new CustomError('Error al cancelar la suscripción', 500);
+      console.error('Error cancelling Stripe subscription:', {
+        message: error.message,
+        subscriptionId,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al cancelar la suscripción: ${error.message}`, 500);
     }
   }
 
@@ -293,8 +376,14 @@ class StripeService {
       });
       return subscription;
     } catch (error: any) {
-      console.error('Error pausing Stripe subscription:', error);
-      throw new CustomError('Error al pausar la suscripción', 500);
+      console.error('Error pausing Stripe subscription:', {
+        message: error.message,
+        subscriptionId,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al pausar la suscripción: ${error.message}`, 500);
     }
   }
 
@@ -308,8 +397,14 @@ class StripeService {
       });
       return subscription;
     } catch (error: any) {
-      console.error('Error resuming Stripe subscription:', error);
-      throw new CustomError('Error al reactivar la suscripción', 500);
+      console.error('Error resuming Stripe subscription:', {
+        message: error.message,
+        subscriptionId,
+        type: error.type,
+        code: error.code,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al reactivar la suscripción: ${error.message}`, 500);
     }
   }
 
@@ -320,8 +415,13 @@ class StripeService {
     try {
       return this.stripe.webhooks.constructEvent(payload, signature, secret);
     } catch (error: any) {
-      console.error('Error verifying Stripe webhook:', error);
-      throw new CustomError('Error al verificar el webhook de Stripe', 400);
+      console.error('Error verifying Stripe webhook:', {
+        message: error.message,
+        type: error.type,
+        signature: signature.substring(0, 20) + '...', // Solo mostrar parte de la signature por seguridad
+        raw: error.raw
+      });
+      throw new CustomError(`Error al verificar el webhook de Stripe: ${error.message}`, 400);
     }
   }
 
