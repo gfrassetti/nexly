@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+// Removed UI component imports - using standard HTML elements
 import { MessageSquare, CheckCircle, AlertCircle, Trash2, Send, Settings } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { showToast } from '../hooks/use-toast';
 
 interface TelegramStatusProps {
   integration: {
@@ -36,7 +34,7 @@ export default function TelegramStatus({
   onConfigure 
 }: TelegramStatusProps) {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const { toast } = useToast();
+  // Using showToast directly
 
   const handleDisconnect = async () => {
     if (!onDisconnect) return;
@@ -45,16 +43,9 @@ export default function TelegramStatus({
       setIsDisconnecting(true);
       await onDisconnect(integration._id);
       
-      toast({
-        title: "Desconectado",
-        description: "Telegram se ha desconectado exitosamente",
-      });
+      showToast.success("Telegram se ha desconectado exitosamente");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo desconectar Telegram",
-        variant: "destructive",
-      });
+      showToast.error(error.message || "No se pudo desconectar Telegram");
     } finally {
       setIsDisconnecting(false);
     }
@@ -63,22 +54,22 @@ export default function TelegramStatus({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'linked':
-        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-200">
           <CheckCircle className="h-3 w-3 mr-1" />
           Conectado
-        </Badge>;
+        </span>;
       case 'pending':
-        return <Badge variant="secondary">
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-900 text-yellow-200">
           <AlertCircle className="h-3 w-3 mr-1" />
           Pendiente
-        </Badge>;
+        </span>;
       case 'error':
-        return <Badge variant="destructive">
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-200">
           <AlertCircle className="h-3 w-3 mr-1" />
           Error
-        </Badge>;
+        </span>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-700 text-neutral-300 border border-neutral-600">{status}</span>;
     }
   };
 
@@ -93,24 +84,24 @@ export default function TelegramStatus({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <div className="w-full bg-neutral-800 rounded-lg border border-neutral-700">
+      <div className="p-6 border-b border-neutral-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            <CardTitle>{integration.name}</CardTitle>
+            <h3 className="text-xl font-semibold text-white">{integration.name}</h3>
           </div>
           {getStatusBadge(integration.status)}
         </div>
-        <CardDescription>
+        <p className="text-sm text-neutral-400 mt-1">
           Integración de Telegram
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </p>
+      </div>
+      <div className="p-6 space-y-4">
         {/* Información del usuario de Telegram */}
         {integration.meta && (
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-neutral-700 rounded-lg">
               {integration.meta.telegramPhotoUrl ? (
                 <img 
                   src={integration.meta.telegramPhotoUrl} 
@@ -118,20 +109,20 @@ export default function TelegramStatus({
                   className="w-10 h-10 rounded-full"
                 />
               ) : (
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <MessageSquare className="h-5 w-5 text-primary" />
+                <div className="w-10 h-10 bg-blue-900/20 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-blue-400" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">
+                <p className="font-medium truncate text-white">
                   {integration.meta.telegramFirstName} {integration.meta.telegramLastName}
                 </p>
                 {integration.meta.telegramUsername && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-neutral-400">
                     @{integration.meta.telegramUsername}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-neutral-400">
                   ID: {integration.meta.telegramUserId}
                 </p>
               </div>
@@ -139,7 +130,7 @@ export default function TelegramStatus({
 
             {/* Fecha de conexión */}
             {integration.meta.connectedAt && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-neutral-400">
                 Conectado el: {formatDate(integration.meta.connectedAt)}
               </div>
             )}
@@ -149,35 +140,30 @@ export default function TelegramStatus({
         {/* Acciones */}
         <div className="flex gap-2">
           {onSendMessage && (
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => onSendMessage(integration._id)}
-              className="flex-1"
+              className="flex-1 bg-neutral-700 hover:bg-neutral-600 text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center"
             >
               <Send className="h-4 w-4 mr-2" />
               Enviar Mensaje
-            </Button>
+            </button>
           )}
           
           {onConfigure && (
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => onConfigure(integration._id)}
+              className="bg-neutral-700 hover:bg-neutral-600 text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center"
             >
               <Settings className="h-4 w-4 mr-2" />
               Configurar
-            </Button>
+            </button>
           )}
           
           {onDisconnect && (
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={handleDisconnect}
               disabled={isDisconnecting}
-              className="text-destructive hover:text-destructive"
+              className="bg-red-600 hover:bg-red-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center"
             >
               {isDisconnecting ? (
                 <AlertCircle className="h-4 w-4 mr-2 animate-spin" />
@@ -185,16 +171,16 @@ export default function TelegramStatus({
                 <Trash2 className="h-4 w-4 mr-2" />
               )}
               Desconectar
-            </Button>
+            </button>
           )}
         </div>
 
         {/* Información adicional */}
-        <div className="text-xs text-muted-foreground space-y-1">
+        <div className="text-xs text-neutral-400 space-y-1">
           <p>Creado: {formatDate(integration.createdAt)}</p>
           <p>Actualizado: {formatDate(integration.updatedAt)}</p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

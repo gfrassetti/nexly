@@ -23,6 +23,16 @@ export function useIntegrations(): UseIntegrationsReturn {
     // WhatsApp siempre está disponible (primera integración)
     if (integrationName === 'whatsapp') return true;
     
+    // Telegram está disponible en trial y planes activos
+    if (integrationName === 'telegram') {
+      return status.trialActive || status.active || maxIntegrations >= 999;
+    }
+    
+    // Instagram está disponible en trial y planes activos
+    if (integrationName === 'instagram') {
+      return status.trialActive || status.active || maxIntegrations >= 999;
+    }
+    
     // Durante trial activo, todo disponible
     if (status.trialActive) return true;
     

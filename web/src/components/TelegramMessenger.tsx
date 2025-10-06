@@ -1,14 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Removed UI component imports - using standard HTML elements
 import { MessageSquare, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { showToast } from '../hooks/use-toast';
 
 interface TelegramMessengerProps {
   integrationId: string;
@@ -28,17 +23,13 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
   const [recipient, setRecipient] = useState('');
   const [parseMode, setParseMode] = useState<'HTML' | 'Markdown' | 'MarkdownV2'>('HTML');
   const [lastMessageId, setLastMessageId] = useState<string | null>(null);
-  const { toast } = useToast();
+  // Using showToast directly
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!message.trim() || !recipient.trim()) {
-      toast({
-        title: "Error",
-        description: "Por favor completa todos los campos",
-        variant: "destructive",
-      });
+      showToast.error("Por favor completa todos los campos");
       return;
     }
 
@@ -64,10 +55,7 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
         setLastMessageId(data.messageId);
         setMessage('');
         
-        toast({
-          title: "Mensaje enviado",
-          description: `Mensaje enviado exitosamente (ID: ${data.messageId})`,
-        });
+        showToast.success(`Mensaje enviado exitosamente (ID: ${data.messageId})`);
         
         onMessageSent?.(data.messageId);
       } else {
@@ -75,11 +63,7 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
       }
     } catch (error: any) {
       console.error('Error enviando mensaje de Telegram:', error);
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo enviar el mensaje",
-        variant: "destructive",
-      });
+      showToast.error(error.message || "No se pudo enviar el mensaje");
     } finally {
       setIsSending(false);
     }
@@ -97,22 +81,24 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
   ];
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="w-full bg-neutral-800 rounded-lg border border-neutral-700">
+      <div className="p-6 border-b border-neutral-700">
+        <h3 className="text-xl font-semibold flex items-center gap-2 text-white">
           <MessageSquare className="h-5 w-5" />
           Enviar Mensaje de Telegram
-        </CardTitle>
-        <CardDescription>
+        </h3>
+        <p className="text-sm text-neutral-400 mt-1">
           Envía mensajes a usuarios de Telegram desde tu panel de NEXLY
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+        </p>
+      </div>
+      <div className="p-6 space-y-6">
         <form onSubmit={handleSendMessage} className="space-y-4">
           {/* Destinatario */}
           <div className="space-y-2">
-            <Label htmlFor="recipient">Destinatario (ID de Usuario de Telegram)</Label>
-            <Input
+            <label htmlFor="recipient" className="block text-sm font-medium text-white mb-1">
+              Destinatario (ID de Usuario de Telegram)
+            </label>
+            <input
               id="recipient"
               type="text"
               placeholder="Ej: 123456789"
@@ -120,6 +106,7 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
               onChange={(e) => setRecipient(e.target.value)}
               disabled={isSending}
               required
+              className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
             />
             <p className="text-xs text-muted-foreground">
               Ingresa el ID numérico del usuario de Telegram al que quieres enviar el mensaje
@@ -128,17 +115,19 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
 
           {/* Modo de parseo */}
           <div className="space-y-2">
-            <Label htmlFor="parseMode">Formato del mensaje</Label>
-            <Select value={parseMode} onValueChange={(value: any) => setParseMode(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="HTML">HTML</SelectItem>
-                <SelectItem value="Markdown">Markdown</SelectItem>
-                <SelectItem value="MarkdownV2">Markdown V2</SelectItem>
-              </SelectContent>
-            </Select>
+            <label htmlFor="parseMode" className="block text-sm font-medium text-white mb-1">
+              Formato del mensaje
+            </label>
+            <select
+              id="parseMode"
+              value={parseMode}
+              onChange={(e) => setParseMode(e.target.value as any)}
+              className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="HTML">HTML</option>
+              <option value="Markdown">Markdown</option>
+              <option value="MarkdownV2">Markdown V2</option>
+            </select>
             <p className="text-xs text-muted-foreground">
               HTML: <code>&lt;b&gt;negrita&lt;/b&gt;</code>, <code>&lt;i&gt;cursiva&lt;/i&gt;</code><br/>
               Markdown: <code>**negrita**</code>, <code>*cursiva*</code>
@@ -147,8 +136,10 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
 
           {/* Mensaje */}
           <div className="space-y-2">
-            <Label htmlFor="message">Mensaje</Label>
-            <Textarea
+            <label htmlFor="message" className="block text-sm font-medium text-white mb-1">
+              Mensaje
+            </label>
+            <textarea
               id="message"
               placeholder="Escribe tu mensaje aquí..."
               value={message}
@@ -156,34 +147,35 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
               disabled={isSending}
               rows={4}
               required
+              className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 resize-vertical"
             />
           </div>
 
           {/* Mensajes rápidos */}
           <div className="space-y-2">
-            <Label>Mensajes rápidos</Label>
+            <label className="block text-sm font-medium text-white mb-1">
+              Mensajes rápidos
+            </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {quickMessages.map((quickMsg, index) => (
-                <Button
+                <button
                   key={index}
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => handleQuickMessage(quickMsg)}
                   disabled={isSending}
-                  className="text-left justify-start h-auto p-2"
+                  className="text-left justify-start h-auto p-2 bg-neutral-700 border border-neutral-600 rounded-md text-white hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <span className="text-xs truncate">{quickMsg}</span>
-                </Button>
+                </button>
               ))}
             </div>
           </div>
 
           {/* Botón de envío */}
-          <Button 
+          <button 
             type="submit" 
             disabled={isSending || !message.trim() || !recipient.trim()}
-            className="w-full"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center"
           >
             {isSending ? (
               <>
@@ -196,33 +188,33 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
                 Enviar Mensaje
               </>
             )}
-          </Button>
+          </button>
         </form>
 
         {/* Estado del último mensaje */}
         {lastMessageId && (
-          <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="p-3 bg-green-950/20 rounded-lg border border-green-800">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-green-900 dark:text-green-100">
+              <CheckCircle className="h-4 w-4 text-green-400" />
+              <span className="text-sm font-medium text-green-100">
                 Último mensaje enviado
               </span>
             </div>
-            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+            <p className="text-xs text-green-300 mt-1">
               ID: {lastMessageId}
             </p>
           </div>
         )}
 
         {/* Información adicional */}
-        <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="p-4 bg-blue-950/20 rounded-lg border border-blue-800">
           <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+            <AlertCircle className="h-4 w-4 text-blue-400 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              <p className="text-sm font-medium text-blue-100">
                 Información importante
               </p>
-              <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+              <ul className="text-xs text-blue-300 space-y-1">
                 <li>• El destinatario debe haber iniciado una conversación con tu bot</li>
                 <li>• Usa el ID numérico del usuario de Telegram (no el username)</li>
                 <li>• Los mensajes se envían a través de tu bot de Telegram</li>
@@ -231,7 +223,7 @@ export default function TelegramMessenger({ integrationId, onMessageSent }: Tele
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
