@@ -12,14 +12,14 @@ export interface IntegrationDoc extends Document {
   meta?: {
     displayPhone?: string;
     verifiedName?: string;
-    // Telegram specific fields
-    telegramUserId?: string;
+    // Telegram MTProto specific fields
+    telegramUserId?: number;
     telegramUsername?: string;
     telegramFirstName?: string;
     telegramLastName?: string;
-    telegramPhotoUrl?: string;
-    botToken?: string;
-    botUsername?: string;
+    telegramPhoneNumber?: string;
+    sessionString?: string;
+    isActive?: boolean;
   };
   // timestamps agregados para que TS no proteste en las rutas
   createdAt?: Date;
@@ -46,14 +46,14 @@ const integrationSchema = new Schema<IntegrationDoc>(
     meta: {
       displayPhone: { type: String },
       verifiedName: { type: String },
-      // Telegram specific fields
-      telegramUserId: { type: String },
+      // Telegram MTProto specific fields
+      telegramUserId: { type: Number },
       telegramUsername: { type: String },
       telegramFirstName: { type: String },
       telegramLastName: { type: String },
-      telegramPhotoUrl: { type: String },
-      botToken: { type: String },
-      botUsername: { type: String },
+      telegramPhoneNumber: { type: String },
+      sessionString: { type: String },
+      isActive: { type: Boolean, default: true },
     },
   },
   { timestamps: true, versionKey: false }

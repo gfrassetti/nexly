@@ -1,5 +1,5 @@
 // Integraciones y canales disponibles
-export const CHANNELS = ["whatsapp", "instagram", "messenger"] as const;
+export const CHANNELS = ["whatsapp", "instagram", "messenger", "telegram"] as const;
 export type Channel = typeof CHANNELS[number];
 
 export const INTEGRATIONS = [
@@ -30,8 +30,8 @@ export const INTEGRATIONS = [
   { 
     id: "telegram", 
     label: "Telegram", 
-    color: "bg-blue-400",
-    description: "Conecta Telegram para gestionar bots y mensajes."
+    color: "bg-blue-500",
+    description: "Conecta tu cuenta personal de Telegram para gestionar todos tus chats y mensajes."
   },
 ] as const;
 
@@ -78,7 +78,7 @@ export const PLATFORM_COLORS = {
   instagram: "bg-pink-500", 
   messenger: "bg-blue-500",
   tiktok: "bg-black",
-  telegram: "bg-blue-400",
+  telegram: "bg-blue-500",
   default: "bg-neutral-500",
 } as const;
 

@@ -8,9 +8,10 @@ import Logo from "./Logo";
 const items = [
   { id: "resumen", label: "Resumen", href: "/dashboard" },
   { id: "inbox", label: "Inbox", href: "/dashboard/inbox" },
+  { id: "inbox-unified", label: "Bandeja Unificada", href: "/dashboard/inbox-unified" },
   { id: "contacts", label: "Contactos", href: "/dashboard/contacts" },
-        { id: "integrations", label: "Integraciones", href: "/dashboard/integrations" },
-        { id: "subscription", label: "Mi Suscripción", href: "/dashboard/subscription" },
+  { id: "integrations", label: "Integraciones", href: "/dashboard/integrations" },
+  { id: "subscription", label: "Mi Suscripción", href: "/dashboard/subscription" },
 ];
 
 

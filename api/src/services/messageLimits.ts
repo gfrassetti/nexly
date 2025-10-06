@@ -67,3 +67,50 @@ export async function getIntegrationMessageLimit(userId: string, integrationId: 
   const limits = await getMessageLimits(userId);
   return limits.maxMessagesPerIntegration;
 }
+
+/**
+ * Verifica si el usuario puede conectar una nueva integración
+ */
+export async function checkIntegrationLimits(userId: string): Promise<{
+  canConnect: boolean;
+  reason?: string;
+  maxIntegrations: number;
+  currentIntegrations: number;
+}> {
+  const user = await User.findById(userId);
+  const subscription = await Subscription.findOne({ userId });
+  
+  // Límites según el plan
+  let maxIntegrations = 1; // Plan gratuito
+  
+  if (subscription) {
+    if (subscription.status === 'trialing') {
+      maxIntegrations = 999; // Trial activo
+    } else {
+      switch (subscription.planType) {
+        case 'basic':
+          maxIntegrations = 3;
+          break;
+        case 'premium':
+          maxIntegrations = 999; // Premium: ilimitadas
+          break;
+      }
+    }
+  }
+  
+  // Contar integraciones actuales
+  const Integration = (await import('../models/Integration')).Integration;
+  const currentIntegrations = await Integration.countDocuments({
+    userId,
+    status: 'linked'
+  });
+  
+  const canConnect = currentIntegrations < maxIntegrations;
+  
+  return {
+    canConnect,
+    reason: canConnect ? undefined : `Límite de integraciones alcanzado. Máximo: ${maxIntegrations}`,
+    maxIntegrations,
+    currentIntegrations
+  };
+}

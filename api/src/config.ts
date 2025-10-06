@@ -33,9 +33,10 @@ export const config = {
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || "",
   twilioWhatsAppNumber: process.env.TWILIO_WHATSAPP_NUMBER || "whatsapp:+14155238886",
   
-  // Telegram Configuration
-  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  telegramWebhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET || "nexly_webhook_secret_2024_abc123def456",
+  // Telegram MTProto Configuration
+  telegramApiId: process.env.TELEGRAM_API_ID || "",
+  telegramApiHash: process.env.TELEGRAM_API_HASH || "",
+  
   
   // Stripe Configuration
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
