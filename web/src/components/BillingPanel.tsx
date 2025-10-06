@@ -76,7 +76,7 @@ export default function BillingPanel() {
       case 'trial' as any:
         return 'bg-transparent text-accent-blue border border-accent-blue/30';
       case 'paused':
-        return 'bg-transparent text-accent-orange border border-accent-orange/30';
+        return 'bg-transparent text-accent-cream border border-accent-cream/30';
       case 'incomplete':
         return 'bg-transparent text-warning border border-warning/30';
       case 'past_due':

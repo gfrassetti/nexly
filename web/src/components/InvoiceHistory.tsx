@@ -146,7 +146,7 @@ function InvoiceItem({ invoice }: InvoiceItemProps) {
               {formatInvoiceAmount(invoice.total, invoice.currency)}
             </p>
             {invoice.amount_due > 0 && invoice.amount_paid < invoice.total && (
-              <p className="text-xs text-accent-orange">
+              <p className="text-xs text-accent-cream">
                 Pendiente: {formatInvoiceAmount(invoice.amount_due, invoice.currency)}
               </p>
             )}

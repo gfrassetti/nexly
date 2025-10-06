@@ -76,11 +76,11 @@ const getStatusColor = (status: string, hasStripeSubscription?: boolean) => {
     case "trialing":
       return "bg-transparent text-accent-blue border border-accent-blue/30";
     case "paused":
-      return "bg-transparent text-accent-orange border border-accent-orange/30";
+      return "bg-transparent text-accent-cream border border-accent-cream/30";
     case "canceled":
       return "bg-transparent text-accent-red border border-accent-red/30";
     case "past_due":
-      return "bg-transparent text-accent-orange border border-accent-orange/30";
+      return "bg-transparent text-accent-cream border border-accent-cream/30";
     case "incomplete":
       return "bg-transparent text-warning border border-warning/30";
     case "unpaid":

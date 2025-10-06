@@ -43,7 +43,7 @@ export default function BillingInfo() {
       'active': 'bg-transparent text-accent-green border border-accent-green/30',
       'incomplete': 'bg-transparent text-warning border border-warning/30',
       'incomplete_expired': 'bg-transparent text-accent-red border border-accent-red/30',
-      'past_due': 'bg-transparent text-accent-orange border border-accent-orange/30',
+      'past_due': 'bg-transparent text-accent-cream border border-accent-cream/30',
       'canceled': 'bg-transparent text-accent-red border border-accent-red/30',
       'unpaid': 'bg-transparent text-accent-red border border-accent-red/30',
       'paused': 'bg-transparent text-muted-foreground border border-border'

@@ -55,7 +55,7 @@ export default function Topbar() {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Pausado)`;
       badgeColor = sub.planType === 'premium' 
         ? 'bg-accent-dark text-white border border-accent-dark/30' 
-        : 'text-accent-orange border border-accent-orange/30';
+        : 'text-accent-cream border border-accent-cream/30';
     } else if (rawStatus === 'past_due' || rawStatus === 'unpaid') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Gracia)`;
       badgeColor = sub.planType === 'premium' 

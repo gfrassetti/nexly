@@ -90,7 +90,7 @@ export default function SubscriptionActions({
           <button
             onClick={handlePause}
             disabled={loading || actionLoading === "pause"}
-            className="w-full px-4 py-2 text-sm font-medium text-accent-orange bg-accent-orange/10 hover:bg-accent-orange/20 disabled:bg-muted rounded-lg transition-colors border border-accent-orange/20"
+            className="w-full px-4 py-2 text-sm font-medium text-accent-cream bg-accent-cream/10 hover:bg-accent-cream/20 disabled:bg-muted rounded-lg transition-colors border border-accent-cream/20"
           >
             {actionLoading === "pause" ? "Pausando..." : "Pausar Suscripción"}
           </button>

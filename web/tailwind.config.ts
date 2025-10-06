@@ -39,7 +39,7 @@ export default {
         // Keep minimal accent colors for specific UI elements
         'accent-blue': '#008bf9',
         'accent-green': '#04b796',
-        'accent-orange': '#edecec',
+        'accent-cream': '#edecec',
         'accent-red': '#da3633',
         'accent-dark': '#14120b',
       },

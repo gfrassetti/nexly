@@ -82,7 +82,7 @@ export default function BillingStats() {
           
           {stats.totalPending > 0 && (
             <div className="text-center">
-              <div className="text-lg font-semibold text-accent-orange">
+              <div className="text-lg font-semibold text-accent-cream">
                 {formatInvoiceAmount(stats.totalPending)}
               </div>
               <div className="text-xs text-muted-foreground">Pendiente</div>

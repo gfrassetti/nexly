@@ -115,11 +115,11 @@ export default function SubscriptionStatus() {
   // Estado de pago incompleto (requiere acción del usuario)
   if (status.incomplete && !status.active) {
     return (
-      <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-lg p-6">
+      <div className="bg-accent-cream/10 border border-accent-cream/20 rounded-lg p-6">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <svg
-              className="w-6 h-6 text-accent-orange"
+              className="w-6 h-6 text-accent-cream"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -131,11 +131,11 @@ export default function SubscriptionStatus() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
-            <h3 className="text-lg font-semibold text-accent-orange">
+            <h3 className="text-lg font-semibold text-accent-cream">
               Pago Requiere Acción
             </h3>
           </div>
-          <p className="text-accent-orange/80 mb-6">
+          <p className="text-accent-cream/80 mb-6">
             Tu pago requiere autenticación adicional (3D Secure) o hay un
             problema con tu método de pago.
           </p>
@@ -148,7 +148,7 @@ export default function SubscriptionStatus() {
                 createStripePaymentLink(selectedPlan as "basic" | "premium");
               }}
               disabled={stripeLoading}
-              className="bg-accent-orange/20 hover:bg-accent-orange/30 disabled:bg-accent-orange/10 disabled:opacity-50 text-accent-orange border border-accent-orange/30 px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+              className="bg-accent-cream/20 hover:bg-accent-cream/30 disabled:bg-accent-cream/10 disabled:opacity-50 text-accent-cream border border-accent-cream/30 px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
             >
               <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
               <div className="text-left">
@@ -324,7 +324,7 @@ export default function SubscriptionStatus() {
     if (sub.isPaused) {
       return {
         text: 'Pausada',
-        className: 'text-accent-orange border border-accent-orange/30',
+        className: 'text-accent-cream border border-accent-cream/30',
         message: 'Suscripción pausada. Puedes reactivarla cuando quieras'
       };
     }
@@ -377,7 +377,7 @@ export default function SubscriptionStatus() {
         isExpired
           ? "bg-nexly-light-blue/20 border-nexly-light-blue/50"
           : sub.isPaused
-          ? "bg-accent-orange/10 border-accent-orange/20"
+          ? "bg-accent-cream/10 border-accent-cream/20"
           : sub.isInGracePeriod
           ? "bg-warning/10 border-warning/20"
           : sub.isActive
@@ -401,7 +401,7 @@ export default function SubscriptionStatus() {
           {subscriptionConfig.message && (
             <p className={`text-sm ${
               sub.isActive ? 'text-accent-green' :
-              sub.isPaused ? 'text-accent-orange' :
+              sub.isPaused ? 'text-accent-cream' :
               sub.status === 'trialing' ? 'text-accent-blue' :
               'text-neutral-300'
             }`}>
@@ -481,7 +481,7 @@ export default function SubscriptionStatus() {
           {status.active && (
             <button
               onClick={pauseSubscription}
-              className="bg-accent-orange/20 hover:bg-accent-orange/30 text-accent-orange border border-accent-orange/30 px-4 py-2 rounded-lg transition-colors text-sm"
+              className="bg-accent-cream/20 hover:bg-accent-cream/30 text-accent-cream border border-accent-cream/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Pausar
             </button>

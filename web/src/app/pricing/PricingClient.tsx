@@ -143,8 +143,8 @@ function PricingContent() {
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-nexly-teal text-white px-4 py-1 rounded-full text-sm font-medium">
+                <div className="flex justify-center -mt-6 mb-2">
+                  <span className="bg-nexly-teal text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg">
                     Más popular
                   </span>
                 </div>
@@ -174,11 +174,7 @@ function PricingContent() {
               <div className="space-y-3 mt-auto">
                 <button
                   onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
-                  className={`w-full py-4 rounded-[2rem] font-semibold transition-all duration-300 ${
-                    plan.popular
-                      ? 'bg-accent-orange hover:bg-accent-orange/90 text-[#14120b] border border-accent-orange/20 hover:border-accent-orange/40'
-                      : 'bg-accent-orange/20 hover:bg-accent-orange/30 text-[#14120b] border border-accent-orange/30 hover:border-accent-orange/50'
-                  }`}
+                  className="w-full py-4 rounded-[2rem] font-semibold transition-all duration-300 bg-accent-cream hover:bg-accent-cream/90 text-[#14120b] border border-accent-cream/20 hover:border-accent-cream/40"
                 >
                   {token ? 'Continuar al Pago' : 'Comenzar Prueba Gratis'}
                 </button>
