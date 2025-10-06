@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 // Removed UI component imports - using standard HTML elements
 import { CheckCircle, ExternalLink, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
 import { showToast } from '../hooks/use-toast';
+import { apiFetch } from '../lib/api';
 
 interface TelegramConnectProps {
   onConnect?: () => void;
@@ -35,21 +36,8 @@ export default function TelegramConnect({ onConnect, onError, disabled = false }
     const loadTelegramConfig = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/integrations/connect/telegram', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          setConfig(data);
-        } else {
-          throw new Error(data.message || 'Error cargando configuración de Telegram');
-        }
+        const data = await apiFetch('/integrations/connect/telegram');
+        setConfig(data);
       } catch (error: any) {
         console.error('Error cargando configuración de Telegram:', error);
         showToast.error(error.message || "No se pudo cargar la configuración de Telegram");
