@@ -404,6 +404,286 @@ export default function FAQSection() {
           </div>
         </div>
       )
+    },
+    {
+      title: "¿Cómo funciona la integración de Telegram?",
+      content: (
+        <div>
+          <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-blue-400 font-semibold mb-2">
+              <strong>Telegram funciona diferente a WhatsApp.</strong> Usa el Widget de Login oficial de Telegram para una conexión segura y permanente.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-3 text-nexly-teal">Proceso de conexión:</h4>
+              <ol className="space-y-3 text-sm">
+                <li className="flex items-start">
+                  <span className="bg-blue-400 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span>
+                  <span>Haces clic en "Conectar Telegram" en tu dashboard</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-blue-400 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span>
+                  <span>Se abre el Widget oficial de Telegram (como "Login con Google")</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-blue-400 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">3</span>
+                  <span>Telegram te pide confirmar tu identidad (usando tu número)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-blue-400 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">4</span>
+                  <span><strong>CRUCIAL:</strong> Aceptas que el bot te envíe mensajes</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-blue-400 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">5</span>
+                  <span>¡Listo! Tu Telegram queda conectado permanentemente</span>
+                </li>
+              </ol>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-3 text-green-400">¿Qué puedes hacer?</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• Enviar mensajes a usuarios de Telegram</li>
+                  <li>• Recibir mensajes en tiempo real</li>
+                  <li>• Gestionar múltiples conversaciones</li>
+                  <li>• Usar formato HTML/Markdown</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-3 text-red-400">Limitaciones:</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• Solo mensajes enviados a tu bot</li>
+                  <li>• No acceso a contactos del usuario</li>
+                  <li>• No historial de mensajes antiguos</li>
+                  <li>• Solo desde que el bot existe</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg">
+            <h4 className="font-semibold mb-2 text-nexly-teal">¿Por qué es diferente?</h4>
+            <p className="text-sm text-neutral-300 mb-3">
+              Telegram usa un sistema de bots, no cuentas de empresa como WhatsApp. El usuario autoriza tu bot 
+              para enviarle mensajes, creando una conexión directa y segura.
+            </p>
+            <p className="text-sm text-neutral-300">
+              <strong>Ventaja:</strong> Una vez conectado, funciona para siempre sin necesidad de reconectar.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "¿Necesito crear un bot de Telegram para usar esta integración?",
+      content: (
+        <div>
+          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-yellow-400 font-semibold mb-2">
+              <strong>No.</strong> Nexly ya tiene un bot configurado. Solo necesitas autorizar la conexión.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-3 text-nexly-teal">¿Cómo funciona?</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• Nexly ya tiene un bot de Telegram configurado</li>
+                <li>• Tú solo autorizas que ese bot te envíe mensajes</li>
+                <li>• No necesitas crear nada en @BotFather</li>
+                <li>• No necesitas configurar tokens ni webhooks</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-3 text-blue-400">Proceso simplificado:</h4>
+              <ol className="space-y-2 text-sm">
+                <li>1. Haces clic en "Conectar Telegram"</li>
+                <li>2. Autorizas el bot de Nexly</li>
+                <li>3. ¡Listo! Ya puedes enviar/recibir mensajes</li>
+              </ol>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-neutral-800/50 rounded-lg">
+            <p className="text-sm text-neutral-400">
+              <strong>Nota:</strong> Si eres desarrollador y quieres usar tu propio bot, contacta al soporte de Nexly 
+              para configuración personalizada.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "¿Puedo ver el historial de mensajes de Telegram en Nexly?",
+      content: (
+        <div>
+          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-red-400 font-semibold mb-2">
+              <strong>Limitado.</strong> Solo puedes ver mensajes enviados a tu bot desde que se conectó.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-3 text-nexly-teal">¿Qué SÍ puedes ver?</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• Mensajes enviados a tu bot después de la conexión</li>
+                <li>• Historial de conversaciones con tu bot</li>
+                <li>• Mensajes que envíes desde Nexly</li>
+                <li>• Información básica del usuario (nombre, username)</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-3 text-red-400">¿Qué NO puedes ver?</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• Mensajes privados del usuario con otras personas</li>
+                <li>• Historial de conversaciones anteriores a la conexión</li>
+                <li>• Contactos de la agenda del usuario</li>
+                <li>• Mensajes en grupos donde no esté tu bot</li>
+              </ul>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <h4 className="font-semibold mb-2 text-green-400 text-sm">Estrategia recomendada</h4>
+                <p className="text-xs text-neutral-300">
+                  Construye tu propio historial: cada mensaje que recibas o envíes se guarda en Nexly, 
+                  creando un registro completo de tus interacciones.
+                </p>
+              </div>
+              
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <h4 className="font-semibold mb-2 text-blue-400 text-sm">Privacidad</h4>
+                <p className="text-xs text-neutral-300">
+                  Esta limitación es por diseño: Telegram protege la privacidad de los usuarios 
+                  y no permite acceso a conversaciones privadas.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "¿Hay costos adicionales por usar Telegram con Nexly?",
+      content: (
+        <div>
+          <div className="mb-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+            <p className="text-green-400 font-semibold mb-2">
+              <strong>No.</strong> Telegram es completamente gratuito para bots y usuarios.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-3 text-nexly-teal">¿Qué incluye?</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• Envío ilimitado de mensajes</li>
+                <li>• Recepción ilimitada de mensajes</li>
+                <li>• Soporte para texto, HTML y Markdown</li>
+                <li>• Webhooks en tiempo real</li>
+                <li>• Sin límites de velocidad</li>
+              </ul>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-3 text-green-400">Ventajas de Telegram</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• API completamente gratuita</li>
+                  <li>• Sin restricciones de plantillas</li>
+                  <li>• Mensajes instantáneos</li>
+                  <li>• Ideal para automatización</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-3 text-blue-400">Comparación con WhatsApp</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• WhatsApp: Costo por conversación</li>
+                  <li>• Telegram: Completamente gratuito</li>
+                  <li>• WhatsApp: Requiere plantillas</li>
+                  <li>• Telegram: Mensajes libres</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg">
+            <h4 className="font-semibold mb-2 text-nexly-teal">¿Por qué es gratis?</h4>
+            <p className="text-sm text-neutral-300">
+              Telegram mantiene su API gratuita como parte de su modelo de negocio. 
+              Esto hace que sea ideal para empresas que necesitan enviar muchos mensajes 
+              sin preocuparse por costos adicionales.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "¿Puedo enviar mensajes a cualquier usuario de Telegram?",
+      content: (
+        <div>
+          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-yellow-400 font-semibold mb-2">
+              <strong>No.</strong> Solo puedes enviar mensajes a usuarios que hayan autorizado tu bot.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-3 text-nexly-teal">¿Cómo funciona?</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• El usuario debe haber iniciado conversación con tu bot</li>
+                <li>• Debe haber autorizado que el bot le envíe mensajes</li>
+                <li>• Solo entonces puedes enviarle mensajes desde Nexly</li>
+                <li>• Es una medida de protección contra spam</li>
+              </ul>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-3 text-green-400">¿Qué SÍ puedes hacer?</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• Enviar a usuarios que se conectaron</li>
+                  <li>• Responder a mensajes recibidos</li>
+                  <li>• Usar el ID de usuario de Telegram</li>
+                  <li>• Enviar mensajes programados</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-3 text-red-400">¿Qué NO puedes hacer?</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• Enviar a usuarios aleatorios</li>
+                  <li>• Spam o mensajes no solicitados</li>
+                  <li>• Enviar sin autorización previa</li>
+                  <li>• Acceder a listas de contactos</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg">
+            <h4 className="font-semibold mb-2 text-nexly-teal">Estrategia recomendada</h4>
+            <p className="text-sm text-neutral-300 mb-3">
+              Para que los usuarios puedan recibir mensajes:
+            </p>
+            <ol className="space-y-1 text-sm text-neutral-300">
+              <li>1. <strong>Comparte el enlace de conexión</strong> con tus clientes</li>
+              <li>2. <strong>Ellos se conectan</strong> usando el widget de Telegram</li>
+              <li>3. <strong>Ya puedes enviarles mensajes</strong> desde Nexly</li>
+              <li>4. <strong>Mantén la conversación activa</strong> para mejor engagement</li>
+            </ol>
+          </div>
+        </div>
+      )
     }
   ];
 

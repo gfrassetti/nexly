@@ -54,6 +54,8 @@ export function useIntegrations(): UseIntegrationsReturn {
       window.location.href = '/dashboard/integrations/connect/whatsapp';
     } else if (integrationName === 'instagram') {
       window.location.href = '/dashboard/integrations/connect/instagram';
+    } else if (integrationName === 'telegram') {
+      window.location.href = '/dashboard/integrations/connect/telegram';
     } else if (isIntegrationAvailable(integrationName)) {
       // Aquí iría la lógica para conectar otras plataformas
       alert(`${integrationName} aún no está implementado`);

@@ -46,6 +46,11 @@ function IntegrationsContent() {
       setMessage("¡Instagram conectado exitosamente!");
       // Refrescar todos los datos
       refreshAll();
+    } else if (success === "telegram_connected") {
+      showSuccess("¡Telegram conectado!", "Telegram se ha conectado exitosamente");
+      setMessage("¡Telegram conectado exitosamente!");
+      // Refrescar todos los datos
+      refreshAll();
     } else if (error) {
       let errorTitle = "Error de conexión";
       let errorMessage = "Error al conectar WhatsApp. Intenta de nuevo.";
@@ -98,6 +103,34 @@ function IntegrationsContent() {
           errorTitle = "Token inválido";
           errorMessage = "El token de acceso es inválido o ha expirado. Intenta conectar de nuevo.";
           break;
+        case "telegram_connection_failed":
+          errorTitle = "Error de conexión de Telegram";
+          errorMessage = "Error al conectar con Telegram. Intenta de nuevo.";
+          break;
+        case "telegram_missing_parameters":
+          errorTitle = "Parámetros faltantes";
+          errorMessage = "Faltan parámetros requeridos para la conexión con Telegram.";
+          break;
+        case "telegram_bot_not_configured":
+          errorTitle = "Bot no configurado";
+          errorMessage = "El bot de Telegram no está configurado correctamente.";
+          break;
+        case "telegram_invalid_signature":
+          errorTitle = "Firma inválida";
+          errorMessage = "La firma de autenticación de Telegram es inválida.";
+          break;
+        case "telegram_missing_state":
+          errorTitle = "Estado faltante";
+          errorMessage = "Falta el estado de autorización para Telegram.";
+          break;
+        case "telegram_invalid_user_id":
+          errorTitle = "ID de usuario inválido";
+          errorMessage = "El ID de usuario de Telegram es inválido.";
+          break;
+        case "telegram_user_not_found":
+          errorTitle = "Usuario no encontrado";
+          errorMessage = "No se encontró el usuario en la base de datos.";
+          break;
         default:
           errorTitle = "Error desconocido";
           errorMessage = `Error: ${error}. Revisa los logs del servidor para más detalles.`;
@@ -138,6 +171,7 @@ function IntegrationsContent() {
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   <li><strong>WhatsApp Business</strong> - Manage WhatsApp messages</li>
                   <li><strong>Instagram Business</strong> - Manage Instagram DMs</li>
+                  <li><strong>Telegram</strong> - Manage Telegram bots and messages</li>
                 </ul>
                 <p className="mt-2">
                   <a href="/pricing" className="font-medium text-accent-blue hover:underline">
@@ -231,15 +265,18 @@ function IntegrationsContent() {
                     <div className={`w-8 h-8 rounded-md flex items-center justify-center mr-3 ${
                       integration.provider === 'whatsapp' ? 'bg-accent-green/20' : 
                       integration.provider === 'instagram' ? 'bg-accent-blue/20' : 
+                      integration.provider === 'telegram' ? 'bg-blue-400/20' : 
                       'bg-accent-blue/20'
                     }`}>
                       <span className={`text-sm font-medium ${
                         integration.provider === 'whatsapp' ? 'text-accent-green' : 
                         integration.provider === 'instagram' ? 'text-accent-blue' : 
+                        integration.provider === 'telegram' ? 'text-blue-400' : 
                         'text-accent-blue'
                       }`}>
                         {integration.provider === 'whatsapp' ? 'W' : 
                          integration.provider === 'instagram' ? 'I' : 
+                         integration.provider === 'telegram' ? 'T' : 
                          integration.provider.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -287,11 +324,13 @@ function IntegrationsContent() {
               <div className={`w-8 h-8 rounded-md flex items-center justify-center mr-3 ${
                 integration.id === 'whatsapp' ? 'bg-accent-green/20' :
                 integration.id === 'instagram' ? 'bg-accent-blue/20' :
+                integration.id === 'telegram' ? 'bg-blue-400/20' :
                 'bg-accent-blue/20'
               }`}>
                 <span className={`text-sm font-medium ${
                   integration.id === 'whatsapp' ? 'text-accent-green' :
                   integration.id === 'instagram' ? 'text-accent-blue' :
+                  integration.id === 'telegram' ? 'text-blue-400' :
                   'text-accent-blue'
                 }`}>
                   {integration.label.charAt(0)}

@@ -28,6 +28,7 @@ import {
   verifyTwilioConfig,
   verifyUserSubaccount
 } from "../services/twilioWhatsAppService";
+import { telegramService, verifyTelegramBot } from "../services/telegramService";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -271,6 +272,8 @@ router.use((req, res, next) => {
       req.path === "/twilio/onboarding/callback" ||
       req.path === "/whatsapp/meta-callback" ||
       req.path === "/whatsapp/webhook" ||
+      req.path === "/telegram/callback" ||
+      req.path === "/telegram/webhook" ||
       req.path === "/test-callback" ||
       req.path === "/debug/simple-test" ||
       req.path === "/debug/callback-test" ||
@@ -488,6 +491,130 @@ router.get("/connect/instagram", async (req: AuthRequest, res: Response) => {
     const errorResponse: ApiErrorResponse = { 
       error: "instagram_connect_failed",
       message: "Error al iniciar conexión con Instagram",
+      details: config.isDevelopment ? err.message : undefined
+    };
+    res.status(500).json(errorResponse);
+  }
+});
+
+/**
+ * GET /integrations/connect/telegram
+ * Inicia el flujo de conexión de Telegram
+ */
+router.get("/connect/telegram", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      const errorResponse: ApiErrorResponse = { 
+        error: "authentication_required",
+        message: "Token de autenticación requerido"
+      };
+      return res.status(401).json(errorResponse);
+    }
+
+    // Verificar configuración de Telegram
+    if (!config.telegramBotToken) {
+      logIntegrationError(new Error('Telegram Bot Token not configured'), userId, 'telegram_connect_start', {
+        hasBotToken: !!config.telegramBotToken
+      });
+      
+      const errorResponse: ApiErrorResponse = { 
+        error: "telegram_not_configured",
+        message: "Telegram no está configurado"
+      };
+      return res.status(500).json(errorResponse);
+    }
+
+    // Verificar límites de integraciones
+    const limitsCheck = await checkIntegrationLimits(userId);
+    if (!limitsCheck.canConnect) {
+      const errorResponse: ApiErrorResponse = {
+        error: "integration_limit_exceeded",
+        message: limitsCheck.reason,
+        details: {
+          maxIntegrations: limitsCheck.maxIntegrations,
+          currentIntegrations: limitsCheck.currentIntegrations
+        }
+      };
+      return res.status(403).json(errorResponse);
+    }
+
+    // Verificar si ya tiene Telegram conectado
+    const existing = await Integration.findOne({ 
+      userId, 
+      provider: "telegram" 
+    });
+
+    if (existing && existing.status === "linked") {
+      const errorResponse: ApiErrorResponse = { 
+        error: "telegram_already_connected",
+        message: "Telegram ya está conectado",
+        details: { integrationId: existing._id }
+      };
+      return res.status(409).json(errorResponse);
+    }
+
+    // Verificar que el bot esté configurado correctamente
+    const botVerification = await verifyTelegramBot();
+    if (!botVerification.success) {
+      logIntegrationError(new Error(botVerification.error), userId, 'telegram_bot_verification_failed', {
+        error: botVerification.error
+      });
+      
+      const errorResponse: ApiErrorResponse = { 
+        error: "telegram_bot_invalid",
+        message: "Bot de Telegram no válido",
+        details: botVerification.error
+      };
+      return res.status(500).json(errorResponse);
+    }
+
+    // Generar URL del widget de Telegram Login
+    const botUsername = botVerification.botInfo?.username;
+    if (!botUsername) {
+      const errorResponse: ApiErrorResponse = { 
+        error: "telegram_bot_no_username",
+        message: "El bot de Telegram no tiene username configurado"
+      };
+      return res.status(500).json(errorResponse);
+    }
+
+    const telegramLoginUrl = `https://telegram.org/js/telegram-widget.js?22`;
+    const authUrl = `${config.apiUrl}/integrations/telegram/callback`;
+    
+    // Log Telegram connect attempt
+    logIntegrationActivity('telegram_connect_start', userId, {
+      endpoint: req.path,
+      method: req.method,
+      provider: 'telegram',
+      botUsername: botUsername
+    });
+
+    res.json({ 
+      success: true,
+      message: "Configuración de Telegram lista",
+      botUsername: botUsername,
+      widgetUrl: telegramLoginUrl,
+      authUrl: authUrl,
+      instructions: {
+        step1: "Usa el widget de Telegram Login en el frontend",
+        step2: "El usuario autorizará el bot desde Telegram",
+        step3: "Se redirigirá automáticamente a NEXLY con la conexión establecida"
+      }
+    });
+
+  } catch (err: any) {
+    const userId = req.user?.id || req.user?._id;
+    logIntegrationError(err, userId || 'unknown', 'telegram_connect_start', {
+      endpoint: req.path,
+      method: req.method,
+      provider: 'telegram',
+      errorType: 'connection_initialization_error'
+    });
+    
+    const errorResponse: ApiErrorResponse = { 
+      error: "telegram_connect_failed",
+      message: "Error al iniciar conexión con Telegram",
       details: config.isDevelopment ? err.message : undefined
     };
     res.status(500).json(errorResponse);
@@ -833,6 +960,131 @@ router.get("/oauth/instagram/callback", async (req: Request, res: Response) => {
     }
     
     res.redirect(`${config.frontendUrl}/dashboard/integrations?error=${errorType}`);
+  }
+});
+
+/**
+ * GET /integrations/telegram/callback
+ * Callback del Telegram Login Widget
+ */
+router.get("/telegram/callback", async (req: Request, res: Response) => {
+  try {
+    console.log("🔍 Telegram Login Widget Callback recibido:");
+    console.log("  - Query params:", req.query);
+    
+    const { id, first_name, last_name, username, photo_url, auth_date, hash, state } = req.query;
+
+    // Verificar que tenemos los parámetros requeridos
+    if (!id || !auth_date || !hash) {
+      console.log("❌ Parámetros requeridos faltantes");
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=telegram_missing_parameters`);
+    }
+
+    // Verificar la firma de los datos (importante para seguridad)
+    const crypto = require('crypto');
+    const botToken = config.telegramBotToken;
+    
+    if (!botToken) {
+      console.log("❌ Bot token no configurado");
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=telegram_bot_not_configured`);
+    }
+
+    // Crear la cadena de datos para verificar la firma
+    const dataCheckArray = [];
+    for (const key in req.query) {
+      if (key !== 'hash') {
+        dataCheckArray.push(`${key}=${req.query[key]}`);
+      }
+    }
+    const dataCheckString = dataCheckArray.sort().join('\n');
+
+    // Crear la clave secreta (SHA256 del token del bot)
+    const secretKey = crypto.createHash('sha256').update(botToken).digest();
+
+    // Calcular el HMAC-SHA256
+    const calculatedHash = crypto.createHmac('sha256', secretKey)
+                                 .update(dataCheckString)
+                                 .digest('hex');
+
+    // Verificar la firma
+    if (calculatedHash !== hash) {
+      console.log("❌ Firma de datos de Telegram no válida");
+      logIntegrationError(new Error("Invalid Telegram signature"), "unknown", "telegram_signature_verification_failed", {
+        query: req.query
+      });
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=telegram_invalid_signature`);
+    }
+
+    // Verificar que el estado contenga el userId
+    if (!state) {
+      console.log("❌ Estado faltante");
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=telegram_missing_state`);
+    }
+
+    const userId = state.toString();
+    if (!mongoose.isValidObjectId(userId)) {
+      console.log("❌ ID de usuario inválido en el estado");
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=telegram_invalid_user_id`);
+    }
+
+    // Verificar que el usuario existe
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log("❌ Usuario no encontrado");
+      return res.redirect(`${config.frontendUrl}/dashboard/integrations?error=telegram_user_not_found`);
+    }
+
+    // Crear o actualizar integración de Telegram
+    const integration = await Integration.findOneAndUpdate(
+      { userId, provider: "telegram" },
+      {
+        userId: new Types.ObjectId(userId),
+        provider: "telegram",
+        externalId: id as string,
+        accessToken: "telegram_managed", // Telegram maneja la autenticación
+        name: `Telegram - ${username || first_name || id}`,
+        status: "linked",
+        meta: {
+          telegramUserId: id as string,
+          telegramUsername: username as string,
+          telegramFirstName: first_name as string,
+          telegramLastName: last_name as string,
+          telegramPhotoUrl: photo_url as string,
+          botToken: botToken,
+          botUsername: (await verifyTelegramBot()).botInfo?.username,
+          authDate: new Date(parseInt(auth_date as string) * 1000),
+          connectedAt: new Date()
+        }
+      },
+      { upsert: true, new: true }
+    );
+
+    // Log successful Telegram integration
+    logIntegrationSuccess('telegram_login_widget_callback', userId, {
+      integrationId: (integration as any)._id?.toString() || 'unknown',
+      telegramUserId: id,
+      telegramUsername: username
+    });
+
+    console.log("✅ Telegram Login Widget completado exitosamente");
+    res.redirect(`${config.frontendUrl}/dashboard/integrations?success=telegram_connected`);
+
+  } catch (err: any) {
+    const userId = req.query.state ? req.query.state.toString() : "unknown";
+    
+    // Log detallado del error
+    console.error("❌ Telegram Login Widget Callback Error:", {
+      message: err?.message,
+      query: req.query,
+      userId: userId
+    });
+    
+    logIntegrationError(err, userId, "telegram_login_widget_callback", { 
+      errorMessage: err?.message,
+      query: req.query
+    });
+    
+    res.redirect(`${config.frontendUrl}/dashboard/integrations?error=telegram_connection_failed`);
   }
 });
 
@@ -2263,6 +2515,235 @@ router.post("/fix-subscription-status", async (req: AuthRequest, res: Response) 
       success: false,
       error: "Error al corregir estado de suscripciones",
       details: error.message
+    });
+  }
+});
+
+/**
+ * POST /integrations/telegram/webhook
+ * Webhook para recibir mensajes de Telegram
+ */
+router.post("/telegram/webhook", async (req: Request, res: Response) => {
+  try {
+    logger.info("Telegram webhook recibido", { 
+      updateId: req.body.update_id,
+      messageId: req.body.message?.message_id
+    });
+    
+    // Procesar el update de Telegram
+    const processedUpdate = telegramService.processWebhookUpdate(req.body);
+    
+    if (!processedUpdate.message || !processedUpdate.chatId || !processedUpdate.userId) {
+      logger.info("Update de Telegram sin mensaje válido, ignorando");
+      return res.status(200).send();
+    }
+
+    // Buscar la integración de Telegram del usuario
+    const integration = await Integration.findOne({
+      'meta.telegramUserId': processedUpdate.userId,
+      provider: 'telegram',
+      status: 'linked'
+    });
+
+    if (!integration) {
+      logger.info("No se encontró integración de Telegram para el usuario", {
+        telegramUserId: processedUpdate.userId
+      });
+      return res.status(200).send();
+    }
+
+    // Aquí puedes procesar el mensaje entrante
+    // Por ejemplo, guardarlo en la base de datos, enviarlo a un agente, etc.
+    logger.info("Mensaje de Telegram procesado", {
+      userId: integration.userId,
+      telegramUserId: processedUpdate.userId,
+      messageId: processedUpdate.messageId,
+      text: processedUpdate.text
+    });
+
+    res.status(200).send();
+  } catch (error: any) {
+    logger.error("Error en webhook de Telegram", {
+      error: error.message,
+      updateId: req.body.update_id,
+      stack: error.stack
+    });
+    res.status(500).send('Error processing webhook');
+  }
+});
+
+/**
+ * POST /integrations/telegram/send
+ * Envía un mensaje de Telegram usando la integración del usuario
+ */
+router.post("/telegram/send", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { to, message, parse_mode = 'HTML' } = req.body;
+    
+    if (!to || !message) {
+      return res.status(400).json({ error: "missing_to_or_message" });
+    }
+
+    // Buscar la integración de Telegram del usuario
+    const integration = await Integration.findOne({
+      userId,
+      provider: "telegram",
+      status: "linked"
+    });
+
+    if (!integration || !integration.meta?.telegramUserId) {
+      return res.status(400).json({ 
+        error: "telegram_not_connected",
+        message: "El usuario debe conectar su Telegram primero"
+      });
+    }
+
+    // Enviar mensaje usando el servicio de Telegram
+    const result = await telegramService.sendMessage(to, message, { parse_mode });
+
+    if (result.success) {
+      // Log successful message send
+      logIntegrationActivity('telegram_message_sent', userId, {
+        messageId: result.messageId,
+        to: to,
+        provider: 'telegram',
+        integrationId: integration._id.toString()
+      });
+
+      res.json({ 
+        success: true, 
+        messageId: result.messageId,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).json({ 
+        error: "telegram_send_failed",
+        message: result.error || "Error al enviar mensaje"
+      });
+    }
+
+  } catch (err: any) {
+    const userId = req.user?.id || req.user?._id;
+    logIntegrationError(err, userId || 'unknown', 'telegram_send_message', {
+      provider: 'telegram'
+    });
+    
+    console.error("telegram_send_failed:", err?.message);
+    res.status(500).json({ 
+      error: "telegram_send_failed",
+      details: err?.message 
+    });
+  }
+});
+
+/**
+ * GET /integrations/telegram/bot-info
+ * Obtiene información del bot de Telegram
+ */
+router.get("/telegram/bot-info", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const botVerification = await verifyTelegramBot();
+    
+    if (!botVerification.success) {
+      return res.status(500).json({
+        success: false,
+        error: "bot_verification_failed",
+        message: botVerification.error
+      });
+    }
+
+    res.json({
+      success: true,
+      botInfo: botVerification.botInfo
+    });
+
+  } catch (error: any) {
+    console.error("Error obteniendo información del bot de Telegram:", error);
+    res.status(500).json({
+      success: false,
+      error: "bot_info_failed",
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /integrations/telegram/set-webhook
+ * Configura el webhook del bot de Telegram
+ */
+router.post("/telegram/set-webhook", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { webhookUrl, secretToken } = req.body;
+    
+    if (!webhookUrl) {
+      return res.status(400).json({ error: "webhook_url_required" });
+    }
+
+    const result = await telegramService.setWebhook(webhookUrl, secretToken);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: "Webhook configurado exitosamente",
+        webhookUrl: webhookUrl
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: "webhook_setup_failed",
+        message: result.error
+      });
+    }
+
+  } catch (error: any) {
+    console.error("Error configurando webhook de Telegram:", error);
+    res.status(500).json({
+      success: false,
+      error: "webhook_setup_failed",
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /integrations/telegram/webhook-info
+ * Obtiene información del webhook actual
+ */
+router.get("/telegram/webhook-info", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const result = await telegramService.getWebhookInfo();
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        webhookInfo: result.webhookInfo
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: "webhook_info_failed",
+        message: result.error
+      });
+    }
+
+  } catch (error: any) {
+    console.error("Error obteniendo información del webhook de Telegram:", error);
+    res.status(500).json({
+      success: false,
+      error: "webhook_info_failed",
+      message: error.message
     });
   }
 });

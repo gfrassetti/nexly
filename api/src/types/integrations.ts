@@ -78,5 +78,5 @@ export interface VerificationResult {
   };
 }
 
-export type IntegrationProvider = "whatsapp" | "instagram" | "messenger";
+export type IntegrationProvider = "whatsapp" | "instagram" | "messenger" | "telegram";
 export type IntegrationStatus = "pending" | "linked" | "error";

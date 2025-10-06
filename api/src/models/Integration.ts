@@ -3,7 +3,7 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IntegrationDoc extends Document {
   // 👇 Debe ser ObjectId porque en el schema usás Schema.Types.ObjectId
   userId: Types.ObjectId;
-  provider: "whatsapp" | "instagram" | "messenger";
+  provider: "whatsapp" | "instagram" | "messenger" | "telegram";
   externalId: string;
   phoneNumberId?: string;
   accessToken?: string;
@@ -12,6 +12,14 @@ export interface IntegrationDoc extends Document {
   meta?: {
     displayPhone?: string;
     verifiedName?: string;
+    // Telegram specific fields
+    telegramUserId?: string;
+    telegramUsername?: string;
+    telegramFirstName?: string;
+    telegramLastName?: string;
+    telegramPhotoUrl?: string;
+    botToken?: string;
+    botUsername?: string;
   };
   // timestamps agregados para que TS no proteste en las rutas
   createdAt?: Date;
@@ -23,7 +31,7 @@ const integrationSchema = new Schema<IntegrationDoc>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     provider: {
       type: String,
-      enum: ["whatsapp", "instagram", "messenger"],
+      enum: ["whatsapp", "instagram", "messenger", "telegram"],
       required: true,
     },
     externalId: { type: String, required: true },
@@ -38,6 +46,14 @@ const integrationSchema = new Schema<IntegrationDoc>(
     meta: {
       displayPhone: { type: String },
       verifiedName: { type: String },
+      // Telegram specific fields
+      telegramUserId: { type: String },
+      telegramUsername: { type: String },
+      telegramFirstName: { type: String },
+      telegramLastName: { type: String },
+      telegramPhotoUrl: { type: String },
+      botToken: { type: String },
+      botUsername: { type: String },
     },
   },
   { timestamps: true, versionKey: false }

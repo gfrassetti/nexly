@@ -187,9 +187,9 @@ class StripeService {
         cancel_url: data.cancelUrl,
         allow_promotion_codes: true,
         billing_address_collection: 'required',
-        // subscription_data: {
-        //   trial_period_days: data.trialPeriodDays || STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
-        // },
+        subscription_data: {
+          trial_period_days: data.trialPeriodDays || STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
+        },
         metadata: {
           planType: data.planType || 'basic',
         },
@@ -227,7 +227,7 @@ class StripeService {
         customerEmail: userEmail,
         successUrl,
         cancelUrl,
-        // trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS, // Comentado para testing sin trial
+        trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
         planType: 'basic',
       });
     } catch (error: any) {
@@ -256,7 +256,7 @@ class StripeService {
         customerEmail: userEmail,
         successUrl,
         cancelUrl,
-        // trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS, // Comentado para testing sin trial
+        trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
         planType: 'premium',
       });
     } catch (error: any) {
