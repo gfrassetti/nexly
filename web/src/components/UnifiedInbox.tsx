@@ -78,7 +78,7 @@ export default function UnifiedInbox({ className = '' }: UnifiedInboxProps) {
   const loadConversations = async () => {
     try {
       setIsLoadingConversations(true);
-      const response = await apiFetch(`/unified-inbox/conversations?status=${statusFilter}&search=${searchTerm}`, {}, token);
+      const response = await apiFetch(`/unified-inbox/conversations?status=${statusFilter}&search=${searchTerm}`, {}, token || undefined);
       
       if (response.success) {
         setConversations(response.conversations || []);
@@ -97,7 +97,7 @@ export default function UnifiedInbox({ className = '' }: UnifiedInboxProps) {
   const loadMessages = async (conversationId: string) => {
     try {
       setIsLoadingMessages(true);
-      const response = await apiFetch(`/unified-inbox/conversations/${conversationId}/messages`, {}, token);
+      const response = await apiFetch(`/unified-inbox/conversations/${conversationId}/messages`, {}, token || undefined);
       
       if (response.success) {
         setMessages(response.messages || []);
