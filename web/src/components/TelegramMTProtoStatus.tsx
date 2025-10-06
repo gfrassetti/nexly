@@ -51,7 +51,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
   const loadChats = async () => {
     setIsLoadingChats(true);
     try {
-      const response = await apiFetch('/telegram/chats', {}, token);
+      const response = await apiFetch('/telegram/chats', {}, token || undefined);
       if (response.success) {
         setChats(response.chats || []);
       } else {
@@ -68,7 +68,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
   const loadMessages = async (chatId: number) => {
     setIsLoadingMessages(true);
     try {
-      const response = await apiFetch(`/telegram/messages/${chatId}?limit=20`, {}, token);
+      const response = await apiFetch(`/telegram/messages/${chatId}?limit=20`, {}, token || undefined);
       if (response.success) {
         setMessages(response.messages || []);
       } else {
