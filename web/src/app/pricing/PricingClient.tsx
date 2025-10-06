@@ -174,10 +174,10 @@ function PricingContent() {
               <div className="space-y-3 mt-auto">
                 <button
                   onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
-                  className={`w-full py-4 rounded-lg font-semibold transition-colors duration-300 ${
+                  className={`w-full py-4 rounded-[2rem] font-semibold transition-all duration-300 ${
                     plan.popular
-                      ? 'bg-nexly-teal hover:bg-nexly-green text-white'
-                      : 'bg-nexly-azul/20 hover:bg-nexly-azul/30 text-nexly-light-blue border border-nexly-azul/30'
+                      ? 'bg-accent-orange hover:bg-accent-orange/90 text-[#14120b] border border-accent-orange/20 hover:border-accent-orange/40'
+                      : 'bg-accent-orange/20 hover:bg-accent-orange/30 text-[#14120b] border border-accent-orange/30 hover:border-accent-orange/50'
                   }`}
                 >
                   {token ? 'Continuar al Pago' : 'Comenzar Prueba Gratis'}

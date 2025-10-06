@@ -14,6 +14,9 @@ export const useStripePayment = () => {
 
     setLoading(true);
     try {
+      // Guardar el plan seleccionado en localStorage para mantener el contexto
+      localStorage.setItem('selectedPlan', planType);
+      
       const response = await api('/stripe/create-payment-link', {
         method: 'POST',
         body: JSON.stringify({

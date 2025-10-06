@@ -447,7 +447,18 @@ export default function SubscriptionStatus() {
           {sub.status === 'trialing' && !sub.isTrialActive && sub.daysRemaining === 0 && (
             <button
               onClick={() => {
-                const selectedPlan = localStorage.getItem("selectedPlan") || "basic";
+                // Usar el planType de la suscripción actual, o el selectedPlan del localStorage como fallback
+                const planFromSubscription = sub.planType;
+                const planFromStorage = localStorage.getItem("selectedPlan");
+                const selectedPlan = planFromSubscription || planFromStorage || "basic";
+                
+                console.log('🔍 Debug Completar Pago:', {
+                  planFromSubscription,
+                  planFromStorage,
+                  selectedPlan,
+                  subscriptionData: sub
+                });
+                
                 createStripePaymentLink(selectedPlan as "basic" | "premium");
               }}
               className="bg-warning/20 hover:bg-warning/30 text-warning border border-warning/30 px-4 py-2 rounded-lg transition-colors text-sm"
