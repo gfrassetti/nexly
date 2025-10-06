@@ -74,8 +74,15 @@ export class TelegramMTProtoService {
     const apiId = parseInt(process.env.TELEGRAM_API_ID || '0');
     const apiHash = process.env.TELEGRAM_API_HASH || '';
 
+    logger.info('Inicializando cliente de Telegram', { 
+      apiId: apiId || 'No configurado', 
+      apiHash: apiHash ? 'Configurado' : 'No configurado' 
+    });
+
     if (!apiId || !apiHash) {
-      throw new Error('TELEGRAM_API_ID o TELEGRAM_API_HASH no están configurados');
+      const error = `TELEGRAM_API_ID o TELEGRAM_API_HASH no están configurados. API_ID: ${apiId}, API_HASH: ${apiHash ? 'Configurado' : 'No configurado'}`;
+      logger.error(error);
+      throw new Error(error);
     }
 
     const stringSession = new StringSession(sessionString || '');
@@ -85,7 +92,9 @@ export class TelegramMTProtoService {
       autoReconnect: true,
     });
 
+    logger.info('Conectando cliente de Telegram...');
     await this.client.connect();
+    logger.info('Cliente de Telegram conectado exitosamente');
   }
 
   public async connect(userId: string, sessionString?: string): Promise<boolean> {

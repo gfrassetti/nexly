@@ -11,6 +11,97 @@ type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 const router = Router();
 
 /**
+ * GET /telegram/debug/config
+ * Debug endpoint para verificar configuración de Telegram
+ */
+router.get('/debug/config', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    const config = {
+      telegramApiId: process.env.TELEGRAM_API_ID ? 'Configurado' : 'No configurado',
+      telegramApiHash: process.env.TELEGRAM_API_HASH ? 'Configurado' : 'No configurado',
+      apiIdValue: process.env.TELEGRAM_API_ID,
+      apiHashValue: process.env.TELEGRAM_API_HASH ? '***' : 'No configurado',
+      nodeEnv: process.env.NODE_ENV,
+      allEnvVars: Object.keys(process.env).filter(key => key.includes('TELEGRAM')),
+    };
+
+    logger.info('Debug config de Telegram', { userId, config });
+
+    res.status(200).json({
+      success: true,
+      config
+    });
+  } catch (error: unknown) {
+    logger.error('Error en debug config', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * GET /telegram/debug/test-connection
+ * Debug endpoint para probar conexión con Telegram
+ */
+router.get('/debug/test-connection', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Probando conexión con Telegram', { userId });
+    
+    const connected = await telegramMTProtoService.connect(userId);
+    
+    if (connected) {
+      logger.info('Conexión con Telegram exitosa', { userId });
+      res.status(200).json({
+        success: true,
+        message: 'Conexión con Telegram exitosa'
+      });
+    } else {
+      logger.error('Error en conexión con Telegram', { userId });
+      res.status(500).json({
+        success: false,
+        error: 'connection_failed',
+        message: 'No se pudo conectar con Telegram'
+      });
+    }
+  } catch (error: unknown) {
+    logger.error('Error en test de conexión', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: error instanceof Error ? error.message : 'Error interno del servidor'
+    });
+  }
+});
+
+/**
  * POST /telegram/send-code
  * Enviar código de verificación al número de teléfono
  */
@@ -74,8 +165,10 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Inicializar cliente para nueva autenticación
+    logger.info('Iniciando conexión con Telegram', { userId, phoneNumber });
     const connected = await telegramMTProtoService.connect(userId);
     if (!connected) {
+      logger.error('Error conectando con Telegram', { userId, phoneNumber });
       return res.status(500).json({
         success: false,
         error: 'connection_failed',
@@ -84,6 +177,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Enviar código de verificación
+    logger.info('Enviando código de verificación', { userId, phoneNumber });
     const result = await telegramMTProtoService.sendCode(phoneNumber);
     
     if (!result.success) {
