@@ -41,6 +41,7 @@ export default {
         'accent-green': '#04b796',
         'accent-orange': '#edecec',
         'accent-red': '#da3633',
+        'accent-dark': '#14120b',
       },
       borderRadius: {
         'sm': '4px',
