@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 import { UnifiedConversation, UnifiedConversationDoc } from '../models/UnifiedConversation';
 import { UnifiedMessage, UnifiedMessageDoc } from '../models/UnifiedMessage';
 import { Integration } from '../models/Integration';
@@ -95,7 +95,7 @@ export class UnifiedMessagingService {
       }
 
       // 3. Actualizar última actividad de la conversación
-      await this.updateConversationActivity(conversation._id, incomingMessage.timestamp, 'contact');
+      await this.updateConversationActivity(conversation._id as Types.ObjectId, incomingMessage.timestamp, 'contact');
 
       logger.info('Mensaje entrante procesado exitosamente', {
         userId,
@@ -159,7 +159,7 @@ export class UnifiedMessagingService {
       );
 
       // 4. Actualizar última actividad
-      await this.updateConversationActivity(conversation._id, new Date(), 'user');
+      await this.updateConversationActivity(conversation._id as Types.ObjectId, new Date(), 'user');
 
       logger.info('Mensaje enviado exitosamente', {
         userId,

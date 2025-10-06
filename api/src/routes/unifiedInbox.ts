@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Types } from 'mongoose';
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 import { unifiedMessagingService } from '../services/unifiedMessagingService';
 import { UnifiedConversation } from '../models/UnifiedConversation';
 import { UnifiedMessage } from '../models/UnifiedMessage';

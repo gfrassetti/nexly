@@ -7,7 +7,7 @@ import {
   Filter, 
   MoreVertical, 
   Archive, 
-  Block, 
+  Ban, 
   CheckCircle,
   Clock,
   Phone,

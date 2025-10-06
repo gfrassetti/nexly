@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 import { unifiedMessagingService, IncomingMessage } from '../services/unifiedMessagingService';
 import { Integration } from '../models/Integration';
 import { Types } from 'mongoose';
