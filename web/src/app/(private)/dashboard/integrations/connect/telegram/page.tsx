@@ -6,16 +6,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import TelegramConnect from '@/components/TelegramConnect';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+// Removed UI component imports - using standard HTML elements
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { showToast } from '@/hooks/use-toast';
 
 function TelegramConnectContent() {
   const { token, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { toast } = useToast();
+  // Using showToast directly
   const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
@@ -29,10 +28,7 @@ function TelegramConnectContent() {
     const error = searchParams.get('error');
 
     if (success === 'telegram_connected') {
-      toast({
-        title: "¡Telegram conectado!",
-        description: "Telegram se ha conectado exitosamente",
-      });
+      showToast.success("¡Telegram conectado! Telegram se ha conectado exitosamente");
       // Redirigir de vuelta a la página de integraciones
       setTimeout(() => {
         router.push('/dashboard/integrations');
@@ -76,13 +72,9 @@ function TelegramConnectContent() {
           break;
       }
       
-      toast({
-        title: errorTitle,
-        description: errorMessage,
-        variant: "destructive",
-      });
+      showToast.error(`${errorTitle}: ${errorMessage}`);
     }
-  }, [searchParams, toast, router]);
+  }, [searchParams, router]);
 
   const handleConnect = () => {
     setIsConnecting(true);
@@ -90,11 +82,7 @@ function TelegramConnectContent() {
 
   const handleError = (error: string) => {
     setIsConnecting(false);
-    toast({
-      title: "Error",
-      description: error,
-      variant: "destructive",
-    });
+    showToast.error(error);
   };
 
   if (authLoading) {
@@ -118,15 +106,13 @@ function TelegramConnectContent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => router.push('/dashboard/integrations')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-transparent hover:bg-neutral-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Volver a Integraciones
-            </Button>
+            </button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Conectar Telegram</h1>
               <p className="text-muted-foreground mt-1">
@@ -138,14 +124,14 @@ function TelegramConnectContent() {
 
         {/* Información sobre Telegram */}
         <div className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>¿Qué es Telegram?</CardTitle>
-              <CardDescription>
+          <div className="bg-neutral-800 rounded-lg border border-neutral-700">
+            <div className="p-6 border-b border-neutral-700">
+              <h3 className="text-xl font-semibold text-white">¿Qué es Telegram?</h3>
+              <p className="text-sm text-neutral-400 mt-1">
                 Telegram es una plataforma de mensajería que permite crear bots para automatizar conversaciones
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <h4 className="font-medium">Ventajas de Telegram:</h4>
@@ -166,8 +152,8 @@ function TelegramConnectContent() {
                   </ul>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Componente de conexión */}
@@ -179,14 +165,14 @@ function TelegramConnectContent() {
 
         {/* Estado de conexión */}
         {isConnecting && (
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+          <div className="mt-6 bg-neutral-800 rounded-lg border border-neutral-700">
+            <div className="p-6">
+              <div className="flex items-center justify-center gap-2 text-neutral-400">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Conectando con Telegram...</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </div>
     </div>

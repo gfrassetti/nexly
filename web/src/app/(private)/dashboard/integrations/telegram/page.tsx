@@ -3,11 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+// Removed UI component imports - using standard HTML elements
 import { ArrowLeft, MessageSquare, Send, Settings, Trash2, Loader2, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { showToast } from '@/hooks/use-toast';
 import TelegramStatus from '@/components/TelegramStatus';
 import TelegramMessenger from '@/components/TelegramMessenger';
 import useSWR from 'swr';
@@ -32,7 +30,7 @@ interface TelegramIntegration {
 export default function TelegramPage() {
   const { token, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+  // Using showToast directly
   const [selectedIntegration, setSelectedIntegration] = useState<TelegramIntegration | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'messenger'>('overview');
 
@@ -68,10 +66,7 @@ export default function TelegramPage() {
       if (response.ok) {
         await refreshIntegrations();
         setSelectedIntegration(null);
-        toast({
-          title: "Desconectado",
-          description: "Telegram se ha desconectado exitosamente",
-        });
+        showToast.success("Telegram se ha desconectado exitosamente");
       } else {
         throw new Error('Error al desconectar');
       }
@@ -117,15 +112,13 @@ export default function TelegramPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => router.push('/dashboard/integrations')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-transparent hover:bg-neutral-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Volver a Integraciones
-            </Button>
+            </button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Telegram</h1>
               <p className="text-muted-foreground mt-1">
@@ -133,68 +126,68 @@ export default function TelegramPage() {
               </p>
             </div>
           </div>
-          <Button
+          <button
             onClick={() => router.push('/dashboard/integrations/connect/telegram')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
           >
             <MessageSquare className="h-4 w-4" />
             Conectar Telegram
-          </Button>
+          </button>
         </div>
 
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
+          <div className="bg-neutral-800 rounded-lg border border-neutral-700">
+            <div className="p-6">
               <div className="flex items-center">
                 <MessageSquare className="h-8 w-8 text-blue-400" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Integraciones</p>
-                  <p className="text-2xl font-bold">{integrations?.length || 0}</p>
+                  <p className="text-sm font-medium text-neutral-400">Integraciones</p>
+                  <p className="text-2xl font-bold text-white">{integrations?.length || 0}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
+            </div>
+          </div>
+          <div className="bg-neutral-800 rounded-lg border border-neutral-700">
+            <div className="p-6">
               <div className="flex items-center">
                 <Send className="h-8 w-8 text-green-400" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Conectadas</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-sm font-medium text-neutral-400">Conectadas</p>
+                  <p className="text-2xl font-bold text-white">
                     {integrations?.filter((i: TelegramIntegration) => i.status === 'linked').length || 0}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
+            </div>
+          </div>
+          <div className="bg-neutral-800 rounded-lg border border-neutral-700">
+            <div className="p-6">
               <div className="flex items-center">
                 <AlertCircle className="h-8 w-8 text-orange-400" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Pendientes</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-sm font-medium text-neutral-400">Pendientes</p>
+                  <p className="text-2xl font-bold text-white">
                     {integrations?.filter((i: TelegramIntegration) => i.status === 'pending').length || 0}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Contenido principal */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Lista de integraciones */}
           <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Integraciones de Telegram</CardTitle>
-                <CardDescription>
+            <div className="bg-neutral-800 rounded-lg border border-neutral-700">
+              <div className="p-6 border-b border-neutral-700">
+                <h3 className="text-xl font-semibold text-white">Integraciones de Telegram</h3>
+                <p className="text-sm text-neutral-400 mt-1">
                   Gestiona tus conexiones de Telegram
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
+              </div>
+              <div className="p-6">
                 {integrations && integrations.length > 0 ? (
                   <div className="space-y-4">
                     {integrations.map((integration: TelegramIntegration) => (
@@ -212,16 +205,13 @@ export default function TelegramPage() {
                             <MessageSquare className="h-4 w-4 text-blue-400" />
                             <span className="font-medium text-sm">{integration.name}</span>
                           </div>
-                          <Badge
-                            variant={integration.status === 'linked' ? 'default' : 'secondary'}
-                            className={
-                              integration.status === 'linked'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : ''
-                            }
-                          >
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            integration.status === 'linked'
+                              ? 'bg-green-900 text-green-200'
+                              : 'bg-neutral-600 text-neutral-200'
+                          }`}>
                             {integration.status === 'linked' ? 'Conectado' : 'Pendiente'}
-                          </Badge>
+                          </span>
                         </div>
                         {integration.meta?.telegramUsername && (
                           <p className="text-xs text-muted-foreground mt-1">
@@ -235,16 +225,16 @@ export default function TelegramPage() {
                   <div className="text-center py-8">
                     <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">No hay integraciones de Telegram</p>
-                    <Button
+                    <button
                       onClick={() => router.push('/dashboard/integrations/connect/telegram')}
-                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
                     >
                       Conectar Telegram
-                    </Button>
+                    </button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
           {/* Detalles de la integración seleccionada */}
@@ -253,23 +243,29 @@ export default function TelegramPage() {
               <div className="space-y-6">
                 {/* Tabs */}
                 <div className="flex gap-2">
-                  <Button
-                    variant={activeTab === 'overview' ? 'default' : 'outline'}
-                    size="sm"
+                  <button
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center ${
+                      activeTab === 'overview' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-neutral-700 hover:bg-neutral-600 text-white'
+                    }`}
                     onClick={() => setActiveTab('overview')}
                   >
                     <Settings className="h-4 w-4 mr-2" />
                     Configuración
-                  </Button>
-                  <Button
-                    variant={activeTab === 'messenger' ? 'default' : 'outline'}
-                    size="sm"
+                  </button>
+                  <button
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center ${
+                      activeTab === 'messenger' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-neutral-700 hover:bg-neutral-600 text-white'
+                    } ${selectedIntegration.status !== 'linked' ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={() => setActiveTab('messenger')}
                     disabled={selectedIntegration.status !== 'linked'}
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Enviar Mensaje
-                  </Button>
+                  </button>
                 </div>
 
                 {/* Contenido de las tabs */}
@@ -286,23 +282,20 @@ export default function TelegramPage() {
                   <TelegramMessenger
                     integrationId={selectedIntegration._id}
                     onMessageSent={(messageId) => {
-                      toast({
-                        title: "Mensaje enviado",
-                        description: `Mensaje enviado exitosamente (ID: ${messageId})`,
-                      });
+                      showToast.success(`Mensaje enviado exitosamente (ID: ${messageId})`);
                     }}
                   />
                 )}
               </div>
             ) : (
-              <Card>
-                <CardContent className="pt-6">
+              <div className="bg-neutral-800 rounded-lg border border-neutral-700">
+                <div className="p-6">
                   <div className="text-center py-8">
-                    <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Selecciona una integración para ver los detalles</p>
+                    <MessageSquare className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
+                    <p className="text-neutral-400">Selecciona una integración para ver los detalles</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
           </div>
         </div>
