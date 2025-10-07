@@ -129,7 +129,7 @@ export class TelegramMTProtoService {
         throw new Error('Cliente de Telegram no inicializado. Llama a connect() primero.');
       }
 
-      // Enviar código de verificación
+      // Usar el método de alto nivel de GramJS
       const result = await this.client.sendCode(
         {
           apiId: parseInt(process.env.TELEGRAM_API_ID || '0'),
@@ -138,7 +138,7 @@ export class TelegramMTProtoService {
         phoneNumber
       );
 
-      logger.info('Código de verificación enviado', { phoneNumber });
+      logger.info('Código de verificación enviado', { phoneNumber, phoneCodeHash: result.phoneCodeHash });
       
       return {
         success: true,
@@ -147,6 +147,14 @@ export class TelegramMTProtoService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       logger.error('Error enviando código de verificación', { phoneNumber, error: errorMessage });
+      
+      // Verificar si es un error de flood
+      if (errorMessage.includes('FLOOD') || errorMessage.includes('flood')) {
+        return {
+          success: false,
+          error: 'FLOOD_WAIT: Demasiados intentos. Intenta más tarde.',
+        };
+      }
       
       return {
         success: false,
@@ -161,52 +169,32 @@ export class TelegramMTProtoService {
         throw new Error('Cliente de Telegram no inicializado. Llama a connect() primero.');
       }
 
-      let user;
-      
-      if (password) {
-        // Autenticación con contraseña 2FA
-        user = await this.client.signInUser(
-          {
-            apiId: parseInt(process.env.TELEGRAM_API_ID || '0'),
-            apiHash: process.env.TELEGRAM_API_HASH || '',
+      // Usar el método de alto nivel de GramJS
+      const result = await this.client.signInUser(
+        {
+          apiId: parseInt(process.env.TELEGRAM_API_ID || '0'),
+          apiHash: process.env.TELEGRAM_API_HASH || '',
+        },
+        {
+          phoneNumber: phoneNumber,
+          phoneCode: async () => phoneCode,
+          password: password ? async () => password : undefined,
+          onError: async (err: any) => {
+            logger.error('Error en autenticación de Telegram', { error: err });
+            throw err;
           },
-          {
-            phoneNumber,
-            phoneCode: async () => phoneCode,
-            password: async () => password,
-            onError: async (err: any) => {
-              logger.error('Error en autenticación de Telegram', { error: err });
-              throw err;
-            },
-          }
-        );
-      } else {
-        // Autenticación sin 2FA
-        user = await this.client.signInUser(
-          {
-            apiId: parseInt(process.env.TELEGRAM_API_ID || '0'),
-            apiHash: process.env.TELEGRAM_API_HASH || '',
-          },
-          {
-            phoneNumber,
-            phoneCode: async () => phoneCode,
-            onError: async (err: any) => {
-              logger.error('Error en autenticación de Telegram', { error: err });
-              throw err;
-            },
-          }
-        );
-      }
+        }
+      );
 
-      if (user) {
+      if (result) {
         const sessionString = this.client.session.save() as unknown as string;
         
         const userInfo: TelegramUser = {
-          id: user.id.toJSNumber(),
-          username: (user as any).username || undefined,
-          firstName: (user as any).firstName || undefined,
-          lastName: (user as any).lastName || undefined,
-          phoneNumber: (user as any).phone || phoneNumber,
+          id: result.id.toJSNumber(),
+          username: (result as any).username || undefined,
+          firstName: (result as any).firstName || undefined,
+          lastName: (result as any).lastName || undefined,
+          phoneNumber: (result as any).phone || phoneNumber,
         };
 
         logger.info('Usuario de Telegram autenticado exitosamente', {
@@ -233,7 +221,7 @@ export class TelegramMTProtoService {
       logger.error('Error en autenticación de Telegram', { phoneNumber, error: errorMessage });
       
       // Verificar si es error de 2FA
-      if (errorMessage.includes('2FA') || errorMessage.includes('password')) {
+      if (errorMessage.includes('2FA') || errorMessage.includes('password') || errorMessage.includes('SESSION_PASSWORD_NEEDED')) {
         return {
           success: false,
           requiresPassword: true,

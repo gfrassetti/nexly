@@ -26,10 +26,8 @@ router.get('/debug/config', async (req: AuthRequest, res: Response) => {
     }
 
     const config = {
-      telegramApiId: process.env.TELEGRAM_API_ID ? 'Configurado' : 'No configurado',
-      telegramApiHash: process.env.TELEGRAM_API_HASH ? 'Configurado' : 'No configurado',
-      apiIdValue: process.env.TELEGRAM_API_ID,
-      apiHashValue: process.env.TELEGRAM_API_HASH ? '***' : 'No configurado',
+      telegramApiId: process.env.TELEGRAM_API_ID,
+      telegramApiHash: process.env.TELEGRAM_API_HASH ? '***' : undefined,
       nodeEnv: process.env.NODE_ENV,
       allEnvVars: Object.keys(process.env).filter(key => key.includes('TELEGRAM')),
     };
