@@ -10,257 +10,6 @@ type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
 const router = Router();
 
-/**
- * GET /telegram/debug/config
- * Debug endpoint para verificar configuración de Telegram
- */
-router.get('/debug/config', async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id || req.user?._id;
-    if (!userId) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'authentication_required',
-        message: 'Token de autenticación requerido'
-      });
-    }
-
-    const config = {
-      telegramApiId: process.env.TELEGRAM_API_ID,
-      telegramApiHash: process.env.TELEGRAM_API_HASH ? '***' : undefined,
-      nodeEnv: process.env.NODE_ENV,
-      allEnvVars: Object.keys(process.env).filter(key => key.includes('TELEGRAM')),
-    };
-
-    logger.info('Debug config de Telegram', { userId, config });
-
-    res.status(200).json({
-      success: true,
-      config
-    });
-  } catch (error: unknown) {
-    logger.error('Error en debug config', {
-      userId: req.user?.id || req.user?._id,
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
-    
-    res.status(500).json({
-      success: false,
-      error: 'server_error',
-      message: 'Error interno del servidor'
-    });
-  }
-});
-
-/**
- * POST /telegram/debug/send-code-simple
- * Debug endpoint simple para probar envío de código sin DB
- */
-router.post('/debug/send-code-simple', async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id || req.user?._id;
-    if (!userId) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'authentication_required',
-        message: 'Token de autenticación requerido'
-      });
-    }
-
-    const { phoneNumber } = req.body;
-    
-    if (!phoneNumber) {
-      return res.status(400).json({
-        success: false,
-        error: 'phone_number_required',
-        message: 'Número de teléfono requerido'
-      });
-    }
-
-    logger.info('Debug: Probando envío de código simple', { userId, phoneNumber });
-    
-    // Solo probar la conexión y envío, sin guardar en DB
-    const connected = await telegramMTProtoService.connect(userId);
-    if (!connected) {
-      return res.status(500).json({
-        success: false,
-        error: 'connection_failed',
-        message: 'No se pudo conectar con Telegram'
-      });
-    }
-
-    const result = await telegramMTProtoService.sendCode(phoneNumber);
-    
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        message: 'Código enviado exitosamente (sin guardar en DB)',
-        phoneCodeHash: result.phoneCodeHash,
-        requiresCode: true,
-        requiresPassword: false
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        error: 'send_code_failed',
-        message: result.error || 'Error enviando código'
-      });
-    }
-
-  } catch (error: unknown) {
-    logger.error('Error en debug send-code-simple', {
-      userId: req.user?.id || req.user?._id,
-      error: error instanceof Error ? error.message : 'Error desconocido',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    
-    res.status(500).json({
-      success: false,
-      error: 'server_error',
-      message: error instanceof Error ? `Error interno del servidor: ${error.message}` : 'Error interno del servidor desconocido'
-    });
-  }
-});
-
-/**
- * POST /telegram/debug/verify-code-simple
- * Debug endpoint simple para probar verificación de código sin DB
- */
-router.post('/debug/verify-code-simple', async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id || req.user?._id;
-    if (!userId) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'authentication_required',
-        message: 'Token de autenticación requerido'
-      });
-    }
-
-    const { phoneNumber, code, password } = req.body;
-    
-    if (!phoneNumber || !code) {
-      return res.status(400).json({
-        success: false,
-        error: 'missing_parameters',
-        message: 'Número de teléfono y código son requeridos'
-      });
-    }
-
-    logger.info('Debug: Probando verificación de código simple', { userId, phoneNumber, code, hasPassword: !!password });
-    
-    // Buscar sesión pendiente
-    const session = await TelegramSession.findOne({
-      userId: new Types.ObjectId(userId),
-      phoneNumber: phoneNumber.trim(),
-      authState: 'pending_code',
-      isActive: false
-    });
-
-    if (!session || !session.phoneCodeHash) {
-      return res.status(400).json({
-        success: false,
-        error: 'session_not_found',
-        message: 'Sesión no encontrada o expirada. Inicia el proceso nuevamente.',
-        debug: { sessionFound: !!session, hasPhoneCodeHash: !!session?.phoneCodeHash }
-      });
-    }
-
-    // Conectar con el cliente
-    const connected = await telegramMTProtoService.connect(userId);
-    if (!connected) {
-      return res.status(500).json({
-        success: false,
-        error: 'connection_failed',
-        message: 'No se pudo conectar con Telegram'
-      });
-    }
-
-    // Verificar código y autenticar
-    const result = await telegramMTProtoService.signIn(
-      phoneNumber.trim(),
-      code.trim(),
-      session.phoneCodeHash,
-      password
-    );
-    
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        message: 'Código verificado exitosamente (sin guardar en DB)',
-        user: result.user,
-        hasSessionString: !!result.sessionString
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        error: result.error || 'Error verificando código',
-        message: result.error || 'Error verificando código',
-        requiresPassword: result.requiresPassword
-      });
-    }
-
-  } catch (error: unknown) {
-    logger.error('Error en debug verify-code-simple', {
-      userId: req.user?.id || req.user?._id,
-      error: error instanceof Error ? error.message : 'Error desconocido',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    
-    res.status(500).json({
-      success: false,
-      error: 'server_error',
-      message: error instanceof Error ? `Error interno del servidor: ${error.message}` : 'Error interno del servidor desconocido'
-    });
-  }
-});
-
-/**
- * GET /telegram/debug/test-connection
- * Debug endpoint para probar conexión con Telegram
- */
-router.get('/debug/test-connection', async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id || req.user?._id;
-    if (!userId) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'authentication_required',
-        message: 'Token de autenticación requerido'
-      });
-    }
-
-    logger.info('Probando conexión con Telegram', { userId });
-    
-    const connected = await telegramMTProtoService.connect(userId);
-    
-    if (connected) {
-      logger.info('Conexión con Telegram exitosa', { userId });
-      res.status(200).json({
-        success: true,
-        message: 'Conexión con Telegram exitosa'
-      });
-    } else {
-      logger.error('Error en conexión con Telegram', { userId });
-      res.status(500).json({
-        success: false,
-        error: 'connection_failed',
-        message: 'No se pudo conectar con Telegram'
-      });
-    }
-  } catch (error: unknown) {
-    logger.error('Error en test de conexión', {
-      userId: req.user?.id || req.user?._id,
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
-    
-    res.status(500).json({
-      success: false,
-      error: 'server_error',
-      message: error instanceof Error ? error.message : 'Error interno del servidor'
-    });
-  }
-});
 
 /**
  * POST /telegram/send-code
@@ -356,31 +105,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
     }
 
             // Enviar código de verificación
-            logger.info('Enviando código de verificación', { userId, phoneNumber });
-            
-            let result;
-            try {
-              result = await telegramMTProtoService.sendCode(phoneNumber);
-              logger.info('Resultado de sendCode', { 
-                userId, 
-                phoneNumber, 
-                result, 
-                phoneCodeHash: result?.phoneCodeHash,
-                hasPhoneCodeHash: !!result?.phoneCodeHash
-              });
-            } catch (sendCodeError) {
-              logger.error('Error en sendCode() de Telegram', { 
-                userId, 
-                phoneNumber, 
-                error: sendCodeError instanceof Error ? sendCodeError.message : 'Error desconocido',
-                stack: sendCodeError instanceof Error ? sendCodeError.stack : undefined
-              });
-              return res.status(500).json({
-                success: false,
-                error: 'send_code_failed',
-                message: sendCodeError instanceof Error ? sendCodeError.message : 'Error enviando código de verificación'
-              });
-            }
+            const result = await telegramMTProtoService.sendCode(phoneNumber);
     
     if (!result.success) {
       return res.status(400).json({
@@ -394,36 +119,15 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
             const sessionData = {
               userId: new Types.ObjectId(userId),
               phoneNumber: phoneNumber.trim(),
-              // sessionString se omitirá inicialmente, se llenará después de la autenticación
               phoneCodeHash: result.phoneCodeHash,
               authState: 'pending_code' as const,
-              isActive: false, // Se activará después de la autenticación exitosa
+              isActive: false,
             };
 
-            logger.info('Guardando sesión en DB', { 
-              userId, 
-              phoneNumber, 
-              phoneCodeHash: result.phoneCodeHash,
-              hasExistingSession: !!existingSession,
-              sessionData 
-            });
-
-            try {
-              if (existingSession) {
-                await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
-                logger.info('Sesión actualizada en DB', { userId, sessionId: existingSession._id });
-              } else {
-                const newSession = await TelegramSession.create(sessionData);
-                logger.info('Nueva sesión creada en DB', { userId, sessionId: newSession._id });
-              }
-            } catch (dbError) {
-              logger.error('Error guardando sesión en DB', { 
-                userId, 
-                phoneNumber, 
-                error: dbError instanceof Error ? dbError.message : 'Error desconocido',
-                stack: dbError instanceof Error ? dbError.stack : undefined
-              });
-              throw dbError; // Re-lanzar para que sea capturado por el catch principal
+            if (existingSession) {
+              await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
+            } else {
+              await TelegramSession.create(sessionData);
             }
 
     logger.info('Código de verificación enviado', { userId, phoneNumber });
@@ -502,29 +206,12 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Verificar código y autenticar
-    logger.info('Iniciando verificación de código', { 
-      userId, 
-      phoneNumber, 
-      code, 
-      hasPassword: !!password,
-      phoneCodeHash: session.phoneCodeHash 
-    });
-    
     const result = await telegramMTProtoService.signIn(
       phoneNumber.trim(),
       code.trim(),
       session.phoneCodeHash,
       password
     );
-    
-    logger.info('Resultado de signIn', { 
-      userId, 
-      success: result.success, 
-      error: result.error,
-      hasUser: !!result.user,
-      hasSessionString: !!result.sessionString,
-      requiresPassword: result.requiresPassword
-    });
 
     if (!result.success) {
       logger.error('Error en signIn', { 
@@ -562,14 +249,8 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Actualizar sesión con datos del usuario
-    logger.info('Actualizando sesión en DB', { 
-      userId, 
-      sessionId: session._id,
-      telegramUserId: result.user.id 
-    });
-    
     session.sessionString = result.sessionString;
-    session.phoneCodeHash = undefined; // Limpiar el hash
+    session.phoneCodeHash = undefined;
     session.authState = 'authenticated';
     session.isActive = true;
     session.userInfo = {
@@ -580,75 +261,37 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
       phoneNumber: result.user.phoneNumber,
     };
     session.lastActivity = new Date();
-    
-    try {
-      await session.save();
-      logger.info('Sesión actualizada exitosamente', { userId, sessionId: session._id });
-    } catch (sessionError) {
-      logger.error('Error actualizando sesión', { 
-        userId, 
-        error: sessionError instanceof Error ? sessionError.message : 'Error desconocido',
-        stack: sessionError instanceof Error ? sessionError.stack : undefined
-      });
-      throw sessionError;
-    }
+    await session.save();
 
     // Crear o actualizar integración
-    logger.info('Creando/actualizando integración', { 
-      userId, 
-      telegramUserId: result.user.id,
-      provider: 'telegram'
+    const integration = await Integration.findOneAndUpdate(
+      { 
+        userId: new Types.ObjectId(userId), 
+        provider: 'telegram',
+        externalId: result.user.id.toString()
+      },
+      {
+        name: result.user.username || result.user.firstName || `Telegram User ${result.user.id}`,
+        status: 'linked',
+        meta: {
+          telegramUserId: result.user.id,
+          telegramUsername: result.user.username,
+          telegramFirstName: result.user.firstName,
+          telegramLastName: result.user.lastName,
+          telegramPhoneNumber: result.user.phoneNumber,
+          sessionString: result.sessionString,
+          isActive: true,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Telegram conectado exitosamente',
+      user: result.user,
+      integrationId: integration._id
     });
-    
-    try {
-      const integration = await Integration.findOneAndUpdate(
-        { 
-          userId: new Types.ObjectId(userId), 
-          provider: 'telegram',
-          externalId: result.user.id.toString()
-        },
-        {
-          name: result.user.username || result.user.firstName || `Telegram User ${result.user.id}`,
-          status: 'linked',
-          meta: {
-            telegramUserId: result.user.id,
-            telegramUsername: result.user.username,
-            telegramFirstName: result.user.firstName,
-            telegramLastName: result.user.lastName,
-            telegramPhoneNumber: result.user.phoneNumber,
-            sessionString: result.sessionString,
-            isActive: true,
-          },
-        },
-        { upsert: true, new: true }
-      );
-      
-      logger.info('Integración creada/actualizada exitosamente', { 
-        userId, 
-        integrationId: integration._id,
-        telegramUserId: result.user.id
-      });
-
-      logger.info('Telegram autenticado exitosamente', { 
-        userId, 
-        telegramUserId: result.user.id,
-        integrationId: integration._id
-      });
-
-      res.status(200).json({
-        success: true,
-        message: 'Telegram conectado exitosamente',
-        user: result.user,
-        integrationId: integration._id
-      });
-    } catch (integrationError) {
-      logger.error('Error creando/actualizando integración', { 
-        userId, 
-        error: integrationError instanceof Error ? integrationError.message : 'Error desconocido',
-        stack: integrationError instanceof Error ? integrationError.stack : undefined
-      });
-      throw integrationError;
-    }
 
   } catch (error: unknown) {
     logger.error('Error en /telegram/verify-code', {
