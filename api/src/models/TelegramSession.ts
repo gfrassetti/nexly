@@ -39,7 +39,8 @@ const telegramSessionSchema = new Schema<TelegramSessionDoc>(
       unique: true // String de sesión único
     },
     phoneCodeHash: { 
-      type: String 
+      type: String,
+      unique: false // No debe ser único, se reutiliza
     },
     isActive: { 
       type: Boolean, 

@@ -73,19 +73,22 @@ export default function TelegramMTProtoConnect({
         body: JSON.stringify({ 
           phoneNumber: phoneNumber.trim(),
           code: code.trim(),
-          password: password.trim() || undefined
+          password: password ? password.trim() : undefined
         })
       }, token || undefined);
 
       if (response.success) {
         setStep('success');
+        setCode(''); // Limpiar el input
         showToast.success('Telegram conectado exitosamente');
         onConnect?.();
       } else {
-        if (response.error === 'verification_failed' && response.message?.includes('password')) {
+        if (response.requiresPassword) {
           setStep('password');
+          setCode(''); // Limpiar el input
           showToast.error('Se requiere contraseña de autenticación de dos factores');
         } else {
+          setCode(''); // Limpiar el input
           throw new Error(response.message || 'Error verificando código');
         }
       }

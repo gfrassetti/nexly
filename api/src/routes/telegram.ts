@@ -123,6 +123,99 @@ router.post('/debug/send-code-simple', async (req: AuthRequest, res: Response) =
 });
 
 /**
+ * POST /telegram/debug/verify-code-simple
+ * Debug endpoint simple para probar verificación de código sin DB
+ */
+router.post('/debug/verify-code-simple', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    const { phoneNumber, code, password } = req.body;
+    
+    if (!phoneNumber || !code) {
+      return res.status(400).json({
+        success: false,
+        error: 'missing_parameters',
+        message: 'Número de teléfono y código son requeridos'
+      });
+    }
+
+    logger.info('Debug: Probando verificación de código simple', { userId, phoneNumber, code, hasPassword: !!password });
+    
+    // Buscar sesión pendiente
+    const session = await TelegramSession.findOne({
+      userId: new Types.ObjectId(userId),
+      phoneNumber: phoneNumber.trim(),
+      authState: 'pending_code',
+      isActive: false
+    });
+
+    if (!session || !session.phoneCodeHash) {
+      return res.status(400).json({
+        success: false,
+        error: 'session_not_found',
+        message: 'Sesión no encontrada o expirada. Inicia el proceso nuevamente.',
+        debug: { sessionFound: !!session, hasPhoneCodeHash: !!session?.phoneCodeHash }
+      });
+    }
+
+    // Conectar con el cliente
+    const connected = await telegramMTProtoService.connect(userId);
+    if (!connected) {
+      return res.status(500).json({
+        success: false,
+        error: 'connection_failed',
+        message: 'No se pudo conectar con Telegram'
+      });
+    }
+
+    // Verificar código y autenticar
+    const result = await telegramMTProtoService.signIn(
+      phoneNumber.trim(),
+      code.trim(),
+      session.phoneCodeHash,
+      password
+    );
+    
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: 'Código verificado exitosamente (sin guardar en DB)',
+        user: result.user,
+        hasSessionString: !!result.sessionString
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.error || 'Error verificando código',
+        message: result.error || 'Error verificando código',
+        requiresPassword: result.requiresPassword
+      });
+    }
+
+  } catch (error: unknown) {
+    logger.error('Error en debug verify-code-simple', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: error instanceof Error ? `Error interno del servidor: ${error.message}` : 'Error interno del servidor desconocido'
+    });
+  }
+});
+
+/**
  * GET /telegram/debug/test-connection
  * Debug endpoint para probar conexión con Telegram
  */
@@ -409,14 +502,37 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Verificar código y autenticar
+    logger.info('Iniciando verificación de código', { 
+      userId, 
+      phoneNumber, 
+      code, 
+      hasPassword: !!password,
+      phoneCodeHash: session.phoneCodeHash 
+    });
+    
     const result = await telegramMTProtoService.signIn(
       phoneNumber.trim(),
       code.trim(),
       session.phoneCodeHash,
       password
     );
+    
+    logger.info('Resultado de signIn', { 
+      userId, 
+      success: result.success, 
+      error: result.error,
+      hasUser: !!result.user,
+      hasSessionString: !!result.sessionString,
+      requiresPassword: result.requiresPassword
+    });
 
     if (!result.success) {
+      logger.error('Error en signIn', { 
+        userId, 
+        error: result.error,
+        requiresPassword: result.requiresPassword
+      });
+      
       if (result.requiresPassword) {
         // Actualizar sesión para requerir contraseña
         session.authState = 'pending_password';
@@ -424,8 +540,9 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
 
         return res.status(200).json({
           success: false,
-          requiresPassword: true,
-          message: 'Se requiere contraseña de autenticación de dos factores'
+          error: 'verification_failed',
+          message: 'Se requiere contraseña de autenticación de dos factores',
+          requiresPassword: true
         });
       }
 
@@ -445,6 +562,12 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Actualizar sesión con datos del usuario
+    logger.info('Actualizando sesión en DB', { 
+      userId, 
+      sessionId: session._id,
+      telegramUserId: result.user.id 
+    });
+    
     session.sessionString = result.sessionString;
     session.phoneCodeHash = undefined; // Limpiar el hash
     session.authState = 'authenticated';
@@ -457,43 +580,75 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
       phoneNumber: result.user.phoneNumber,
     };
     session.lastActivity = new Date();
-    await session.save();
+    
+    try {
+      await session.save();
+      logger.info('Sesión actualizada exitosamente', { userId, sessionId: session._id });
+    } catch (sessionError) {
+      logger.error('Error actualizando sesión', { 
+        userId, 
+        error: sessionError instanceof Error ? sessionError.message : 'Error desconocido',
+        stack: sessionError instanceof Error ? sessionError.stack : undefined
+      });
+      throw sessionError;
+    }
 
     // Crear o actualizar integración
-    const integration = await Integration.findOneAndUpdate(
-      { 
-        userId: new Types.ObjectId(userId), 
-        provider: 'telegram',
-        externalId: result.user.id.toString()
-      },
-      {
-        name: result.user.username || result.user.firstName || `Telegram User ${result.user.id}`,
-        status: 'linked',
-        meta: {
-          telegramUserId: result.user.id,
-          telegramUsername: result.user.username,
-          telegramFirstName: result.user.firstName,
-          telegramLastName: result.user.lastName,
-          telegramPhoneNumber: result.user.phoneNumber,
-          sessionString: result.sessionString,
-          isActive: true,
-        },
-      },
-      { upsert: true, new: true }
-    );
-
-    logger.info('Telegram autenticado exitosamente', { 
+    logger.info('Creando/actualizando integración', { 
       userId, 
       telegramUserId: result.user.id,
-      integrationId: integration._id
+      provider: 'telegram'
     });
+    
+    try {
+      const integration = await Integration.findOneAndUpdate(
+        { 
+          userId: new Types.ObjectId(userId), 
+          provider: 'telegram',
+          externalId: result.user.id.toString()
+        },
+        {
+          name: result.user.username || result.user.firstName || `Telegram User ${result.user.id}`,
+          status: 'linked',
+          meta: {
+            telegramUserId: result.user.id,
+            telegramUsername: result.user.username,
+            telegramFirstName: result.user.firstName,
+            telegramLastName: result.user.lastName,
+            telegramPhoneNumber: result.user.phoneNumber,
+            sessionString: result.sessionString,
+            isActive: true,
+          },
+        },
+        { upsert: true, new: true }
+      );
+      
+      logger.info('Integración creada/actualizada exitosamente', { 
+        userId, 
+        integrationId: integration._id,
+        telegramUserId: result.user.id
+      });
 
-    res.status(200).json({
-      success: true,
-      message: 'Telegram conectado exitosamente',
-      user: result.user,
-      integrationId: integration._id
-    });
+      logger.info('Telegram autenticado exitosamente', { 
+        userId, 
+        telegramUserId: result.user.id,
+        integrationId: integration._id
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Telegram conectado exitosamente',
+        user: result.user,
+        integrationId: integration._id
+      });
+    } catch (integrationError) {
+      logger.error('Error creando/actualizando integración', { 
+        userId, 
+        error: integrationError instanceof Error ? integrationError.message : 'Error desconocido',
+        stack: integrationError instanceof Error ? integrationError.stack : undefined
+      });
+      throw integrationError;
+    }
 
   } catch (error: unknown) {
     logger.error('Error en /telegram/verify-code', {
