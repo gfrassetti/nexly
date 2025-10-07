@@ -166,9 +166,27 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
 
     // Inicializar cliente para nueva autenticación
     logger.info('Iniciando conexión con Telegram', { userId, phoneNumber });
-    const connected = await telegramMTProtoService.connect(userId);
+    
+    let connected;
+    try {
+      connected = await telegramMTProtoService.connect(userId);
+      logger.info('Resultado de connect()', { userId, phoneNumber, connected });
+    } catch (connectError) {
+      logger.error('Error en connect() de Telegram', { 
+        userId, 
+        phoneNumber, 
+        error: connectError instanceof Error ? connectError.message : 'Error desconocido',
+        stack: connectError instanceof Error ? connectError.stack : undefined
+      });
+      return res.status(500).json({
+        success: false,
+        error: 'connection_failed',
+        message: connectError instanceof Error ? connectError.message : 'Error conectando con Telegram'
+      });
+    }
+    
     if (!connected) {
-      logger.error('Error conectando con Telegram', { userId, phoneNumber });
+      logger.error('Error conectando con Telegram - connect() retornó false', { userId, phoneNumber });
       return res.status(500).json({
         success: false,
         error: 'connection_failed',
@@ -178,7 +196,24 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
 
     // Enviar código de verificación
     logger.info('Enviando código de verificación', { userId, phoneNumber });
-    const result = await telegramMTProtoService.sendCode(phoneNumber);
+    
+    let result;
+    try {
+      result = await telegramMTProtoService.sendCode(phoneNumber);
+      logger.info('Resultado de sendCode', { userId, phoneNumber, result });
+    } catch (sendCodeError) {
+      logger.error('Error en sendCode() de Telegram', { 
+        userId, 
+        phoneNumber, 
+        error: sendCodeError instanceof Error ? sendCodeError.message : 'Error desconocido',
+        stack: sendCodeError instanceof Error ? sendCodeError.stack : undefined
+      });
+      return res.status(500).json({
+        success: false,
+        error: 'send_code_failed',
+        message: sendCodeError instanceof Error ? sendCodeError.message : 'Error enviando código de verificación'
+      });
+    }
     
     if (!result.success) {
       return res.status(400).json({
