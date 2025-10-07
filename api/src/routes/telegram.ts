@@ -53,6 +53,76 @@ router.get('/debug/config', async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * POST /telegram/debug/send-code-simple
+ * Debug endpoint simple para probar envío de código sin DB
+ */
+router.post('/debug/send-code-simple', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    const { phoneNumber } = req.body;
+    
+    if (!phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'phone_number_required',
+        message: 'Número de teléfono requerido'
+      });
+    }
+
+    logger.info('Debug: Probando envío de código simple', { userId, phoneNumber });
+    
+    // Solo probar la conexión y envío, sin guardar en DB
+    const connected = await telegramMTProtoService.connect(userId);
+    if (!connected) {
+      return res.status(500).json({
+        success: false,
+        error: 'connection_failed',
+        message: 'No se pudo conectar con Telegram'
+      });
+    }
+
+    const result = await telegramMTProtoService.sendCode(phoneNumber);
+    
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: 'Código enviado exitosamente (sin guardar en DB)',
+        phoneCodeHash: result.phoneCodeHash,
+        requiresCode: true,
+        requiresPassword: false
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'send_code_failed',
+        message: result.error || 'Error enviando código'
+      });
+    }
+
+  } catch (error: unknown) {
+    logger.error('Error en debug send-code-simple', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: error instanceof Error ? `Error interno del servidor: ${error.message}` : 'Error interno del servidor desconocido'
+    });
+  }
+});
+
+/**
  * GET /telegram/debug/test-connection
  * Debug endpoint para probar conexión con Telegram
  */
@@ -231,7 +301,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
             const sessionData = {
               userId: new Types.ObjectId(userId),
               phoneNumber: phoneNumber.trim(),
-              sessionString: '', // Se llenará después de la autenticación
+              // sessionString se omitirá inicialmente, se llenará después de la autenticación
               phoneCodeHash: result.phoneCodeHash,
               authState: 'pending_code' as const,
               isActive: false, // Se activará después de la autenticación exitosa
