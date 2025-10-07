@@ -192,26 +192,32 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Enviar código de verificación
-    logger.info('Enviando código de verificación', { userId, phoneNumber });
-    
-    let result;
-    try {
-      result = await telegramMTProtoService.sendCode(phoneNumber);
-      logger.info('Resultado de sendCode', { userId, phoneNumber, result });
-    } catch (sendCodeError) {
-      logger.error('Error en sendCode() de Telegram', { 
-        userId, 
-        phoneNumber, 
-        error: sendCodeError instanceof Error ? sendCodeError.message : 'Error desconocido',
-        stack: sendCodeError instanceof Error ? sendCodeError.stack : undefined
-      });
-      return res.status(500).json({
-        success: false,
-        error: 'send_code_failed',
-        message: sendCodeError instanceof Error ? sendCodeError.message : 'Error enviando código de verificación'
-      });
-    }
+            // Enviar código de verificación
+            logger.info('Enviando código de verificación', { userId, phoneNumber });
+            
+            let result;
+            try {
+              result = await telegramMTProtoService.sendCode(phoneNumber);
+              logger.info('Resultado de sendCode', { 
+                userId, 
+                phoneNumber, 
+                result, 
+                phoneCodeHash: result?.phoneCodeHash,
+                hasPhoneCodeHash: !!result?.phoneCodeHash
+              });
+            } catch (sendCodeError) {
+              logger.error('Error en sendCode() de Telegram', { 
+                userId, 
+                phoneNumber, 
+                error: sendCodeError instanceof Error ? sendCodeError.message : 'Error desconocido',
+                stack: sendCodeError instanceof Error ? sendCodeError.stack : undefined
+              });
+              return res.status(500).json({
+                success: false,
+                error: 'send_code_failed',
+                message: sendCodeError instanceof Error ? sendCodeError.message : 'Error enviando código de verificación'
+              });
+            }
     
     if (!result.success) {
       return res.status(400).json({
@@ -221,21 +227,41 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Crear o actualizar sesión con phoneCodeHash
-    const sessionData = {
-      userId: new Types.ObjectId(userId),
-      phoneNumber: phoneNumber.trim(),
-      sessionString: '', // Se llenará después de la autenticación
-      phoneCodeHash: result.phoneCodeHash,
-      authState: 'pending_code' as const,
-      isActive: false, // Se activará después de la autenticación exitosa
-    };
+            // Crear o actualizar sesión con phoneCodeHash
+            const sessionData = {
+              userId: new Types.ObjectId(userId),
+              phoneNumber: phoneNumber.trim(),
+              sessionString: '', // Se llenará después de la autenticación
+              phoneCodeHash: result.phoneCodeHash,
+              authState: 'pending_code' as const,
+              isActive: false, // Se activará después de la autenticación exitosa
+            };
 
-    if (existingSession) {
-      await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
-    } else {
-      await TelegramSession.create(sessionData);
-    }
+            logger.info('Guardando sesión en DB', { 
+              userId, 
+              phoneNumber, 
+              phoneCodeHash: result.phoneCodeHash,
+              hasExistingSession: !!existingSession,
+              sessionData 
+            });
+
+            try {
+              if (existingSession) {
+                await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
+                logger.info('Sesión actualizada en DB', { userId, sessionId: existingSession._id });
+              } else {
+                const newSession = await TelegramSession.create(sessionData);
+                logger.info('Nueva sesión creada en DB', { userId, sessionId: newSession._id });
+              }
+            } catch (dbError) {
+              logger.error('Error guardando sesión en DB', { 
+                userId, 
+                phoneNumber, 
+                error: dbError instanceof Error ? dbError.message : 'Error desconocido',
+                stack: dbError instanceof Error ? dbError.stack : undefined
+              });
+              throw dbError; // Re-lanzar para que sea capturado por el catch principal
+            }
 
     logger.info('Código de verificación enviado', { userId, phoneNumber });
 
@@ -246,18 +272,19 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       requiresPassword: false
     });
 
-  } catch (error: unknown) {
-    logger.error('Error en /telegram/send-code', {
-      userId: req.user?.id || req.user?._id,
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
-    
-    res.status(500).json({
-      success: false,
-      error: 'server_error',
-      message: 'Error interno del servidor'
-    });
-  }
+          } catch (error: unknown) {
+            logger.error('Error en /telegram/send-code', {
+              userId: req.user?.id || req.user?._id,
+              error: error instanceof Error ? error.message : 'Error desconocido',
+              stack: error instanceof Error ? error.stack : undefined
+            });
+            
+            res.status(500).json({
+              success: false,
+              error: 'server_error',
+              message: error instanceof Error ? `Error interno del servidor: ${error.message}` : 'Error interno del servidor desconocido'
+            });
+          }
 });
 
 /**
