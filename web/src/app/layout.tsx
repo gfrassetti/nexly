@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ReactNode } from "react";
 import { SubscriptionInfoProvider } from "@/contexts/SubscriptionInfoContext";
+import { StatsProvider } from "@/contexts/StatsContext";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -27,7 +28,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <SubscriptionInfoProvider>
-          {children}
+          <StatsProvider>
+            {children}
+          </StatsProvider>
         </SubscriptionInfoProvider>
       </body>
     </html>

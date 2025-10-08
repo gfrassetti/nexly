@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
+import { useStats } from "@/contexts/StatsContext";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 
 interface DashboardStats {
@@ -19,24 +20,13 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { token } = useAuth();
   const { subscription } = useSubscription();
   const searchParams = useSearchParams();
   const { createPaymentLink } = usePaymentLink();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalContacts: 0,
-    totalMessages: 0,
-    conversationsToday: 0,
-    averageResponseTime: 0,
-    activeIntegrations: 0,
-    messagesByPlatform: {},
-    recentMessages: [],
-    unreadConversations: 0,
-  });
+  const { stats, isLoading, error } = useStats();
   const [showTrialNotification, setShowTrialNotification] = useState(false);
   const [showPaymentError, setShowPaymentError] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Show trial notification only if trial is active
   useEffect(() => {
@@ -67,45 +57,39 @@ export default function DashboardPage() {
     }
   }, [searchParams]);
 
-  // Load dashboard data
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      if (!token) return;
-      
-      try {
-        // Mock data for now - replace with real API calls
-        setStats({
-          totalContacts: 1247,
-          totalMessages: 8934,
-          conversationsToday: 23,
-          averageResponseTime: 4.2,
-          activeIntegrations: 2,
-          messagesByPlatform: {
-            whatsapp: 4567,
-            instagram: 2341,
-            messenger: 2026
-          },
-          recentMessages: [],
-          unreadConversations: 12,
-        });
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDashboardData();
-  }, [token]);
+  // Los datos ahora se cargan automáticamente desde el contexto StatsContext
 
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'whatsapp': return '💬';
       case 'instagram': return '📸';
       case 'messenger': return '💬';
+      case 'telegram': return '✈️';
       default: return '📞';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-blue mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando estadísticas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Error cargando estadísticas</p>
+          <p className="text-muted-foreground text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col text-foreground" style={{ background: 'var(--background-gradient)' }}>

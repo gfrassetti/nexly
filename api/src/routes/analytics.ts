@@ -1,205 +1,215 @@
-import { Router } from 'express';
-import authenticateToken from '../middleware/auth';
-import { asyncHandler } from '../utils/errorHandler';
-import { Message } from '../models/Message';
-import { Contact } from '../models/Contact';
+import { Router, Request, Response } from 'express';
+import { Types } from 'mongoose';
+import logger from '../utils/logger';
 import { Integration } from '../models/Integration';
+import { Contact } from '../models/Contact';
+import { Message } from '../models/Message';
+import { Conversation } from '../models/Conversation';
+import { UnifiedConversation } from '../models/UnifiedConversation';
+import { UnifiedMessage } from '../models/UnifiedMessage';
+
+type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
 const router = Router();
 
 /**
- * Obtener métricas del dashboard
+ * GET /analytics/dashboard-stats
+ * Obtener estadísticas del dashboard basadas en integraciones exitosas
  */
-router.get('/dashboard', authenticateToken, asyncHandler(async (req: any, res: any) => {
-  const userId = req.user?.id;
-
-  if (!userId) {
-    return res.status(401).json({ error: 'Usuario no autenticado' });
-  }
-
+router.get('/dashboard-stats', async (req: AuthRequest, res: Response) => {
   try {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
-    const startOfLastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
 
-    // Métricas A: Conversación
-    const [
-      totalContacts,
-      conversationsToday,
-      messagesToday,
-      averageResponseTime,
-      activeIntegrations,
-      messagesByPlatform,
-      recentMessages,
-      unreadConversations,
-      
-      // Métricas comparativas
-      contactsLastMonth,
-      conversationsYesterday,
-      responseTimeLastWeek,
-      integrationsThisMonth
-    ] = await Promise.all([
-      // Totales
-      Contact.countDocuments({ userId }),
-      Message.countDocuments({ 
-        userId, 
-        timestamp: { $gte: startOfToday },
-        direction: 'inbound'
-      }),
-      Message.countDocuments({ 
-        userId, 
-        timestamp: { $gte: startOfToday }
-      }),
-      
-      // Tiempo de respuesta promedio (simulado por ahora)
-      Promise.resolve(29), // En minutos
-      
-      // Integraciones activas
-      Integration.countDocuments({ userId, status: 'active' }),
-      
-      // Mensajes por plataforma
-      Message.aggregate([
-        { $match: { userId } },
-        { $group: { _id: '$platform', count: { $sum: 1 } } }
-      ]),
-      
-      // Mensajes recientes (últimos 5)
-      Message.find({ userId })
-        .sort({ timestamp: -1 })
-        .limit(5)
-        .populate('contactId', 'name phone email'),
-        
-      // Conversaciones no leídas
-      Message.countDocuments({ 
-        userId, 
-        direction: 'inbound',
-        read: false 
-      }),
-      
-      // Métricas comparativas
-      Contact.countDocuments({ 
-        userId, 
-        createdAt: { $gte: startOfLastMonth }
-      }),
-      Message.countDocuments({ 
-        userId, 
-        timestamp: { $gte: startOfYesterday, $lt: startOfToday },
-        direction: 'inbound'
-      }),
-      Promise.resolve(34), // Tiempo de respuesta la semana pasada (simulado)
-      Integration.countDocuments({ 
-        userId, 
-        createdAt: { $gte: new Date(now.getFullYear(), now.getMonth(), 1) }
-      })
-    ]);
+    logger.info('Obteniendo estadísticas del dashboard', { userId });
 
-    // Procesar mensajes por plataforma
-    const platformStats: Record<string, number> = {};
-    messagesByPlatform.forEach((item: any) => {
-      platformStats[item._id || 'unknown'] = item.count;
+    // Obtener integraciones activas del usuario
+    const activeIntegrations = await Integration.find({
+      userId: new Types.ObjectId(userId),
+      status: 'linked'
     });
 
-    // Calcular porcentajes de cambio
-    const contactsChange = contactsLastMonth > 0 
-      ? Math.round(((totalContacts - contactsLastMonth) / contactsLastMonth) * 100)
-      : 0;
-      
-    const conversationsChange = conversationsYesterday > 0
-      ? Math.round(((conversationsToday - conversationsYesterday) / conversationsYesterday) * 100)
-      : 0;
-      
-    const responseTimeChange = responseTimeLastWeek > 0
-      ? Math.round(((responseTimeLastWeek - averageResponseTime) / responseTimeLastWeek) * 100)
-      : 0;
+    const integrationIds = activeIntegrations.map(integration => integration._id);
 
-    res.json({
-      success: true,
-      metrics: {
-        // Métricas principales
-        totalContacts: {
-          value: totalContacts,
-          change: contactsChange,
-          changeType: contactsChange >= 0 ? 'increase' : 'decrease'
-        },
-        conversationsToday: {
-          value: conversationsToday,
-          change: conversationsChange,
-          changeType: conversationsChange >= 0 ? 'increase' : 'decrease'
-        },
-        averageResponseTime: {
-          value: averageResponseTime,
-          change: responseTimeChange,
-          changeType: responseTimeChange >= 0 ? 'decrease' : 'increase' // Menos tiempo es mejor
-        },
-        activeIntegrations: {
-          value: activeIntegrations,
-          change: integrationsThisMonth,
-          changeType: 'increase'
-        },
-        
-        // Datos adicionales
-        messagesByPlatform: platformStats,
-        recentMessages,
-        unreadConversations,
-        
-        // Métricas B: Negocio (simuladas por ahora)
-        businessMetrics: {
-          conversionRate: 12.5, // % de consultas que se convierten en ventas
-          customerSatisfaction: 4.2, // Rating promedio
-          peakHours: ['10:00-12:00', '15:00-17:00'], // Horarios pico
-          channelPerformance: {
-            whatsapp: { messages: platformStats.whatsapp || 0, satisfaction: 4.5 },
-            instagram: { messages: platformStats.instagram || 0, satisfaction: 4.0 },
-            messenger: { messages: platformStats.messenger || 0, satisfaction: 4.1 }
-          }
+    // Estadísticas básicas
+    const [
+      totalContacts,
+      totalMessages,
+      conversationsToday,
+      unreadConversations,
+      messagesByPlatform
+    ] = await Promise.all([
+      // Total de contactos únicos
+      Contact.countDocuments({
+        userId: new Types.ObjectId(userId)
+      }),
+
+      // Total de mensajes
+      Message.countDocuments({
+        userId: new Types.ObjectId(userId)
+      }),
+
+      // Conversaciones de hoy
+      Conversation.countDocuments({
+        userId: new Types.ObjectId(userId),
+        updatedAt: {
+          $gte: new Date(new Date().setHours(0, 0, 0, 0))
         }
+      }),
+
+      // Conversaciones no leídas
+      Conversation.countDocuments({
+        userId: new Types.ObjectId(userId),
+        unreadCount: { $gt: 0 }
+      }),
+
+      // Mensajes por plataforma
+      Message.aggregate([
+        { $match: { userId: new Types.ObjectId(userId) } },
+        { $group: { _id: '$provider', count: { $sum: 1 } } }
+      ])
+    ]);
+
+    // Calcular tiempo promedio de respuesta (simulado por ahora)
+    const averageResponseTime = 4.2; // TODO: Implementar cálculo real
+
+    // Obtener mensajes recientes
+    const recentMessages = await Message.find({
+      userId: new Types.ObjectId(userId)
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('contactId', 'name phoneNumber')
+      .select('content provider createdAt contactId');
+
+    // Formatear mensajes por plataforma
+    const platformStats: Record<string, number> = {};
+    messagesByPlatform.forEach((item: any) => {
+      platformStats[item._id] = item.count;
+    });
+
+    // Asegurar que todas las plataformas tengan un valor
+    const platforms = ['whatsapp', 'instagram', 'messenger', 'telegram'];
+    platforms.forEach(platform => {
+      if (!platformStats[platform]) {
+        platformStats[platform] = 0;
       }
     });
 
-  } catch (error: any) {
-    console.error('Error obteniendo analytics:', error);
-    res.status(500).json({ 
-      error: 'Error obteniendo métricas',
-      details: error.message 
-    });
-  }
-}));
-
-/**
- * Obtener métricas de IA
- */
-router.get('/ai-metrics', authenticateToken, asyncHandler(async (req: any, res: any) => {
-  const userId = req.user?.id;
-
-  if (!userId) {
-    return res.status(401).json({ error: 'Usuario no autenticado' });
-  }
-
-  try {
-    // Por ahora retornamos métricas simuladas
-    // En el futuro se pueden calcular basadas en logs de IA
-    const aiMetrics = {
-      autoResponsesGenerated: 45,
-      sentimentAnalysisAccuracy: 89,
-      timeSavedInMinutes: 180,
-      humanInterventionRate: 23, // % de casos que requieren intervención humana
-      satisfactionScore: 4.1
+    const stats = {
+      totalContacts,
+      totalMessages,
+      conversationsToday,
+      averageResponseTime,
+      activeIntegrations: activeIntegrations.length,
+      messagesByPlatform: platformStats,
+      recentMessages: recentMessages.map(msg => ({
+        id: msg._id,
+        content: msg.content,
+        provider: msg.provider,
+        createdAt: msg.createdAt,
+        contact: msg.contactId
+      })),
+      unreadConversations
     };
 
-    res.json({
-      success: true,
-      aiMetrics
+    logger.info('Estadísticas calculadas', { 
+      userId, 
+      stats: {
+        totalContacts,
+        totalMessages,
+        activeIntegrations: activeIntegrations.length,
+        conversationsToday,
+        unreadConversations
+      }
     });
 
-  } catch (error: any) {
-    console.error('Error obteniendo métricas de IA:', error);
-    res.status(500).json({ 
-      error: 'Error obteniendo métricas de IA',
-      details: error.message 
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error obteniendo estadísticas del dashboard', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
     });
   }
-}));
+});
+
+/**
+ * GET /analytics/integration-stats
+ * Obtener estadísticas específicas por integración
+ */
+router.get('/integration-stats', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    const integrations = await Integration.find({
+      userId: new Types.ObjectId(userId),
+      status: 'linked'
+    });
+
+    const integrationStats = await Promise.all(
+      integrations.map(async (integration) => {
+        const messageCount = await Message.countDocuments({
+          userId: new Types.ObjectId(userId),
+          provider: integration.provider
+        });
+
+        const contactCount = await Contact.countDocuments({
+          userId: new Types.ObjectId(userId),
+          provider: integration.provider
+        });
+
+        return {
+          id: integration._id,
+          provider: integration.provider,
+          name: integration.name,
+          messageCount,
+          contactCount,
+          connectedAt: integration.createdAt,
+          lastActivity: integration.updatedAt
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      data: integrationStats
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error obteniendo estadísticas de integraciones', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
 
 export default router;
