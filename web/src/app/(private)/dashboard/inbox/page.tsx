@@ -89,8 +89,8 @@ export default function InboxPage() {
 
   return (
     <div className="h-full flex flex-col bg-neutral-900 text-white">
-      {/* Header con pestañas de canales */}
-      <div className="border-b border-neutral-700 bg-neutral-800">
+      {/* Header con pestañas de canales (Esta sección es fija) */}
+      <div className="border-b border-neutral-700 bg-neutral-800 flex-shrink-0">
         <div className="flex items-center justify-between p-4">
           <div className="flex gap-2">
             {CHANNELS.map((c) => (
@@ -136,23 +136,32 @@ export default function InboxPage() {
       {/* Contenido principal */}
       <div className="flex flex-1 min-h-0">
         {/* Sidebar con lista de conversaciones */}
-        <div className="w-80 border-r border-neutral-700 bg-neutral-800 flex flex-col">
-          <InboxList
-            items={conversations}
-            activeId={activeId}
-            onSelect={setActiveId}
-            searchQuery={searchQuery}
-          />
+        {/* Añadimos flex flex-col y min-h-0 para que el InboxList pueda usar flex-1 */}
+        <div className="w-80 border-r border-neutral-700 bg-neutral-800 flex flex-col min-h-0">
+          
+          {/* ENVOLTURA CLAVE: Añadimos flex-1 y overflow-y-auto para SCROLL en la lista */}
+          <div className="flex-1 overflow-y-auto">
+            <InboxList
+              items={conversations}
+              activeId={activeId}
+              onSelect={setActiveId}
+              searchQuery={searchQuery}
+            />
+          </div>
         </div>
         
         {/* Área de conversación */}
+        {/* flex-1 flex flex-col min-w-0 es correcto para el layout de la conversación */}
         <div className="flex-1 flex flex-col min-w-0">
+          
           {/* Área de mensajes con scroll independiente */}
+          {/* flex-1 y overflow-y-auto hacen que el hilo de mensajes crezca y tenga SCROLL */}
           <div className="flex-1 overflow-y-auto">
             <MessageThread threadId={activeId} token={token || ""} channel={channel} />
           </div>
           
           {/* Composer fijo en la parte inferior */}
+          {/* flex-shrink-0 asegura que el compositor NO se encoja */}
           <div className="flex-shrink-0">
             <Composer
               threadId={activeId}

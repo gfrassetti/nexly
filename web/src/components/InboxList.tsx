@@ -85,7 +85,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col">
       {/* Header de la lista */}
       <div className="p-4 border-b border-neutral-700">
         <h2 className="text-lg font-semibold text-white">Conversaciones</h2>
@@ -97,7 +97,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
       </div>
 
       {/* Lista de conversaciones */}
-      <div className="flex-1 overflow-y-auto">
+      <div>
         {filteredItems.length === 0 ? (
           <div className="p-4 text-center text-neutral-400">
             {searchQuery ? (
