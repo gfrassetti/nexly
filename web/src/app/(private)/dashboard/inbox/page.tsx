@@ -22,7 +22,22 @@ export default function InboxPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${p}?provider=${c}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return res.json();
+      const data = await res.json();
+      
+      // Mapear los datos del backend al formato esperado por el componente
+      if (data.conversations) {
+        data.conversations = data.conversations.map((conv: any) => ({
+          id: conv.id,
+          title: conv.contactName || conv.title || 'Sin nombre',
+          last: conv.lastMessage || conv.last || '',
+          at: conv.lastMessageTime || conv.at || new Date().toISOString(),
+          unread: conv.unreadCount > 0,
+          platform: conv.provider || c,
+          avatar: conv.avatar
+        }));
+      }
+      
+      return data;
     }
   );
 

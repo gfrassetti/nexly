@@ -55,7 +55,9 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
 
   // Función para obtener el avatar del usuario
   const getUserAvatar = (title: string, platform?: string) => {
-    const initials = title
+    // Proteger contra valores undefined/null
+    const safeTitle = title || 'Sin nombre';
+    const initials = safeTitle
       .split(' ')
       .map(word => word[0])
       .join('')
@@ -66,6 +68,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
       whatsapp: 'bg-green-500',
       instagram: 'bg-pink-500',
       messenger: 'bg-blue-500',
+      telegram: 'bg-blue-400',
     };
 
     const bgColor = platformColors[platform as keyof typeof platformColors] || 'bg-neutral-500';
