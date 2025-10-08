@@ -1,10 +1,12 @@
 "use client";
 import useSWR from "swr";
+import { useEffect, useRef, useMemo, useCallback } from "react";
 
 interface MessageThreadProps {
   threadId: string | null;
   token?: string;
   channel?: string;
+  onMessageSent?: () => void;
 }
 
 type Message = {
@@ -16,7 +18,10 @@ type Message = {
   status?: 'sent' | 'delivered' | 'read';
 };
 
-export default function MessageThread({ threadId, token, channel }: MessageThreadProps) {
+export default function MessageThread({ threadId, token, channel, onMessageSent }: MessageThreadProps) {
+  // Ref para hacer auto-scroll al final cuando lleguen nuevos mensajes
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
   // Mock data para mensajes (mientras tanto)
   const mockMessages: Message[] = [
     {
@@ -61,27 +66,66 @@ export default function MessageThread({ threadId, token, channel }: MessageThrea
     }
   ];
 
-  const { data: messagesData } = useSWR(
+  const { data: messagesData, mutate: mutateMessages } = useSWR(
     threadId && token ? [`/integrations/conversations/${threadId}/messages`, token] : null,
     async ([url, t]) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
-      return res.json();
+      const data = await res.json();
+      
+      // Mapear los datos del backend al formato esperado por el componente
+      if (data.messages) {
+        return data.messages.map((msg: any) => ({
+          id: msg.id,
+          content: msg.body || msg.content || '',
+          timestamp: msg.timestamp || new Date().toISOString(),
+          direction: msg.from === 'business' ? 'outbound' : 'inbound',
+          type: 'text' as const,
+          status: msg.status || 'delivered' as const
+        }));
+      }
+      
+      return [];
     }
   );
 
-  const messages = messagesData?.messages || mockMessages;
+  const messages = messagesData || mockMessages;
 
-  const formatTime = (timestamp: string) => {
+  // Refrescar mensajes cuando se envíe un mensaje
+  useEffect(() => {
+    if (onMessageSent) {
+      const refreshMessages = () => {
+        mutateMessages();
+      };
+      
+      // Escuchar el evento de mensaje enviado
+      window.addEventListener('messageSent', refreshMessages);
+      
+      return () => {
+        window.removeEventListener('messageSent', refreshMessages);
+      };
+    }
+  }, [onMessageSent, mutateMessages]);
+
+  // Auto-scroll al final cuando cambien los mensajes
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  // Formatear tiempo (useCallback para memoización)
+  const formatTime = useCallback((timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('es-ES', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
-  };
+  }, []);
 
-  const getStatusIcon = (status?: string) => {
+  // Iconos de estado (useCallback para memoización)
+  const getStatusIcon = useCallback((status?: string) => {
     switch (status) {
       case 'sent':
         return <div className="w-2 h-2 bg-neutral-400 rounded-full"></div>;
@@ -102,7 +146,7 @@ export default function MessageThread({ threadId, token, channel }: MessageThrea
       default:
         return null;
     }
-  };
+  }, []);
 
   if (!threadId) {
     return (
@@ -161,6 +205,8 @@ export default function MessageThread({ threadId, token, channel }: MessageThrea
             </div>
           </div>
         ))}
+        {/* Elemento invisible para hacer scroll al final */}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );

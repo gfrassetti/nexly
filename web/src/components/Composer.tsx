@@ -101,6 +101,11 @@ export default function Composer({
       await onSend(text.trim());
       setText("");
       setError(null);
+      
+      // Enfocar el textarea después de enviar (mejor UX)
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
     } catch (error: any) {
       setError(error?.message || "Error al enviar el mensaje");
     } finally {

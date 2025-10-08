@@ -5,7 +5,7 @@ import { useDataRefresh } from "@/hooks/useDataRefresh";
 import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { sendMessage } from "@/hooks/sendMessage";
 import { CHANNELS } from "@/lib/constants";
 
@@ -16,7 +16,7 @@ export default function InboxPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: conversationsData } = useSWR(
+  const { data: conversationsData, mutate: mutateConversations } = useSWR(
     token ? ["/integrations/conversations", channel] : null,
     async ([p, c]) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${p}?provider=${c}`, {
@@ -45,6 +45,11 @@ export default function InboxPage() {
     }
   );
 
+  // Memoizar las conversaciones para evitar recálculos innecesarios
+  const conversations = useMemo(() => {
+    return conversationsData?.conversations || [];
+  }, [conversationsData]);
+
   // Refrescar datos cuando se cambie el canal
   useEffect(() => {
     refreshInbox();
@@ -67,10 +72,18 @@ export default function InboxPage() {
         throw new Error('Error enviando mensaje');
       }
       
-      // Refrescar la conversación
-      refreshInbox();
+      // Refrescar tanto las conversaciones como los mensajes
+      await Promise.all([
+        mutateConversations(), // Refrescar lista de conversaciones
+        refreshInbox() // Refrescar datos generales
+      ]);
+      
+      // Emitir evento para refrescar mensajes
+      window.dispatchEvent(new CustomEvent('messageSent'));
+      
+      console.log('Mensaje enviado y datos refrescados');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error enviando mensaje:', error);
     }
   }
 
@@ -125,7 +138,7 @@ export default function InboxPage() {
         {/* Sidebar con lista de conversaciones */}
         <div className="w-80 border-r border-neutral-700 bg-neutral-800 flex flex-col">
           <InboxList
-            items={conversationsData?.conversations || []}
+            items={conversations}
             activeId={activeId}
             onSelect={setActiveId}
             searchQuery={searchQuery}
@@ -134,12 +147,19 @@ export default function InboxPage() {
         
         {/* Área de conversación */}
         <div className="flex-1 flex flex-col min-w-0">
-          <MessageThread threadId={activeId} token={token || ""} channel={channel} />
-          <Composer
-            threadId={activeId}
-            token={token || ""}
-            onSend={handleSend}
-          />
+          {/* Área de mensajes con scroll independiente */}
+          <div className="flex-1 overflow-y-auto">
+            <MessageThread threadId={activeId} token={token || ""} channel={channel} />
+          </div>
+          
+          {/* Composer fijo en la parte inferior */}
+          <div className="flex-shrink-0">
+            <Composer
+              threadId={activeId}
+              token={token || ""}
+              onSend={handleSend}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 type Item = {
   id: string;
@@ -33,8 +33,8 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
     );
   }, [items, searchQuery]);
 
-  // Función para formatear el tiempo
-  const formatTime = (timeString: string) => {
+  // Función para formatear el tiempo (useCallback para evitar recrearla en cada render)
+  const formatTime = useCallback((timeString: string) => {
     try {
       const date = new Date(timeString);
       const now = new Date();
@@ -55,10 +55,10 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
     } catch {
       return timeString;
     }
-  };
+  }, []);
 
-  // Función para obtener el avatar del usuario
-  const getUserAvatar = (title: string, platform?: string) => {
+  // Función para obtener el avatar del usuario (useCallback para memoización)
+  const getUserAvatar = useCallback((title: string, platform?: string) => {
     // Proteger contra valores undefined/null
     const safeTitle = title || 'Sin nombre';
     const initials = safeTitle
@@ -82,7 +82,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
         {initials}
       </div>
     );
-  };
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
