@@ -42,7 +42,7 @@ export default function TelegramMTProtoConnect({
       }, token || undefined);
 
       if (response.success) {
-        setMaskedPhone(response.phoneNumber);
+        setMaskedPhone(response.phoneNumber || phoneNumber);
         setStep('code');
         showToast.success('Código de verificación enviado');
       } else {
@@ -112,11 +112,10 @@ export default function TelegramMTProtoConnect({
     setIsLoading(true);
     
     try {
-      const response = await apiFetch('/telegram/verify-code', {
+      const response = await apiFetch('/telegram/verify-password', {
         method: 'POST',
         body: JSON.stringify({ 
           phoneNumber: phoneNumber.trim(),
-          code: code.trim(),
           password: password.trim()
         })
       }, token || undefined);

@@ -104,8 +104,8 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       });
     }
 
-            // Enviar código de verificación
-            const result = await telegramMTProtoService.sendCode(phoneNumber);
+    // Enviar código de verificación
+    const result = await telegramMTProtoService.sendCode(phoneNumber);
     
     if (!result.success) {
       return res.status(400).json({
@@ -115,43 +115,47 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       });
     }
 
-            // Crear o actualizar sesión con phoneCodeHash
-            const sessionData = {
-              userId: new Types.ObjectId(userId),
-              phoneNumber: phoneNumber.trim(),
-              phoneCodeHash: result.phoneCodeHash,
-              authState: 'pending_code' as const,
-              isActive: false,
-            };
+    // Crear o actualizar sesión con phoneCodeHash
+    const sessionData = {
+      userId: new Types.ObjectId(userId),
+      phoneNumber: phoneNumber.trim(),
+      phoneCodeHash: result.phoneCodeHash,
+      authState: 'pending_code' as const,
+      isActive: false,
+    };
 
-            if (existingSession) {
-              await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
-            } else {
-              await TelegramSession.create(sessionData);
-            }
+    if (existingSession) {
+      await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
+    } else {
+      await TelegramSession.create(sessionData);
+    }
 
     logger.info('Código de verificación enviado', { userId, phoneNumber });
+
+    // Enmascarar el número de teléfono para mostrar en el frontend
+    const maskedPhone = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1***$3');
 
     res.status(200).json({
       success: true,
       message: 'Código de verificación enviado',
+      phoneNumber: maskedPhone,
       requiresCode: true,
       requiresPassword: false
     });
 
-          } catch (error: unknown) {
-            logger.error('Error en /telegram/send-code', {
-              userId: req.user?.id || req.user?._id,
-              error: error instanceof Error ? error.message : 'Error desconocido',
-              stack: error instanceof Error ? error.stack : undefined
-            });
-            
-            res.status(500).json({
-              success: false,
-              error: 'server_error',
-              message: error instanceof Error ? `Error interno del servidor: ${error.message}` : 'Error interno del servidor desconocido'
-            });
-          }
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/send-code', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: error instanceof Error ? `Error interno del servidor: ${error.message}` : 'Error interno del servidor desconocido'
+    });
+  }
 });
 
 /**
@@ -295,6 +299,140 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
 
   } catch (error: unknown) {
     logger.error('Error en /telegram/verify-code', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * POST /telegram/verify-password
+ * Verificar contraseña de 2FA
+ */
+router.post('/verify-password', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    const { phoneNumber, password } = req.body;
+    
+    if (!phoneNumber || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'missing_parameters',
+        message: 'Número de teléfono y contraseña son requeridos'
+      });
+    }
+
+    // Buscar sesión pendiente de contraseña
+    const session = await TelegramSession.findOne({
+      userId: new Types.ObjectId(userId),
+      phoneNumber: phoneNumber.trim(),
+      authState: 'pending_password',
+      isActive: false
+    });
+
+    if (!session || !session.phoneCodeHash) {
+      return res.status(400).json({
+        success: false,
+        error: 'session_not_found',
+        message: 'Sesión no encontrada o expirada. Inicia el proceso nuevamente.'
+      });
+    }
+
+    // Conectar con el cliente
+    const connected = await telegramMTProtoService.connect(userId);
+    if (!connected) {
+      return res.status(500).json({
+        success: false,
+        error: 'connection_failed',
+        message: 'No se pudo conectar con Telegram'
+      });
+    }
+
+    // Verificar contraseña 2FA
+    const result = await telegramMTProtoService.signIn(
+      phoneNumber.trim(),
+      '', // Código vacío para 2FA
+      session.phoneCodeHash,
+      password
+    );
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: 'verification_failed',
+        message: result.error || 'Contraseña de 2FA incorrecta'
+      });
+    }
+
+    if (!result.user || !result.sessionString) {
+      return res.status(500).json({
+        success: false,
+        error: 'authentication_incomplete',
+        message: 'Error en el proceso de autenticación'
+      });
+    }
+
+    // Actualizar sesión con datos del usuario
+    session.sessionString = result.sessionString;
+    session.phoneCodeHash = undefined;
+    session.authState = 'authenticated';
+    session.isActive = true;
+    session.userInfo = {
+      id: result.user.id,
+      username: result.user.username,
+      firstName: result.user.firstName,
+      lastName: result.user.lastName,
+      phoneNumber: result.user.phoneNumber,
+    };
+    session.lastActivity = new Date();
+    await session.save();
+
+    // Crear o actualizar integración
+    const integration = await Integration.findOneAndUpdate(
+      { 
+        userId: new Types.ObjectId(userId), 
+        provider: 'telegram',
+        externalId: result.user.id.toString()
+      },
+      {
+        name: result.user.username || result.user.firstName || `Telegram User ${result.user.id}`,
+        status: 'linked',
+        meta: {
+          telegramUserId: result.user.id,
+          telegramUsername: result.user.username,
+          telegramFirstName: result.user.firstName,
+          telegramLastName: result.user.lastName,
+          telegramPhoneNumber: result.user.phoneNumber,
+          sessionString: result.sessionString,
+          isActive: true,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Telegram conectado exitosamente',
+      user: result.user,
+      integrationId: integration._id
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/verify-password', {
       userId: req.user?.id || req.user?._id,
       error: error instanceof Error ? error.message : 'Error desconocido'
     });
