@@ -131,7 +131,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Enviar código de verificación
-    const result = await telegramMTProtoService.sendCode(phoneNumber.trim());
+    const result = await telegramMTProtoService.sendCode(userId, phoneNumber.trim());
     
     if (!result.success) {
       logger.error('Error en sendCode', { userId, phoneNumber, error: result.error });
@@ -261,6 +261,7 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
 
     // Verificar código y autenticar
     const result = await telegramMTProtoService.signIn(
+      userId,
       phoneNumber.trim(),
       code.trim(),
       session.phoneCodeHash,
@@ -414,6 +415,7 @@ router.post('/verify-password', async (req: AuthRequest, res: Response) => {
 
     // Verificar contraseña 2FA
     const result = await telegramMTProtoService.signIn(
+      userId,
       phoneNumber.trim(),
       '', // Código vacío para 2FA
       session.phoneCodeHash,
@@ -536,7 +538,7 @@ router.get('/chats', async (req: AuthRequest, res: Response) => {
     }
 
     // Obtener chats
-    const result = await telegramMTProtoService.getChats();
+    const result = await telegramMTProtoService.getChats(userId);
     
     if (!result.success) {
       return res.status(500).json({
@@ -617,7 +619,7 @@ router.get('/messages/:chatId', async (req: AuthRequest, res: Response) => {
     }
 
     // Obtener mensajes
-    const result = await telegramMTProtoService.getMessages(parseInt(chatId), limit);
+    const result = await telegramMTProtoService.getMessages(userId, parseInt(chatId), limit);
     
     if (!result.success) {
       return res.status(500).json({
@@ -698,7 +700,7 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
     }
 
     // Enviar mensaje
-    const result = await telegramMTProtoService.sendMessage(parseInt(chatId), message);
+    const result = await telegramMTProtoService.sendMessage(userId, parseInt(chatId), message);
     
     if (!result.success) {
       return res.status(500).json({
@@ -759,7 +761,7 @@ router.delete('/disconnect', async (req: AuthRequest, res: Response) => {
     }
 
     // Desconectar cliente
-    await telegramMTProtoService.disconnect();
+    await telegramMTProtoService.disconnect(userId);
 
     // Marcar sesión como inactiva
     session.isActive = false;

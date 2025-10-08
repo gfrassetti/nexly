@@ -62,21 +62,22 @@ export interface GetMessagesResult {
 }
 
 export class TelegramMTProtoService {
-  private client: TelegramClient | null = null;
-  private sessionString: string | null = null;
-  private userId: string | null = null;
+  private clients: Map<string, TelegramClient> = new Map(); // Caché de clientes por userId
+  private sessions: Map<string, string> = new Map(); // Caché de sessionStrings por userId
 
   constructor() {
     // Constructor vacío, la inicialización se hace en initClient
   }
 
-  private async initClient(sessionString?: string): Promise<void> {
+  private async initClient(userId: string, sessionString?: string): Promise<TelegramClient> {
     const apiId = parseInt(process.env.TELEGRAM_API_ID || '0');
     const apiHash = process.env.TELEGRAM_API_HASH || '';
 
     logger.info('Inicializando cliente de Telegram', { 
+      userId,
       apiId: apiId || 'No configurado', 
-      apiHash: apiHash ? 'Configurado' : 'No configurado' 
+      apiHash: apiHash ? 'Configurado' : 'No configurado',
+      hasSessionString: !!sessionString
     });
 
     if (!apiId || !apiHash) {
@@ -87,32 +88,48 @@ export class TelegramMTProtoService {
 
     const stringSession = new StringSession(sessionString || '');
     
-    this.client = new TelegramClient(stringSession, apiId, apiHash, {
+    const client = new TelegramClient(stringSession, apiId, apiHash, {
       connectionRetries: 5,
       autoReconnect: true,
     });
 
-    logger.info('Conectando cliente de Telegram...');
-    await this.client.connect();
-    logger.info('Cliente de Telegram conectado exitosamente');
+    logger.info('Conectando cliente de Telegram...', { userId });
+    await client.connect();
+    logger.info('Cliente de Telegram conectado exitosamente', { userId });
+
+    return client;
   }
 
   public async connect(userId: string, sessionString?: string): Promise<boolean> {
     try {
-      this.userId = userId;
-      await this.initClient(sessionString);
+      // Verificar si ya existe un cliente en caché para este usuario
+      if (this.clients.has(userId)) {
+        const existingClient = this.clients.get(userId)!;
+        if (existingClient.connected) {
+          logger.info('Usando cliente existente en caché', { userId });
+          return true;
+        } else {
+          logger.info('Cliente en caché desconectado, reconectando...', { userId });
+          await existingClient.connect();
+          return true;
+        }
+      }
+
+      // Si no hay cliente en caché, crear uno nuevo
+      logger.info('Creando nuevo cliente de Telegram', { userId, hasSessionString: !!sessionString });
       
-      if (!this.client) {
-        throw new Error('Cliente de Telegram no inicializado');
-      }
-
-      // Si hay sessionString, intentar reconectar
+      const client = await this.initClient(userId, sessionString);
+      
+      // Guardar en caché
+      this.clients.set(userId, client);
+      
       if (sessionString) {
+        this.sessions.set(userId, sessionString);
         logger.info('Reconectando con sesión existente', { userId });
-        return true;
+      } else {
+        logger.info('Cliente de Telegram inicializado para nueva autenticación', { userId });
       }
 
-      logger.info('Cliente de Telegram inicializado para nueva autenticación', { userId });
       return true;
     } catch (error: unknown) {
       logger.error('Error conectando cliente de Telegram', {
@@ -123,20 +140,22 @@ export class TelegramMTProtoService {
     }
   }
 
-  public async sendCode(phoneNumber: string): Promise<SendCodeResult> {
+  public async sendCode(userId: string, phoneNumber: string): Promise<SendCodeResult> {
     try {
-      if (!this.client) {
-        logger.error('Cliente de Telegram no inicializado en sendCode');
+      const client = this.clients.get(userId);
+      
+      if (!client) {
+        logger.error('Cliente de Telegram no inicializado en sendCode', { userId });
         return {
           success: false,
           error: 'Cliente de Telegram no inicializado. Llama a connect() primero.',
         };
       }
 
-      logger.info('Iniciando sendCode', { phoneNumber });
+      logger.info('Iniciando sendCode', { userId, phoneNumber });
 
       // Usar el método de alto nivel de GramJS
-      const result = await this.client.sendCode(
+      const result = await client.sendCode(
         {
           apiId: parseInt(process.env.TELEGRAM_API_ID || '0'),
           apiHash: process.env.TELEGRAM_API_HASH || '',
@@ -145,13 +164,14 @@ export class TelegramMTProtoService {
       );
 
       logger.info('Código de verificación enviado exitosamente', { 
+        userId,
         phoneNumber, 
         phoneCodeHash: result.phoneCodeHash,
         hasPhoneCodeHash: !!result.phoneCodeHash 
       });
       
       if (!result.phoneCodeHash) {
-        logger.error('phoneCodeHash no recibido en sendCode', { phoneNumber, result });
+        logger.error('phoneCodeHash no recibido en sendCode', { userId, phoneNumber, result });
         return {
           success: false,
           error: 'No se recibió el hash de verificación de Telegram',
@@ -165,6 +185,7 @@ export class TelegramMTProtoService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       logger.error('Error enviando código de verificación', { 
+        userId,
         phoneNumber, 
         error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined
@@ -193,14 +214,22 @@ export class TelegramMTProtoService {
     }
   }
 
-  public async signIn(phoneNumber: string, phoneCode: string, phoneCodeHash: string, password?: string): Promise<SignInResult> {
+  public async signIn(userId: string, phoneNumber: string, phoneCode: string, phoneCodeHash: string, password?: string): Promise<SignInResult> {
     try {
-      if (!this.client) {
-        throw new Error('Cliente de Telegram no inicializado. Llama a connect() primero.');
+      const client = this.clients.get(userId);
+      
+      if (!client) {
+        logger.error('Cliente de Telegram no inicializado en signIn', { userId });
+        return {
+          success: false,
+          error: 'Cliente de Telegram no inicializado. Llama a connect() primero.',
+        };
       }
 
+      logger.info('Iniciando signIn', { userId, phoneNumber, hasPassword: !!password });
+
       // Usar el método de alto nivel de GramJS
-      const result = await this.client.signInUser(
+      const result = await client.signInUser(
         {
           apiId: parseInt(process.env.TELEGRAM_API_ID || '0'),
           apiHash: process.env.TELEGRAM_API_HASH || '',
@@ -210,14 +239,14 @@ export class TelegramMTProtoService {
           phoneCode: async () => phoneCode,
           password: password ? async () => password : undefined,
           onError: async (err: any) => {
-            logger.error('Error en autenticación de Telegram', { error: err });
+            logger.error('Error en autenticación de Telegram', { userId, error: err });
             throw err;
           },
         }
       );
 
       if (result) {
-        const sessionString = this.client.session.save() as unknown as string;
+        const sessionString = client.session.save() as unknown as string;
         
         const userInfo: TelegramUser = {
           id: result.id.toJSNumber(),
@@ -228,12 +257,14 @@ export class TelegramMTProtoService {
         };
 
         logger.info('Usuario de Telegram autenticado exitosamente', {
-          userId: userInfo.id,
+          userId,
+          telegramUserId: userInfo.id,
           username: userInfo.username,
           phoneNumber: userInfo.phoneNumber,
         });
 
-        this.sessionString = sessionString;
+        // Guardar sessionString en caché
+        this.sessions.set(userId, sessionString);
         
         return {
           success: true,
@@ -248,7 +279,7 @@ export class TelegramMTProtoService {
       }
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logger.error('Error en autenticación de Telegram', { phoneNumber, error: errorMessage });
+      logger.error('Error en autenticación de Telegram', { userId, phoneNumber, error: errorMessage });
       
       // Verificar si es error de 2FA
       if (errorMessage.includes('2FA') || errorMessage.includes('password') || errorMessage.includes('SESSION_PASSWORD_NEEDED')) {
@@ -266,14 +297,20 @@ export class TelegramMTProtoService {
     }
   }
 
-  public async getChats(): Promise<GetChatsResult> {
+  public async getChats(userId: string): Promise<GetChatsResult> {
     try {
-      if (!this.client || !this.client.connected) {
-        throw new Error('Cliente de Telegram no conectado');
+      const client = this.clients.get(userId);
+      
+      if (!client || !client.connected) {
+        logger.error('Cliente de Telegram no conectado en getChats', { userId });
+        return {
+          success: false,
+          error: 'Cliente de Telegram no conectado',
+        };
       }
 
-      const dialogs = await this.client.getDialogs();
-      const chats: TelegramChat[] = dialogs.map(dialog => {
+      const dialogs = await client.getDialogs();
+      const chats: TelegramChat[] = dialogs.map((dialog: any) => {
         const entity = dialog.entity;
         let type: 'private' | 'group' | 'supergroup' | 'channel' = 'private';
         let title: string | undefined;
@@ -309,8 +346,8 @@ export class TelegramMTProtoService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       logger.error('Error obteniendo chats de Telegram', {
+        userId,
         error: errorMessage,
-        userId: this.userId,
       });
       
       return {
@@ -320,13 +357,19 @@ export class TelegramMTProtoService {
     }
   }
 
-  public async getMessages(chatId: number, limit: number = 20): Promise<GetMessagesResult> {
+  public async getMessages(userId: string, chatId: number, limit: number = 20): Promise<GetMessagesResult> {
     try {
-      if (!this.client || !this.client.connected) {
-        throw new Error('Cliente de Telegram no conectado');
+      const client = this.clients.get(userId);
+      
+      if (!client || !client.connected) {
+        logger.error('Cliente de Telegram no conectado en getMessages', { userId, chatId });
+        return {
+          success: false,
+          error: 'Cliente de Telegram no conectado',
+        };
       }
 
-      const messages = await this.client.getMessages(chatId, {
+      const messages = await client.getMessages(chatId, {
         limit: limit,
       });
 
@@ -346,9 +389,9 @@ export class TelegramMTProtoService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       logger.error('Error obteniendo mensajes de Telegram', {
+        userId,
         chatId,
         error: errorMessage,
-        userId: this.userId,
       });
       
       return {
@@ -358,13 +401,19 @@ export class TelegramMTProtoService {
     }
   }
 
-  public async sendMessage(chatId: number, message: string): Promise<SendMessageResult> {
+  public async sendMessage(userId: string, chatId: number, message: string): Promise<SendMessageResult> {
     try {
-      if (!this.client || !this.client.connected) {
-        throw new Error('Cliente de Telegram no conectado');
+      const client = this.clients.get(userId);
+      
+      if (!client || !client.connected) {
+        logger.error('Cliente de Telegram no conectado en sendMessage', { userId, chatId });
+        return {
+          success: false,
+          error: 'Cliente de Telegram no conectado',
+        };
       }
 
-      const result = await this.client.sendMessage(chatId, { message });
+      const result = await client.sendMessage(chatId, { message });
       
       if (result) {
         return {
@@ -380,10 +429,10 @@ export class TelegramMTProtoService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       logger.error('Error enviando mensaje de Telegram', {
+        userId,
         chatId,
         message,
         error: errorMessage,
-        userId: this.userId,
       });
       
       return {
@@ -393,25 +442,30 @@ export class TelegramMTProtoService {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  public async disconnect(userId: string): Promise<void> {
     try {
-      if (this.client && this.client.connected) {
-        await this.client.disconnect();
-        logger.info('Cliente de Telegram desconectado', { userId: this.userId });
+      const client = this.clients.get(userId);
+      
+      if (client && client.connected) {
+        await client.disconnect();
+        logger.info('Cliente de Telegram desconectado', { userId });
       }
-      this.client = null;
-      this.sessionString = null;
-      this.userId = null;
+      
+      // Limpiar del caché
+      this.clients.delete(userId);
+      this.sessions.delete(userId);
+      
+      logger.info('Cliente y sesión eliminados del caché', { userId });
     } catch (error: unknown) {
       logger.error('Error desconectando cliente de Telegram', {
+        userId,
         error: error instanceof Error ? error.message : 'Error desconocido',
-        userId: this.userId,
       });
     }
   }
 
-  public getSessionString(): string | null {
-    return this.sessionString;
+  public getSessionString(userId: string): string | null {
+    return this.sessions.get(userId) || null;
   }
 }
 
