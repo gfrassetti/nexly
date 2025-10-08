@@ -34,6 +34,7 @@ export default function Composer({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -162,20 +163,39 @@ export default function Composer({
     // Aquí podrías mostrar notificaciones o actualizar la UI
   };
 
-  const getChannelInfo = () => {
-    switch (channel.toLowerCase()) {
-      case 'whatsapp':
-        return { name: 'WhatsApp', color: 'text-green-400', icon: '📱' };
-      case 'instagram':
-        return { name: 'Instagram', color: 'text-pink-400', icon: '📸' };
-      case 'messenger':
-        return { name: 'Messenger', color: 'text-blue-400', icon: '💬' };
-      default:
-        return { name: channel, color: 'text-neutral-400', icon: '📞' };
+  const handleAttachmentClick = () => {
+    if (onAttachmentClick) {
+      onAttachmentClick();
+    } else {
+      // Implementación por defecto: abrir selector de archivos
+      fileInputRef.current?.click();
     }
   };
 
-  const channelInfo = getChannelInfo();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // TODO: Implementar lógica de carga de archivos
+      setError('La función de adjuntar archivos estará disponible próximamente');
+      // Limpiar el input
+      e.target.value = '';
+    }
+  };
+
+  const getChannelName = () => {
+    switch (channel.toLowerCase()) {
+      case 'whatsapp':
+        return 'WhatsApp';
+      case 'instagram':
+        return 'Instagram';
+      case 'messenger':
+        return 'Messenger';
+      case 'telegram':
+        return 'Telegram';
+      default:
+        return channel;
+    }
+  };
 
   if (!threadId) {
     return (
@@ -219,10 +239,19 @@ export default function Composer({
       {/* Composer area */}
       <div className="p-4">
         <div className="flex items-end gap-3">
+          {/* Input oculto para archivos */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+          />
+          
           {/* Botón de adjuntar archivo */}
           <button
             type="button"
-            onClick={onAttachmentClick}
+            onClick={handleAttachmentClick}
             disabled={disabled || isLoading}
             className="flex-shrink-0 p-2 text-neutral-400 hover:text-neutral-300 disabled:text-neutral-600 disabled:cursor-not-allowed transition-colors"
             title="Adjuntar archivo"
@@ -252,7 +281,7 @@ export default function Composer({
               value={text}
               onChange={handleTextChange}
               onKeyPress={handleKeyPress}
-              placeholder={placeholder || `Escribe un mensaje en ${channelInfo.name}...`}
+              placeholder={placeholder || `Escribe un mensaje en ${getChannelName()}...`}
               className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent max-h-32 disabled:opacity-50 disabled:cursor-not-allowed"
               rows={1}
               disabled={isLoading || disabled}
@@ -344,12 +373,6 @@ export default function Composer({
                 {getUsedMessages(channel)}/{getMaxMessages(channel)} mensajes hoy
               </span>
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={channelInfo.color}>{channelInfo.icon}</span>
-            <span className={channelInfo.color}>{channelInfo.name}</span>
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Conectado</span>
           </div>
         </div>
       </div>

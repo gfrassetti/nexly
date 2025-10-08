@@ -21,50 +21,6 @@ type Message = {
 export default function MessageThread({ threadId, token, channel, onMessageSent }: MessageThreadProps) {
   // Ref para hacer auto-scroll al final cuando lleguen nuevos mensajes
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Mock data para mensajes (mientras tanto)
-  const mockMessages: Message[] = [
-    {
-      id: '1',
-      content: 'Hola! ¿Cómo estás?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 min ago
-      direction: 'inbound',
-      type: 'text',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'Hola! Muy bien, gracias. ¿Y tú?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(), // 25 min ago
-      direction: 'outbound',
-      type: 'text',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'Perfecto! ¿Te gustaría conocer más sobre nuestros servicios?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 20).toISOString(), // 20 min ago
-      direction: 'inbound',
-      type: 'text',
-      status: 'delivered'
-    },
-    {
-      id: '4',
-      content: 'Sí, me interesa mucho. ¿Podrías enviarme más información?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 min ago
-      direction: 'outbound',
-      type: 'text',
-      status: 'sent'
-    },
-    {
-      id: '5',
-      content: '¡Por supuesto! Te envío un catálogo con todos nuestros servicios y precios.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 min ago
-      direction: 'inbound',
-      type: 'text',
-      status: 'delivered'
-    }
-  ];
 
   const { data: messagesData, mutate: mutateMessages } = useSWR(
     threadId && token ? [`/integrations/conversations/${threadId}/messages`, token] : null,
@@ -90,7 +46,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
     }
   );
 
-  const messages = messagesData || mockMessages;
+  const messages = messagesData || [];
 
   // Refrescar mensajes cuando se envíe un mensaje
   useEffect(() => {

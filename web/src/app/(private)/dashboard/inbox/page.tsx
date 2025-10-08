@@ -167,6 +167,7 @@ export default function InboxPage() {
               threadId={activeId}
               token={token || ""}
               onSend={handleSend}
+              channel={channel}
             />
           </div>
         </div>
