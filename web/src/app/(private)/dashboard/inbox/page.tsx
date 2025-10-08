@@ -137,7 +137,7 @@ export default function InboxPage() {
       <div className="flex flex-1 min-h-0">
         {/* Sidebar con lista de conversaciones */}
         {/* Añadimos flex flex-col y min-h-0 para que el InboxList pueda usar flex-1 */}
-        <div className="w-80 border-r border-neutral-700 bg-neutral-800 flex flex-col min-h-0">
+        <div className="w-80 border-r border-neutral-700 bg-neutral-800 flex flex-col h-screen">
           
           {/* ENVOLTURA CLAVE: Añadimos flex-1 y overflow-y-auto para SCROLL en la lista */}
           <div className="flex-1 overflow-y-auto">
