@@ -467,6 +467,83 @@ export class TelegramMTProtoService {
   public getSessionString(userId: string): string | null {
     return this.sessions.get(userId) || null;
   }
+
+  /**
+   * Iniciar listener de mensajes en tiempo real para un usuario
+   */
+  public async startMessageListener(userId: string, onMessage: (message: any) => void): Promise<void> {
+    try {
+      const client = this.clients.get(userId);
+      
+      if (!client || !client.connected) {
+        logger.error('Cliente no disponible para listener', { userId });
+        return;
+      }
+
+      logger.info('Iniciando listener de mensajes', { userId });
+
+      // Escuchar nuevos mensajes
+      client.addEventHandler(async (update: any) => {
+        try {
+          if (update.className === 'UpdateNewMessage') {
+            const message = update.message;
+            
+            logger.info('Nuevo mensaje recibido', { 
+              userId, 
+              messageId: message.id,
+              chatId: message.chatId?.toJSNumber(),
+              fromId: message.fromId?.toJSNumber()
+            });
+
+            // Procesar el mensaje y llamar al callback
+            const processedMessage = {
+              id: message.id,
+              chatId: message.chatId?.toJSNumber(),
+              text: message.message || '',
+              date: new Date(message.date * 1000),
+              fromId: message.fromId?.toJSNumber(),
+              isOutgoing: message.out,
+              userId: userId
+            };
+
+            onMessage(processedMessage);
+          }
+        } catch (error) {
+          logger.error('Error procesando mensaje en listener', { 
+            userId, 
+            error: error instanceof Error ? error.message : 'Error desconocido' 
+          });
+        }
+      }, new (await import('telegram/events')).NewMessage({}));
+
+      logger.info('Listener de mensajes iniciado exitosamente', { userId });
+    } catch (error) {
+      logger.error('Error iniciando listener de mensajes', { 
+        userId, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      });
+    }
+  }
+
+  /**
+   * Detener listener de mensajes para un usuario
+   */
+  public async stopMessageListener(userId: string): Promise<void> {
+    try {
+      const client = this.clients.get(userId);
+      
+      if (client && client.connected) {
+        // Remover todos los event handlers
+        client.removeEventHandler(() => {});
+        logger.info('Listener de mensajes detenido', { userId });
+      }
+    } catch (error) {
+      logger.error('Error deteniendo listener de mensajes', { 
+        userId, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      });
+    }
+  }
 }
 
 export const telegramMTProtoService = new TelegramMTProtoService();

@@ -341,6 +341,27 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
       { upsert: true, new: true }
     );
 
+    // Iniciar listener de mensajes en tiempo real
+    try {
+      await telegramMTProtoService.startMessageListener(userId, async (message) => {
+        logger.info('Mensaje recibido en tiempo real', { 
+          userId, 
+          messageId: message.id,
+          chatId: message.chatId 
+        });
+        
+        // Aquí podrías guardar el mensaje en la base de datos
+        // o enviarlo via WebSocket al frontend
+        // TODO: Implementar guardado en DB y notificación al frontend
+      });
+    } catch (listenerError) {
+      logger.error('Error iniciando listener de mensajes', { 
+        userId, 
+        error: listenerError instanceof Error ? listenerError.message : 'Error desconocido' 
+      });
+      // No fallar la autenticación por esto
+    }
+
     res.status(200).json({
       success: true,
       message: 'Telegram conectado exitosamente',
@@ -475,6 +496,27 @@ router.post('/verify-password', async (req: AuthRequest, res: Response) => {
       },
       { upsert: true, new: true }
     );
+
+    // Iniciar listener de mensajes en tiempo real
+    try {
+      await telegramMTProtoService.startMessageListener(userId, async (message) => {
+        logger.info('Mensaje recibido en tiempo real', { 
+          userId, 
+          messageId: message.id,
+          chatId: message.chatId 
+        });
+        
+        // Aquí podrías guardar el mensaje en la base de datos
+        // o enviarlo via WebSocket al frontend
+        // TODO: Implementar guardado en DB y notificación al frontend
+      });
+    } catch (listenerError) {
+      logger.error('Error iniciando listener de mensajes', { 
+        userId, 
+        error: listenerError instanceof Error ? listenerError.message : 'Error desconocido' 
+      });
+      // No fallar la autenticación por esto
+    }
 
     res.status(200).json({
       success: true,

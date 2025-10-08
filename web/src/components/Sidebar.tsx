@@ -8,6 +8,7 @@ import Logo from "./Logo";
 const items = [
   { id: "resumen", label: "Resumen", href: "/dashboard" },
   { id: "inbox", label: "Inbox", href: "/dashboard/inbox" },
+  { id: "telegram", label: "Telegram", href: "/dashboard/telegram" },
   { id: "contacts", label: "Contactos", href: "/dashboard/contacts" },
   { id: "integrations", label: "Integraciones", href: "/dashboard/integrations" },
   { id: "subscription", label: "Mi Suscripción", href: "/dashboard/subscription" },
