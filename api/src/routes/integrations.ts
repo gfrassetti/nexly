@@ -329,7 +329,7 @@ router.get("/limits", async (req: AuthRequest, res: Response) => {
  * GET /integrations
  * Lista integraciones del usuario autenticado.
  */
-router.get("/", async (req: AuthRequest, res: Response) => {
+router.get("/", handleAuth, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {

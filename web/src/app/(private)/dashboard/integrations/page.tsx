@@ -343,12 +343,12 @@ function IntegrationsContent() {
             </p>
             {(() => {
               // 1. Encontrar si esta integración está conectada
-              const connectedIntegration = connectedIntegrations?.integrations?.find(
+              const connectedIntegration = connectedIntegrations?.find(
                 (int: any) => int.provider === integration.id && int.status === 'linked'
               );
 
               // 2. Obtener el texto del botón basado en el estado
-              const buttonText = getButtonText(integration.id, connectedIntegrations?.integrations);
+              const buttonText = getButtonText(integration.id, connectedIntegrations);
               
               // 3. Determinar si está conectado
               const isConnected = buttonText === 'Desconectar';
