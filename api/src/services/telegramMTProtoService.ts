@@ -126,8 +126,14 @@ export class TelegramMTProtoService {
   public async sendCode(phoneNumber: string): Promise<SendCodeResult> {
     try {
       if (!this.client) {
-        throw new Error('Cliente de Telegram no inicializado. Llama a connect() primero.');
+        logger.error('Cliente de Telegram no inicializado en sendCode');
+        return {
+          success: false,
+          error: 'Cliente de Telegram no inicializado. Llama a connect() primero.',
+        };
       }
+
+      logger.info('Iniciando sendCode', { phoneNumber });
 
       // Usar el método de alto nivel de GramJS
       const result = await this.client.sendCode(
@@ -138,21 +144,45 @@ export class TelegramMTProtoService {
         phoneNumber
       );
 
-      logger.info('Código de verificación enviado', { phoneNumber, phoneCodeHash: result.phoneCodeHash });
+      logger.info('Código de verificación enviado exitosamente', { 
+        phoneNumber, 
+        phoneCodeHash: result.phoneCodeHash,
+        hasPhoneCodeHash: !!result.phoneCodeHash 
+      });
       
+      if (!result.phoneCodeHash) {
+        logger.error('phoneCodeHash no recibido en sendCode', { phoneNumber, result });
+        return {
+          success: false,
+          error: 'No se recibió el hash de verificación de Telegram',
+        };
+      }
+
       return {
         success: true,
         phoneCodeHash: result.phoneCodeHash,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      logger.error('Error enviando código de verificación', { phoneNumber, error: errorMessage });
+      logger.error('Error enviando código de verificación', { 
+        phoneNumber, 
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined
+      });
       
       // Verificar si es un error de flood
       if (errorMessage.includes('FLOOD') || errorMessage.includes('flood')) {
         return {
           success: false,
           error: 'FLOOD_WAIT: Demasiados intentos. Intenta más tarde.',
+        };
+      }
+
+      // Verificar si es un error de número inválido
+      if (errorMessage.includes('PHONE_NUMBER_INVALID')) {
+        return {
+          success: false,
+          error: 'Número de teléfono inválido. Asegúrate de incluir el código de país.',
         };
       }
       

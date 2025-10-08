@@ -10,6 +10,31 @@ type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
 const router = Router();
 
+/**
+ * GET /telegram/health
+ * Verificar que el servicio de Telegram está configurado correctamente
+ */
+router.get('/health', async (req: AuthRequest, res: Response) => {
+  try {
+    const apiId = process.env.TELEGRAM_API_ID;
+    const apiHash = process.env.TELEGRAM_API_HASH;
+
+    const isConfigured = !!(apiId && apiHash && apiId !== '0');
+
+    res.status(200).json({
+      success: true,
+      configured: isConfigured,
+      apiId: apiId ? 'SET' : 'NOT_SET',
+      apiHash: apiHash ? 'SET' : 'NOT_SET'
+    });
+  } catch (error: unknown) {
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: error instanceof Error ? error.message : 'Error desconocido'
+    });
+  }
+});
 
 /**
  * POST /telegram/send-code
@@ -50,28 +75,29 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Verificar si ya existe una sesión activa
+    // Verificar si ya existe una sesión (activa o no) para este usuario
     let existingSession = await TelegramSession.findOne({ 
-      userId: new Types.ObjectId(userId), 
-      isActive: true 
+      userId: new Types.ObjectId(userId)
     });
 
     if (existingSession) {
-      // Si existe una sesión, intentar reconectar
-      const connected = await telegramMTProtoService.connect(userId, existingSession.sessionString);
-      if (connected) {
-        return res.status(200).json({
-          success: true,
-          message: 'Sesión existente reconectada',
-          requiresCode: false,
-          requiresPassword: false
-        });
-      } else {
-        // Si no se puede reconectar, marcar como inactiva y continuar
-        existingSession.isActive = false;
-        existingSession.authState = 'error';
-        await existingSession.save();
+      // Si existe una sesión activa y autenticada, intentar reconectar
+      if (existingSession.isActive && existingSession.authState === 'authenticated' && existingSession.sessionString) {
+        const connected = await telegramMTProtoService.connect(userId, existingSession.sessionString);
+        if (connected) {
+          return res.status(200).json({
+            success: true,
+            message: 'Sesión existente reconectada',
+            requiresCode: false,
+            requiresPassword: false
+          });
+        }
       }
+      
+      // Si la sesión existe pero no está activa o no se pudo reconectar, marcar como inactiva
+      existingSession.isActive = false;
+      existingSession.authState = 'error';
+      await existingSession.save();
     }
 
     // Inicializar cliente para nueva autenticación
@@ -105,13 +131,23 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
     }
 
     // Enviar código de verificación
-    const result = await telegramMTProtoService.sendCode(phoneNumber);
+    const result = await telegramMTProtoService.sendCode(phoneNumber.trim());
     
     if (!result.success) {
+      logger.error('Error en sendCode', { userId, phoneNumber, error: result.error });
       return res.status(400).json({
         success: false,
         error: 'send_code_failed',
         message: result.error || 'Error enviando código de verificación'
+      });
+    }
+
+    if (!result.phoneCodeHash) {
+      logger.error('phoneCodeHash no recibido', { userId, phoneNumber });
+      return res.status(500).json({
+        success: false,
+        error: 'invalid_response',
+        message: 'No se recibió el hash de verificación'
       });
     }
 
@@ -124,16 +160,30 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       isActive: false,
     };
 
+    logger.info('Guardando sesión', { userId, phoneNumber, hasExistingSession: !!existingSession });
+
     if (existingSession) {
       await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
     } else {
       await TelegramSession.create(sessionData);
     }
 
-    logger.info('Código de verificación enviado', { userId, phoneNumber });
+    logger.info('Código de verificación enviado exitosamente', { userId, phoneNumber });
 
     // Enmascarar el número de teléfono para mostrar en el frontend
-    const maskedPhone = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1***$3');
+    let maskedPhone = phoneNumber.trim();
+    try {
+      // Intentar enmascarar el número (funciona mejor con formato internacional)
+      if (maskedPhone.length >= 10) {
+        const digits = maskedPhone.replace(/\D/g, ''); // Quitar todo excepto dígitos
+        if (digits.length >= 10) {
+          maskedPhone = `${maskedPhone.substring(0, 3)}***${maskedPhone.substring(maskedPhone.length - 4)}`;
+        }
+      }
+    } catch (maskError) {
+      logger.warn('Error enmascarando número', { error: maskError });
+      // Si falla el enmascaramiento, usar el número original
+    }
 
     res.status(200).json({
       success: true,

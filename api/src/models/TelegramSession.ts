@@ -36,7 +36,7 @@ const telegramSessionSchema = new Schema<TelegramSessionDoc>(
     sessionString: { 
       type: String, 
       required: false, // No requerido inicialmente, se llenará después de la autenticación
-      unique: true // String de sesión único
+      sparse: true // Permite múltiples documentos con sessionString undefined/null
     },
     phoneCodeHash: { 
       type: String,
