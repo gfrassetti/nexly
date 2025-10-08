@@ -16,7 +16,7 @@ function IntegrationsContent() {
   const searchParams = useSearchParams();
   const { subscription, getMaxIntegrations, status } = useSubscription();
   const { createPaymentLink } = usePaymentLink();
-  const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick } = useIntegrations();
+  const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick, handleDisconnect } = useIntegrations();
   const { showSuccess, showError } = useNotificationHelpers();
   const { refreshAll } = useDataRefresh();
   const { token } = useAuth();
@@ -341,19 +341,50 @@ function IntegrationsContent() {
             <p className="text-muted-foreground mb-4 text-xs">
               {integration.description}
             </p>
-            <button 
-              className={`w-full px-3 py-2 rounded-md text-xs font-medium transition-colors ${
-                !isIntegrationAvailable(integration.id) 
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
-                  : getButtonText(integration.id).includes('Connect') || getButtonText(integration.id).includes('Conectar')
-                    ? 'bg-accent-green/10 border border-accent-green/20 text-accent-green hover:bg-accent-green/20'
-                    : 'bg-muted text-muted-foreground'
-              }`}
-              onClick={() => handleIntegrationClick(integration.id)}
-              disabled={!isIntegrationAvailable(integration.id)}
-            >
-              {getButtonText(integration.id)}
-            </button>
+            {(() => {
+              // 1. Encontrar si esta integración está conectada
+              const connectedIntegration = connectedIntegrations?.integrations?.find(
+                (int: any) => int.provider === integration.id && int.status === 'linked'
+              );
+
+              // 2. Obtener el texto del botón basado en el estado
+              const buttonText = getButtonText(integration.id, connectedIntegrations?.integrations);
+              
+              // 3. Determinar si está conectado
+              const isConnected = buttonText === 'Desconectar';
+              
+              // 4. Definir el manejo de clics
+              const handleClick = () => {
+                if (isConnected && connectedIntegration) {
+                  // Si está conectado, llama a Desconectar
+                  handleDisconnect(integration.id, connectedIntegration._id);
+                } else {
+                  // Si no está conectado, llama a Conectar
+                  handleIntegrationClick(integration.id);
+                }
+              };
+
+              // 5. Renderizar el botón con estilos dinámicos
+              return (
+                <button 
+                  className={`w-full px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                    // Estilos para DESCONECTAR (Rojo/Error)
+                    isConnected 
+                      ? 'bg-red-600/10 border border-red-600/20 text-red-600 hover:bg-red-600/20'
+                    // Estilos para CONECTAR (Verde/Accent)
+                    : buttonText.includes('Conectar') 
+                      ? 'bg-accent-green/10 border border-accent-green/20 text-accent-green hover:bg-accent-green/20'
+                    // Estilos para Upgrade/No Disponible (Gris/Muted)
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                  }`}
+                  onClick={handleClick}
+                  // Solo deshabilitar si no está disponible Y no está conectado
+                  disabled={!isIntegrationAvailable(integration.id) && !isConnected}
+                >
+                  {buttonText}
+                </button>
+              );
+            })()}
           </div>
         ))}
       </div>

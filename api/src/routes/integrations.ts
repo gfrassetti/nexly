@@ -1679,7 +1679,7 @@ router.post("/send-whatsapp", async (req: AuthRequest, res: Response) => {
  * DELETE /integrations/:id
  * Elimina una integración del usuario.
  */
-router.delete("/:id", async (req: AuthRequest, res: Response) => {
+router.delete("/:id", handleAuth, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) return res.status(401).json({ error: "no_user_in_token" });
