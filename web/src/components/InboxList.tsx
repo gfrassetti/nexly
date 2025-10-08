@@ -9,6 +9,10 @@ type Item = {
   unread?: boolean;
   platform?: string;
   avatar?: string;
+  // Propiedades adicionales para Telegram
+  chatType?: string;
+  telegramUsername?: string;
+  contactPhone?: string;
 };
 
 interface InboxListProps {
@@ -144,6 +148,17 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
                     <p className="text-sm text-neutral-300 truncate">
                       {item.last}
                     </p>
+                    {/* Mostrar información adicional para Telegram */}
+                    {item.platform === 'telegram' && item.telegramUsername && (
+                      <p className="text-xs text-neutral-500 truncate">
+                        @{item.telegramUsername}
+                      </p>
+                    )}
+                    {item.platform === 'telegram' && item.chatType && (
+                      <p className="text-xs text-neutral-500 capitalize">
+                        {item.chatType}
+                      </p>
+                    )}
                   </div>
                 </div>
               </li>

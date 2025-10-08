@@ -33,7 +33,11 @@ export default function InboxPage() {
           at: conv.lastMessageTime || conv.at || new Date().toISOString(),
           unread: conv.unreadCount > 0,
           platform: conv.provider || c,
-          avatar: conv.avatar
+          avatar: conv.avatar,
+          // Información adicional para Telegram
+          chatType: conv.chatType,
+          telegramUsername: conv.telegramUsername,
+          contactPhone: conv.contactPhone
         }));
       }
       

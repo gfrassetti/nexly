@@ -1355,8 +1355,68 @@ router.get("/conversations", async (req: AuthRequest, res: Response) => {
       return res.json({ conversations: [] });
     }
 
-    // Por ahora, devolver conversaciones de ejemplo
-    // En producción, esto vendría de la API de Meta
+    // Para Telegram, obtener chats reales
+    if (provider === "telegram") {
+      try {
+        // Importar el servicio de Telegram
+        const { telegramMTProtoService } = await import("../services/telegramMTProtoService");
+        const { TelegramSession } = await import("../models/TelegramSession");
+
+        // Buscar sesión activa de Telegram
+        const session = await TelegramSession.findOne({
+          userId: new Types.ObjectId(userId),
+          isActive: true,
+          authState: 'authenticated'
+        });
+
+        if (!session || !session.sessionString) {
+          return res.json({ conversations: [] });
+        }
+
+        // Conectar con Telegram
+        const connected = await telegramMTProtoService.connect(userId, session.sessionString);
+        if (!connected) {
+          return res.json({ conversations: [] });
+        }
+
+        // Obtener chats reales
+        const chatsResult = await telegramMTProtoService.getChats(userId);
+        
+        if (!chatsResult.success || !chatsResult.chats) {
+          return res.json({ conversations: [] });
+        }
+
+        // Convertir chats de Telegram al formato esperado
+        const conversations = chatsResult.chats.map((chat, index) => ({
+          id: `telegram_${chat.id}`,
+          contactId: `telegram_contact_${chat.id}`,
+          contactName: chat.title || chat.username || `Chat ${chat.id}`,
+          contactPhone: chat.username ? `@${chat.username}` : undefined,
+          lastMessage: "Último mensaje no disponible", // TODO: Obtener último mensaje real
+          lastMessageTime: new Date().toISOString(),
+          unreadCount: 0, // TODO: Implementar conteo de no leídos
+          provider: "telegram",
+          chatType: chat.type,
+          telegramChatId: chat.id,
+          telegramUsername: chat.username
+        }));
+
+        logger.info('Conversaciones de Telegram obtenidas', { 
+          userId, 
+          chatCount: conversations.length 
+        });
+
+        return res.json({ conversations });
+      } catch (telegramError) {
+        logger.error('Error obteniendo chats de Telegram', { 
+          userId, 
+          error: telegramError instanceof Error ? telegramError.message : 'Error desconocido' 
+        });
+        return res.json({ conversations: [] });
+      }
+    }
+
+    // Para otras plataformas, devolver conversaciones de ejemplo por ahora
     const conversations = [
       {
         id: "conv_1",
@@ -1398,8 +1458,71 @@ router.get("/conversations/:id/messages", async (req: AuthRequest, res: Response
 
     const { id } = req.params;
 
-    // Por ahora, devolver mensajes de ejemplo
-    // En producción, esto vendría de la API de Meta
+    // Si es un chat de Telegram (ID empieza con telegram_)
+    if (id.startsWith('telegram_')) {
+      try {
+        // Extraer el chat ID de Telegram
+        const telegramChatId = parseInt(id.replace('telegram_', ''));
+        
+        // Importar el servicio de Telegram
+        const { telegramMTProtoService } = await import("../services/telegramMTProtoService");
+        const { TelegramSession } = await import("../models/TelegramSession");
+
+        // Buscar sesión activa de Telegram
+        const session = await TelegramSession.findOne({
+          userId: new Types.ObjectId(userId),
+          isActive: true,
+          authState: 'authenticated'
+        });
+
+        if (!session || !session.sessionString) {
+          return res.json({ messages: [] });
+        }
+
+        // Conectar con Telegram
+        const connected = await telegramMTProtoService.connect(userId, session.sessionString);
+        if (!connected) {
+          return res.json({ messages: [] });
+        }
+
+        // Obtener mensajes reales del chat
+        const messagesResult = await telegramMTProtoService.getMessages(userId, telegramChatId, 50);
+        
+        if (!messagesResult.success || !messagesResult.messages) {
+          return res.json({ messages: [] });
+        }
+
+        // Convertir mensajes de Telegram al formato esperado
+        const messages = messagesResult.messages.map((msg) => ({
+          id: `telegram_msg_${msg.id}`,
+          conversationId: id,
+          from: msg.isOutgoing ? "business" : "customer",
+          to: msg.isOutgoing ? "customer" : "business",
+          body: msg.text || "[Mensaje no disponible]",
+          timestamp: msg.date.toISOString(),
+          status: "delivered",
+          telegramMessageId: msg.id,
+          telegramFromId: msg.fromId
+        }));
+
+        logger.info('Mensajes de Telegram obtenidos', { 
+          userId, 
+          chatId: telegramChatId,
+          messageCount: messages.length 
+        });
+
+        return res.json({ messages });
+      } catch (telegramError) {
+        logger.error('Error obteniendo mensajes de Telegram', { 
+          userId, 
+          chatId: id,
+          error: telegramError instanceof Error ? telegramError.message : 'Error desconocido' 
+        });
+        return res.json({ messages: [] });
+      }
+    }
+
+    // Para otras plataformas, devolver mensajes de ejemplo por ahora
     const messages = [
       {
         id: "msg_1",
@@ -1453,7 +1576,68 @@ router.post("/conversations/:id/reply", async (req: AuthRequest, res: Response) 
       return res.status(400).json({ error: "message_required" });
     }
 
-    // Buscar la integración de WhatsApp del usuario
+    // Si es un chat de Telegram (ID empieza con telegram_)
+    if (id.startsWith('telegram_')) {
+      try {
+        // Extraer el chat ID de Telegram
+        const telegramChatId = parseInt(id.replace('telegram_', ''));
+        
+        // Importar el servicio de Telegram
+        const { telegramMTProtoService } = await import("../services/telegramMTProtoService");
+        const { TelegramSession } = await import("../models/TelegramSession");
+
+        // Buscar sesión activa de Telegram
+        const session = await TelegramSession.findOne({
+          userId: new Types.ObjectId(userId),
+          isActive: true,
+          authState: 'authenticated'
+        });
+
+        if (!session || !session.sessionString) {
+          return res.status(400).json({ error: "telegram_not_connected" });
+        }
+
+        // Conectar con Telegram
+        const connected = await telegramMTProtoService.connect(userId, session.sessionString);
+        if (!connected) {
+          return res.status(500).json({ error: "telegram_connection_failed" });
+        }
+
+        // Enviar mensaje real a través de Telegram
+        const sendResult = await telegramMTProtoService.sendMessage(userId, telegramChatId, message);
+        
+        if (!sendResult.success) {
+          return res.status(500).json({ 
+            error: "telegram_send_failed",
+            message: sendResult.error 
+          });
+        }
+
+        logger.info('Mensaje de Telegram enviado', { 
+          userId, 
+          chatId: telegramChatId,
+          messageId: sendResult.messageId 
+        });
+
+        return res.json({ 
+          success: true, 
+          messageId: sendResult.messageId,
+          message: "Mensaje enviado exitosamente" 
+        });
+      } catch (telegramError) {
+        logger.error('Error enviando mensaje de Telegram', { 
+          userId, 
+          chatId: id,
+          error: telegramError instanceof Error ? telegramError.message : 'Error desconocido' 
+        });
+        return res.status(500).json({ 
+          error: "telegram_send_failed",
+          message: "Error enviando mensaje de Telegram" 
+        });
+      }
+    }
+
+    // Para WhatsApp (lógica existente)
     const integration = await Integration.findOne({
       userId,
       provider: "whatsapp",
