@@ -25,14 +25,17 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
   const { data: messagesData, mutate: mutateMessages } = useSWR(
     threadId && token ? [`/integrations/conversations/${threadId}/messages`, token] : null,
     async ([url, t]) => {
+      console.log('🔄 Fetching messages for:', url);
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
       
+      console.log('📨 Messages received:', data);
+      
       // Mapear los datos del backend al formato esperado por el componente
       if (data.messages) {
-        return data.messages.map((msg: any) => ({
+        const mappedMessages = data.messages.map((msg: any) => ({
           id: msg.id,
           content: msg.body || msg.content || '',
           timestamp: msg.timestamp || new Date().toISOString(),
@@ -40,9 +43,18 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
           type: 'text' as const,
           status: msg.status || 'delivered' as const
         }));
+        
+        console.log('✅ Mapped messages:', mappedMessages.length, 'messages');
+        return mappedMessages;
       }
       
+      console.log('⚠️ No messages in response');
       return [];
+    },
+    {
+      refreshInterval: 5000, // Refrescar cada 5 segundos
+      revalidateOnFocus: true, // Refrescar cuando la ventana recupera el foco
+      revalidateOnReconnect: true // Refrescar cuando se reconecta
     }
   );
 
@@ -50,19 +62,18 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
 
   // Refrescar mensajes cuando se envíe un mensaje
   useEffect(() => {
-    if (onMessageSent) {
-      const refreshMessages = () => {
-        mutateMessages();
-      };
-      
-      // Escuchar el evento de mensaje enviado
-      window.addEventListener('messageSent', refreshMessages);
-      
-      return () => {
-        window.removeEventListener('messageSent', refreshMessages);
-      };
-    }
-  }, [onMessageSent, mutateMessages]);
+    const refreshMessages = (event?: Event) => {
+      console.log('Evento messageSent recibido, refrescando mensajes para threadId:', threadId);
+      mutateMessages();
+    };
+    
+    // Escuchar el evento de mensaje enviado
+    window.addEventListener('messageSent', refreshMessages);
+    
+    return () => {
+      window.removeEventListener('messageSent', refreshMessages);
+    };
+  }, [threadId, mutateMessages]);
 
   // Auto-scroll al final cuando cambien los mensajes
   useEffect(() => {

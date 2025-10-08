@@ -72,18 +72,20 @@ export default function InboxPage() {
         throw new Error('Error enviando mensaje');
       }
       
-      // Refrescar tanto las conversaciones como los mensajes
-      await Promise.all([
-        mutateConversations(), // Refrescar lista de conversaciones
-        refreshInbox() // Refrescar datos generales
-      ]);
+      console.log('Mensaje enviado correctamente');
       
-      // Emitir evento para refrescar mensajes
-      window.dispatchEvent(new CustomEvent('messageSent'));
+      // Refrescar las conversaciones
+      mutateConversations();
       
-      console.log('Mensaje enviado y datos refrescados');
+      // Importante: Emitir evento DESPUÉS de que el mensaje se envió
+      // Esto dispara el refresco en MessageThread
+      window.dispatchEvent(new CustomEvent('messageSent', { 
+        detail: { threadId: activeId } 
+      }));
+      
     } catch (error) {
       console.error('Error enviando mensaje:', error);
+      throw error; // Re-lanzar para que Composer lo maneje
     }
   }
 

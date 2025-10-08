@@ -99,7 +99,9 @@ export default function Composer({
     setError(null);
     
     try {
+      console.log('📤 Enviando mensaje:', text.trim());
       await onSend(text.trim());
+      console.log('✅ Mensaje enviado exitosamente');
       setText("");
       setError(null);
       
@@ -108,6 +110,7 @@ export default function Composer({
         textareaRef.current.focus();
       }
     } catch (error: any) {
+      console.error('❌ Error enviando mensaje:', error);
       setError(error?.message || "Error al enviar el mensaje");
     } finally {
       setIsLoading(false);
