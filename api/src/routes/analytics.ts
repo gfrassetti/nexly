@@ -5,8 +5,6 @@ import { Integration } from '../models/Integration';
 import { Contact } from '../models/Contact';
 import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
-import { UnifiedConversation } from '../models/UnifiedConversation';
-import { UnifiedMessage } from '../models/UnifiedMessage';
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -111,8 +109,8 @@ router.get('/dashboard-stats', async (req: AuthRequest, res: Response) => {
       messagesByPlatform: platformStats,
       recentMessages: recentMessages.map(msg => ({
         id: msg._id,
-        content: msg.content,
-        provider: msg.provider,
+        content: (msg as any).body || '',
+        provider: (msg as any).provider,
         createdAt: msg.createdAt,
         contact: msg.contactId
       })),

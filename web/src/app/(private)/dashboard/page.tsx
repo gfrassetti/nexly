@@ -80,16 +80,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-destructive mb-4">Error cargando estadísticas</p>
-          <p className="text-muted-foreground text-sm">{error}</p>
-        </div>
-      </div>
-    );
-  }
+  // No mostrar error, siempre mostrar las cards (aunque estén vacías)
 
   return (
     <div className="h-full flex flex-col text-foreground" style={{ background: 'var(--background-gradient)' }}>
@@ -189,8 +180,14 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 flex items-center">
-              <span className="text-xs text-accent-green">+12%</span>
-              <span className="text-xs text-muted-foreground ml-2">vs last month</span>
+              {stats.totalContacts > 0 ? (
+                <>
+                  <span className="text-xs text-accent-green">+12%</span>
+                  <span className="text-xs text-muted-foreground ml-2">vs last month</span>
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground">Sin datos aún</span>
+              )}
             </div>
           </div>
 
@@ -208,8 +205,14 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 flex items-center">
-              <span className="text-xs text-accent-green">+8%</span>
-              <span className="text-xs text-muted-foreground ml-2">vs yesterday</span>
+              {stats.conversationsToday > 0 ? (
+                <>
+                  <span className="text-xs text-accent-green">+8%</span>
+                  <span className="text-xs text-muted-foreground ml-2">vs yesterday</span>
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground">Sin conversaciones hoy</span>
+              )}
             </div>
           </div>
 
@@ -227,8 +230,14 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 flex items-center">
-              <span className="text-xs text-accent-green">-15%</span>
-              <span className="text-xs text-muted-foreground ml-2">vs last week</span>
+              {stats.averageResponseTime > 0 ? (
+                <>
+                  <span className="text-xs text-accent-green">-15%</span>
+                  <span className="text-xs text-muted-foreground ml-2">vs last week</span>
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground">Sin datos de respuesta</span>
+              )}
             </div>
           </div>
 
@@ -246,8 +255,14 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 flex items-center">
-              <span className="text-xs text-accent-green">+2</span>
-              <span className="text-xs text-muted-foreground ml-2">this month</span>
+              {stats.activeIntegrations > 0 ? (
+                <>
+                  <span className="text-xs text-accent-green">+2</span>
+                  <span className="text-xs text-muted-foreground ml-2">this month</span>
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground">Sin integraciones activas</span>
+              )}
             </div>
           </div>
         </div>

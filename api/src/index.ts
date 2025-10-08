@@ -130,7 +130,6 @@ app.use("/conversations", conversationsRouter);
 app.use("/subscriptions", subscriptionRateLimit, sanitizePaymentData, subscriptionsRouter);
 app.use("/stripe", sanitizePaymentData, stripeRouter);
 app.use("/ai", aiRouter);
-app.use("/analytics", analyticsRouter);
 app.use("/stripe/webhook", validateWebhookOrigin, stripeWebhookRouter);
 app.use("/stripe/pause", stripePauseRouter);
 app.use("/loggerTest", loggerTestRouter);

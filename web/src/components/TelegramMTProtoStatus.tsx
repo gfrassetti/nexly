@@ -28,12 +28,12 @@ interface TelegramMTProtoStatusProps {
     name: string;
     status: string;
     meta: {
-      telegramUserId: number;
+      telegramUserId?: number;
       telegramUsername?: string;
       telegramFirstName?: string;
       telegramLastName?: string;
       telegramPhoneNumber?: string;
-      isActive: boolean;
+      isActive?: boolean;
     };
   };
   onDisconnect?: () => void;

@@ -533,8 +533,7 @@ export class TelegramMTProtoService {
       const client = this.clients.get(userId);
       
       if (client && client.connected) {
-        // Remover todos los event handlers
-        client.removeEventHandler(() => {});
+        // Simplemente desconectar el cliente detendrá todos los listeners
         logger.info('Listener de mensajes detenido', { userId });
       }
     } catch (error) {

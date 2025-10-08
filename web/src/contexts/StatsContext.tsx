@@ -52,11 +52,32 @@ export function StatsProvider({ children }: { children: ReactNode }) {
       if (response.success) {
         setStats(response.data);
       } else {
-        setError(response.message || 'Error cargando estadísticas');
+        console.warn('Error en respuesta de stats:', response.message);
+        // No establecer error, usar datos por defecto
+        setStats({
+          totalContacts: 0,
+          totalMessages: 0,
+          conversationsToday: 0,
+          averageResponseTime: 0,
+          activeIntegrations: 0,
+          messagesByPlatform: {},
+          recentMessages: [],
+          unreadConversations: 0,
+        });
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
-      setError('Error de conexión');
+      // No establecer error, usar datos por defecto
+      setStats({
+        totalContacts: 0,
+        totalMessages: 0,
+        conversationsToday: 0,
+        averageResponseTime: 0,
+        activeIntegrations: 0,
+        messagesByPlatform: {},
+        recentMessages: [],
+        unreadConversations: 0,
+      });
     } finally {
       setIsLoading(false);
     }

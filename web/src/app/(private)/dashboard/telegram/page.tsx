@@ -11,6 +11,7 @@ import { showToast } from '@/hooks/use-toast';
 interface TelegramIntegration {
   _id: string;
   provider: string;
+  name: string;
   status: string;
   meta: {
     telegramUserId?: number;
@@ -104,7 +105,7 @@ export default function TelegramPage() {
               </p>
             </div>
             <TelegramMTProtoStatus 
-              integration={integration} 
+              integration={integration as any} 
               onDisconnect={handleDisconnect}
             />
           </div>
