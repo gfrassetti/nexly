@@ -20,17 +20,33 @@ export default function InboxPage() {
   const { data: conversationsData, mutate: mutateConversations, isLoading } = useSWR(
     token ? ["/integrations/conversations", channel] : null,
     async ([p, c]) => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${p}?provider=${c}`, {
+      let fetchUrl;
+      let listPropertyName; // Propiedad que contiene la lista (chats, conversations, etc.)
+
+      // 1. Determinar la URL y la propiedad de la lista según el canal
+      if (c === 'telegram') {
+        // Si es Telegram, usa la ruta específica que definiste
+        fetchUrl = '/telegram/chats';
+        listPropertyName = 'chats'; // Telegram devuelve la lista bajo la propiedad 'chats'
+      } else {
+        // Si es otro canal (whatsapp, instagram), usa la ruta genérica
+        fetchUrl = `${p}?provider=${c}`;
+        listPropertyName = 'conversations'; // Otros canales devuelven la lista bajo 'conversations'
+      }
+      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${fetchUrl}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
       const data = await res.json();
       
-      // Mapear los datos del backend al formato esperado por el componente
-      if (data.conversations) {
-        data.conversations = data.conversations.map((conv: any) => ({
-          id: conv.id,
-          title: conv.contactName || conv.title || 'Sin nombre',
-          last: conv.lastMessage || conv.last || '',
+      // 2. Mapear y normalizar los datos del backend
+      if (data[listPropertyName]) {
+        // Usamos la propiedad de lista determinada dinámicamente
+        data.conversations = data[listPropertyName].map((conv: any) => ({
+          id: String(conv.id), // Asegurarse de que el ID es un string
+          title: conv.contactName || conv.title || conv.name || 'Sin nombre',
+          last: conv.lastMessage || conv.last || 'Último mensaje no disponible',
           at: conv.lastMessageTime || conv.at || new Date().toISOString(),
           unread: conv.unreadCount > 0,
           platform: conv.provider || c,
@@ -40,6 +56,9 @@ export default function InboxPage() {
           telegramUsername: conv.telegramUsername,
           contactPhone: conv.contactPhone
         }));
+      } else {
+        // Si la propiedad esperada no existe, devolver un array vacío para evitar errores
+        data.conversations = [];
       }
       
       return data;
