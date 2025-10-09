@@ -4,6 +4,40 @@ import logger from '../utils/logger';
 import { TelegramSession } from '../models/TelegramSession';
 import { Types } from 'mongoose';
 
+// Función helper para extraer ID de objetos Peer de Telegram
+function extractIdFromPeer(peer: any): number | undefined {
+  try {
+    // Si es un objeto PeerUser
+    if (peer.userId) {
+      return peer.userId.toJSNumber ? peer.userId.toJSNumber() : Number(peer.userId);
+    }
+    // Si es un objeto PeerChannel
+    if (peer.channelId) {
+      return peer.channelId.toJSNumber ? peer.channelId.toJSNumber() : Number(peer.channelId);
+    }
+    // Si es un objeto PeerChat
+    if (peer.chatId) {
+      return peer.chatId.toJSNumber ? peer.chatId.toJSNumber() : Number(peer.chatId);
+    }
+    // Si es un número directo
+    if (typeof peer === 'number') {
+      return peer;
+    }
+    // Si es un string, convertirlo a número
+    if (typeof peer === 'string') {
+      return Number(peer);
+    }
+    // Si tiene un método toString, usarlo
+    if (peer && typeof peer.toString === 'function') {
+      return Number(peer.toString());
+    }
+    return undefined;
+  } catch (error) {
+    logger.warn('Error extrayendo ID de peer:', { peer, error });
+    return undefined;
+  }
+}
+
 export interface TelegramUser {
   id: number;
   username?: string;
@@ -392,7 +426,7 @@ export class TelegramMTProtoService {
         chatId: chatId,
         text: msg.message,
         date: new Date(msg.date * 1000),
-        fromId: msg.fromId ? msg.fromId.toJSNumber() : undefined,
+        fromId: msg.fromId ? extractIdFromPeer(msg.fromId) : undefined,
         isOutgoing: msg.out,
       }));
 
