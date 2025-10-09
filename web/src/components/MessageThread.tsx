@@ -23,8 +23,20 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
   // Ref para hacer auto-scroll al final cuando lleguen nuevos mensajes
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Validar que el threadId corresponda al canal actual
+  const isValidThread = threadId && channel && (
+    // Para Telegram, el threadId debe contener "telegram_"
+    (channel === 'telegram' && threadId.includes('telegram_')) ||
+    // Para WhatsApp, el threadId debe contener "whatsapp_" o ser un número de teléfono
+    (channel === 'whatsapp' && (threadId.includes('whatsapp_') || /^\d+$/.test(threadId))) ||
+    // Para Instagram, el threadId debe contener "instagram_"
+    (channel === 'instagram' && threadId.includes('instagram_')) ||
+    // Para Messenger, el threadId debe contener "messenger_" o ser un ID de Facebook
+    (channel === 'messenger' && (threadId.includes('messenger_') || /^\d+$/.test(threadId)))
+  );
+
   const { data: messagesData, mutate: mutateMessages, isLoading } = useSWR(
-    threadId && token ? [`/integrations/conversations/${threadId}/messages`, token] : null,
+    threadId && token && isValidThread ? [`/integrations/conversations/${threadId}/messages`, token] : null,
     async ([url, t]) => {
       console.log('🔄 Fetching messages for:', url);
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
@@ -116,7 +128,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
     }
   };
 
-  if (!threadId) {
+  if (!threadId || !isValidThread) {
     return (
       <div className="flex-1 flex items-center justify-center bg-neutral-900">
         <div className="text-center text-neutral-400">
@@ -124,7 +136,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           <h3 className="text-lg font-medium mb-2">Selecciona una conversación</h3>
-          <p className="text-sm">Elige una conversación de la lista para comenzar a chatear</p>
+          <p className="text-sm">Elige una conversación de {channel} para comenzar a chatear</p>
         </div>
       </div>
     );

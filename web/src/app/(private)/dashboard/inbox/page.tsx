@@ -57,6 +57,8 @@ export default function InboxPage() {
   // Refrescar datos cuando se cambie el canal
   useEffect(() => {
     refreshInbox();
+    // Limpiar la conversación activa cuando cambies de canal
+    setActiveId(null);
   }, [channel, refreshInbox]);
 
   async function handleSend(text: string) {
