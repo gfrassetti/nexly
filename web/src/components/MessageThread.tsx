@@ -52,19 +52,45 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
       const data = await res.json();
       
       console.log('📨 Messages received:', data);
+      console.log('📋 Raw messages array:', data.messages);
+      if (data.messages && data.messages.length > 0) {
+        console.log('🔍 First message sample:', data.messages[0]);
+      }
       
       // Mapear los datos del backend al formato esperado por el componente
       if (data.messages) {
-        const mappedMessages = data.messages.map((msg: any) => ({
-          id: msg.id,
-          content: msg.body || msg.content || '',
-          timestamp: msg.timestamp || new Date().toISOString(),
-          direction: msg.from === 'business' ? 'outbound' : 'inbound',
-          type: 'text' as const,
-          status: msg.status || 'delivered' as const
-        }));
+        const mappedMessages = data.messages.map((msg: any) => {
+          // Mapeo específico por canal
+          let content = '';
+          let timestamp = '';
+          let direction: 'inbound' | 'outbound' = 'inbound';
+          
+          if (c === 'telegram') {
+            // Estructura específica de Telegram
+            content = msg.text || '';
+            timestamp = msg.date ? new Date(msg.date).toISOString() : new Date().toISOString();
+            direction = msg.isOutgoing ? 'outbound' : 'inbound';
+            console.log(`📝 Telegram msg mapping: text="${content}", date="${msg.date}", isOutgoing=${msg.isOutgoing}`);
+          } else {
+            // Estructura genérica para otras plataformas
+            content = msg.body || msg.content || msg.text || '';
+            timestamp = msg.timestamp || msg.date ? new Date(msg.timestamp || msg.date).toISOString() : new Date().toISOString();
+            direction = msg.from === 'business' || msg.isOutgoing ? 'outbound' : 'inbound';
+          }
+          
+          return {
+            id: msg.id?.toString() || msg.messageId || Math.random().toString(),
+            content,
+            timestamp,
+            direction,
+            type: 'text' as const,
+            status: msg.status || 'delivered' as const
+          };
+        });
         
         console.log('✅ Mapped messages:', mappedMessages.length, 'messages');
+        console.log('📋 Sample message:', mappedMessages[0]);
+        console.log('📋 All mapped messages:', mappedMessages);
         return mappedMessages;
       }
       
@@ -240,7 +266,10 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
 
       {/* Área de mensajes */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message: Message) => (
+        {console.log('🎨 Rendering messages:', messages.length, 'messages')}
+        {messages.map((message: Message, index: number) => {
+          console.log(`🎨 Rendering message ${index}:`, message);
+          return (
           <div
             key={message.id}
             className={`flex ${message.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}
@@ -265,7 +294,8 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
         {/* Elemento invisible para hacer scroll al final */}
         <div ref={messagesEndRef} />
       </div>

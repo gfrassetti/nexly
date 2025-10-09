@@ -3,41 +3,34 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-import { usePaymentLink } from "@/hooks/usePaymentLink";
-import { useStats } from "@/contexts/StatsContext";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 
-interface DashboardStats {
-  totalContacts: number;
-  totalMessages: number;
-  conversationsToday: number;
-  averageResponseTime: number;
-  activeIntegrations: number;
-  messagesByPlatform: Record<string, number>;
-  recentMessages: any[];
-  unreadConversations: number;
-}
-
 export default function DashboardPage() {
-  const { subscription } = useSubscription();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
-  const { createPaymentLink } = usePaymentLink();
-  const { stats, isLoading, error } = useStats();
   const [showTrialNotification, setShowTrialNotification] = useState(false);
   const [showPaymentError, setShowPaymentError] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
 
+  // Datos estáticos simples - sin hooks complejos
+  const stats = {
+    totalContacts: 0,
+    totalMessages: 0,
+    conversationsToday: 0,
+    averageResponseTime: 0,
+    activeIntegrations: 0
+  };
+
   // Show trial notification only if trial is active
   useEffect(() => {
     const trialStarted = searchParams.get('trial_started');
-    if (trialStarted === 'true' && subscription?.subscription?.isTrialActive) {
+    if (trialStarted === 'true') {
       setShowTrialNotification(true);
       setTimeout(() => setShowTrialNotification(false), 5000);
     } else {
       setShowTrialNotification(false);
     }
-  }, [searchParams, subscription]);
+  }, [searchParams]);
 
   // Show payment error notification
   useEffect(() => {
@@ -68,19 +61,6 @@ export default function DashboardPage() {
       default: return '📞';
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando estadísticas...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // No mostrar error, siempre mostrar las cards (aunque estén vacías)
 
   return (
     <div className="h-full flex flex-col text-foreground" style={{ background: 'var(--background-gradient)' }}>
