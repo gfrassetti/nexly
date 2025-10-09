@@ -1,6 +1,7 @@
 "use client";
 import useSWR from "swr";
 import { useEffect, useRef, useMemo, useCallback } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageThreadProps {
   threadId: string | null;
@@ -22,7 +23,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
   // Ref para hacer auto-scroll al final cuando lleguen nuevos mensajes
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: messagesData, mutate: mutateMessages } = useSWR(
+  const { data: messagesData, mutate: mutateMessages, isLoading } = useSWR(
     threadId && token ? [`/integrations/conversations/${threadId}/messages`, token] : null,
     async ([url, t]) => {
       console.log('🔄 Fetching messages for:', url);
@@ -124,6 +125,76 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
           </svg>
           <h3 className="text-lg font-medium mb-2">Selecciona una conversación</h3>
           <p className="text-sm">Elige una conversación de la lista para comenzar a chatear</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar skeleton mientras carga
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col bg-neutral-900">
+        {/* Header skeleton */}
+        <div className="border-b border-neutral-700 bg-neutral-800 p-4">
+          <div className="flex items-center space-x-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <Skeleton className="h-6 w-6 rounded" />
+          </div>
+        </div>
+
+        {/* Messages area skeleton */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Incoming message */}
+          <div className="flex justify-start">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+
+          {/* Outgoing message */}
+          <div className="flex justify-end">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-12" />
+            </div>
+          </div>
+
+          {/* Incoming message */}
+          <div className="flex justify-start">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+
+          {/* Outgoing message */}
+          <div className="flex justify-end">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-14" />
+            </div>
+          </div>
+
+          {/* Incoming message */}
+          <div className="flex justify-start">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-18" />
+            </div>
+          </div>
+
+          {/* Outgoing message */}
+          <div className="flex justify-end">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
         </div>
       </div>
     );

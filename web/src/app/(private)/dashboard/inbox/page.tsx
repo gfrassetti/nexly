@@ -5,6 +5,7 @@ import { useDataRefresh } from "@/hooks/useDataRefresh";
 import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect, useMemo } from "react";
 import { sendMessage } from "@/hooks/sendMessage";
 import { CHANNELS } from "@/lib/constants";
@@ -16,7 +17,7 @@ export default function InboxPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: conversationsData, mutate: mutateConversations } = useSWR(
+  const { data: conversationsData, mutate: mutateConversations, isLoading } = useSWR(
     token ? ["/integrations/conversations", channel] : null,
     async ([p, c]) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${p}?provider=${c}`, {
@@ -99,12 +100,16 @@ export default function InboxPage() {
               <button
                 key={c}
                 onClick={() => setChannel(c)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+                disabled={isLoading}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize flex items-center gap-2 ${
                   channel === c 
                     ? "bg-green-600 text-white shadow-lg" 
                     : "bg-neutral-700 text-neutral-300 hover:bg-neutral-600"
-                }`}
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
+                {isLoading && channel === c && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
                 {c}
               </button>
             ))}
@@ -143,12 +148,29 @@ export default function InboxPage() {
           
           {/* ENVOLTURA CLAVE: Añadimos flex-1 y overflow-y-auto para SCROLL en la lista */}
           <div className="flex-1 overflow-y-auto">
-            <InboxList
-              items={conversations}
-              activeId={activeId}
-              onSelect={setActiveId}
-              searchQuery={searchQuery}
-            />
+            {isLoading ? (
+              <div className="p-4 space-y-2">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3">
+                    <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-12" />
+                      </div>
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <InboxList
+                items={conversations}
+                activeId={activeId}
+                onSelect={setActiveId}
+                searchQuery={searchQuery}
+              />
+            )}
           </div>
         </div>
         
