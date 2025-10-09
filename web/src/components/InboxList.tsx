@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 
 type Item = {
   id: string;
@@ -23,42 +23,18 @@ interface InboxListProps {
 }
 
 export default function InboxList({ items, activeId, onSelect, searchQuery = "" }: InboxListProps) {
-  // Debug logging
-  console.log('🔍 InboxList - Props recibidos:', {
-    itemsLength: items.length,
-    items: items.slice(0, 3), // Primeros 3 items
-    activeId,
-    searchQuery
-  });
-
   // Filtrar conversaciones basado en la búsqueda
   const filteredItems = useMemo(() => {
-    console.log('🔍 InboxList - Filtrando items:', {
-      originalLength: items.length,
-      searchQuery,
-      hasSearchQuery: !!searchQuery.trim()
-    });
-
-    if (!searchQuery.trim()) {
-      console.log('🔍 InboxList - Sin búsqueda, devolviendo todos los items:', items.length);
-      return items;
-    }
+    if (!searchQuery.trim()) return items;
     
-    const filtered = items.filter(item => 
+    return items.filter(item => 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.last.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    
-    console.log('🔍 InboxList - Items filtrados:', {
-      filteredLength: filtered.length,
-      filtered: filtered.slice(0, 3)
-    });
-    
-    return filtered;
   }, [items, searchQuery]);
 
-  // Función para formatear el tiempo (useCallback para evitar recrearla en cada render)
-  const formatTime = useCallback((timeString: string) => {
+  // Función para formatear el tiempo
+  const formatTime = (timeString: string) => {
     try {
       const date = new Date(timeString);
       const now = new Date();
@@ -79,10 +55,10 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
     } catch {
       return timeString;
     }
-  }, []);
+  };
 
-  // Función para obtener el avatar del usuario (useCallback para memoización)
-  const getUserAvatar = useCallback((title: string, platform?: string) => {
+  // Función para obtener el avatar del usuario
+  const getUserAvatar = (title: string, platform?: string) => {
     // Proteger contra valores undefined/null
     const safeTitle = title || 'Sin nombre';
     const initials = safeTitle
@@ -106,7 +82,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
         {initials}
       </div>
     );
-  }, []);
+  };
 
   return (
     <div className="flex flex-col">
@@ -122,14 +98,6 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
 
       {/* Lista de conversaciones */}
       <div>
-        {(() => {
-          console.log('🔍 InboxList - Renderizando:', {
-            filteredItemsLength: filteredItems.length,
-            willShowEmpty: filteredItems.length === 0,
-            searchQuery
-          });
-          return null;
-        })()}
         {filteredItems.length === 0 ? (
           <div className="p-4 text-center text-neutral-400">
             {searchQuery ? (

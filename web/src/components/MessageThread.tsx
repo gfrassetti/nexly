@@ -1,6 +1,6 @@
 "use client";
 import useSWR from "swr";
-import { useEffect, useRef, useMemo, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageThreadProps {
@@ -83,17 +83,17 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
     }
   }, [messages]);
 
-  // Formatear tiempo (useCallback para memoización)
-  const formatTime = useCallback((timestamp: string) => {
+  // Formatear tiempo
+  const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('es-ES', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
-  }, []);
+  };
 
-  // Iconos de estado (useCallback para memoización)
-  const getStatusIcon = useCallback((status?: string) => {
+  // Iconos de estado
+  const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'sent':
         return <div className="w-2 h-2 bg-neutral-400 rounded-full"></div>;
@@ -114,7 +114,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
       default:
         return null;
     }
-  }, []);
+  };
 
   if (!threadId) {
     return (

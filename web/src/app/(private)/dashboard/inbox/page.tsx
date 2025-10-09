@@ -20,14 +20,10 @@ export default function InboxPage() {
   const { data: conversationsData, mutate: mutateConversations, isLoading } = useSWR(
     token ? ["/integrations/conversations", channel] : null,
     async ([p, c]) => {
-      console.log(`🔄 Fetching conversations for channel: ${c}`);
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${p}?provider=${c}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      
-      console.log(`📨 Raw data received for ${c}:`, data);
-      console.log(`📊 Number of conversations:`, data.conversations?.length || 0);
       
       // Mapear los datos del backend al formato esperado por el componente
       if (data.conversations) {
@@ -44,35 +40,19 @@ export default function InboxPage() {
           telegramUsername: conv.telegramUsername,
           contactPhone: conv.contactPhone
         }));
-        
-        console.log(`✅ Mapped conversations for ${c}:`, data.conversations);
-      } else {
-        console.warn(`⚠️ No conversations array in response for ${c}`);
       }
       
       return data;
+    },
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 10000, // Cache por 10 segundos para evitar refetch constante
     }
   );
 
-  // Memoizar las conversaciones para evitar recálculos innecesarios
-  const conversations = useMemo(() => {
-    const convs = conversationsData?.conversations || [];
-    console.log(`🎯 Final conversations to display (${channel}):`, convs);
-    console.log(`📝 Number of conversations to display:`, convs.length);
-    return convs;
-  }, [conversationsData, channel]);
-
-  // Debug: Mostrar estado completo
-  useEffect(() => {
-    console.log('🔍 DEBUG - Estado completo:', {
-      conversationsData,
-      conversations,
-      conversationsLength: conversations.length,
-      isLoading,
-      channel,
-      token: token ? '✅ Present' : '❌ Missing'
-    });
-  }, [conversationsData, conversations, isLoading, channel, token]);
+  // Obtener conversaciones directamente
+  const conversations = conversationsData?.conversations || [];
 
   // Refrescar datos cuando se cambie el canal
   useEffect(() => {
