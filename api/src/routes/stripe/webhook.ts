@@ -74,29 +74,30 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   if ((invoice as any).subscription && typeof (invoice as any).subscription === 'string') {
     const subscriptionId = (invoice as any).subscription as string;
     
-    // Buscar la suscripción en la base de datos
-    const subscription = await SubscriptionModel.findOne({ stripeSubscriptionId: subscriptionId });
+    // 1. Encontrar y actualizar la Suscripción
+    const updatedSubscription = await SubscriptionModel.findOneAndUpdate(
+      { stripeSubscriptionId: subscriptionId },
+      { 
+        status: 'active',
+        lastPaymentDate: new Date()
+      },
+      { new: true }
+    );
     
-    if (subscription) {
-      // Actualizar el estado de la suscripción en la base de datos
-      await SubscriptionModel.findOneAndUpdate(
-        { stripeSubscriptionId: subscriptionId },
-        { 
-          status: 'active',
-          lastPaymentDate: new Date()
-        },
-        { new: true }
-      );
+    if (updatedSubscription) {
+      // 2. ENCONTRAR AL USUARIO ASOCIADO
+      const user = await User.findById(updatedSubscription.userId);
       
-      // CORRECCIÓN: Si el pago fue exitoso y venía de un trial, actualizar el usuario
-      const user = await User.findById(subscription.userId);
-      if (user && user.subscription_status === 'active_trial') {
+      if (user && user.subscription_status !== 'active_paid') {
+        // 3. ACTUALIZAR EL ESTADO DEL USUARIO (CRÍTICO PARA LA UI)
         user.subscription_status = 'active_paid';
         await user.save();
-        console.log(`User ${user._id} transitioned from trial to paid`);
+        console.log(`User ${user._id} status updated to active_paid after invoice paid.`);
       }
       
       console.log(`Subscription ${subscriptionId} activated after payment`);
+    } else {
+      console.log(`Subscription ${subscriptionId} not found in database for update.`);
     }
   }
 }
