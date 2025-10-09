@@ -1337,6 +1337,7 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
  * GET /integrations/conversations
  * Obtiene las conversaciones de WhatsApp del usuario
  */
+/* asd */
 router.get("/conversations", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
