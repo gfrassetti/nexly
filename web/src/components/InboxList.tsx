@@ -23,14 +23,38 @@ interface InboxListProps {
 }
 
 export default function InboxList({ items, activeId, onSelect, searchQuery = "" }: InboxListProps) {
+  // Debug logging
+  console.log('🔍 InboxList - Props recibidos:', {
+    itemsLength: items.length,
+    items: items.slice(0, 3), // Primeros 3 items
+    activeId,
+    searchQuery
+  });
+
   // Filtrar conversaciones basado en la búsqueda
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
+    console.log('🔍 InboxList - Filtrando items:', {
+      originalLength: items.length,
+      searchQuery,
+      hasSearchQuery: !!searchQuery.trim()
+    });
+
+    if (!searchQuery.trim()) {
+      console.log('🔍 InboxList - Sin búsqueda, devolviendo todos los items:', items.length);
+      return items;
+    }
     
-    return items.filter(item => 
+    const filtered = items.filter(item => 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.last.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    
+    console.log('🔍 InboxList - Items filtrados:', {
+      filteredLength: filtered.length,
+      filtered: filtered.slice(0, 3)
+    });
+    
+    return filtered;
   }, [items, searchQuery]);
 
   // Función para formatear el tiempo (useCallback para evitar recrearla en cada render)
@@ -98,6 +122,14 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
 
       {/* Lista de conversaciones */}
       <div>
+        {(() => {
+          console.log('🔍 InboxList - Renderizando:', {
+            filteredItemsLength: filteredItems.length,
+            willShowEmpty: filteredItems.length === 0,
+            searchQuery
+          });
+          return null;
+        })()}
         {filteredItems.length === 0 ? (
           <div className="p-4 text-center text-neutral-400">
             {searchQuery ? (
