@@ -9,15 +9,15 @@ function extractIdFromPeer(peer: any): number | undefined {
   try {
     // Si es un objeto PeerUser
     if (peer.userId) {
-      return peer.userId.toJSNumber ? peer.userId.toJSNumber() : Number(peer.userId);
+      return Number(String(peer.userId));
     }
     // Si es un objeto PeerChannel
     if (peer.channelId) {
-      return peer.channelId.toJSNumber ? peer.channelId.toJSNumber() : Number(peer.channelId);
+      return Number(String(peer.channelId));
     }
     // Si es un objeto PeerChat
     if (peer.chatId) {
-      return peer.chatId.toJSNumber ? peer.chatId.toJSNumber() : Number(peer.chatId);
+      return Number(String(peer.chatId));
     }
     // Si es un número directo
     if (typeof peer === 'number') {
