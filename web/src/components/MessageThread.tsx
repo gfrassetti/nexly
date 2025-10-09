@@ -82,9 +82,13 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
 
   // Refrescar mensajes cuando se envíe un mensaje
   useEffect(() => {
-    const refreshMessages = (event?: Event) => {
-      console.log('Evento messageSent recibido, refrescando mensajes para threadId:', threadId);
-      mutateMessages();
+    const refreshMessages = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      // Opcional: Solo refrescar si es el thread activo
+      // if (customEvent.detail.threadId === threadId) { 
+        console.log('Evento messageSent recibido, refrescando mensajes para threadId:', threadId);
+        mutateMessages();
+      // }
     };
     
     // Escuchar el evento de mensaje enviado

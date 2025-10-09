@@ -112,8 +112,8 @@ export default function InboxPage() {
       
       console.log('Mensaje enviado correctamente');
       
-      // Refrescar las conversaciones
-      mutateConversations();
+      // Refrescar las conversaciones para actualizar el último mensaje y la hora
+      await mutateConversations();
       
       // Importante: Emitir evento DESPUÉS de que el mensaje se envió
       // Esto dispara el refresco en MessageThread
@@ -181,7 +181,7 @@ export default function InboxPage() {
       <div className="flex flex-1 min-h-0">
         {/* Sidebar con lista de conversaciones */}
         {/* Añadimos flex flex-col y min-h-0 para que el InboxList pueda usar flex-1 */}
-        <div className="w-80 border-r border-neutral-700 bg-neutral-800 flex flex-col h-screen">
+        <div className="w-80 border-r border-neutral-700 bg-neutral-800 flex flex-col min-h-0">
           
           {/* ENVOLTURA CLAVE: Añadimos flex-1 y overflow-y-auto para SCROLL en la lista */}
           <div className="flex-1 overflow-y-auto">
