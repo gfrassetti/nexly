@@ -43,19 +43,34 @@ export default function InboxPage() {
       // 2. Mapear y normalizar los datos del backend
       if (data[listPropertyName]) {
         // Usamos la propiedad de lista determinada dinámicamente
-        data.conversations = data[listPropertyName].map((conv: any) => ({
-          id: String(conv.id), // Asegurarse de que el ID es un string
-          title: conv.contactName || conv.title || conv.name || 'Sin nombre',
-          last: conv.lastMessage || conv.last || 'Último mensaje no disponible',
-          at: conv.lastMessageTime || conv.at || new Date().toISOString(),
-          unread: conv.unreadCount > 0,
-          platform: conv.provider || c,
-          avatar: conv.avatar,
-          // Información adicional para Telegram
-          chatType: conv.chatType,
-          telegramUsername: conv.telegramUsername,
-          contactPhone: conv.contactPhone
-        }));
+        data.conversations = data[listPropertyName].map((conv: any) => {
+          // Mejorar el mapeo de nombres para Telegram
+          let title = conv.contactName || conv.title || conv.name;
+          
+          // Para conversaciones privadas de Telegram, usar username o firstName
+          if (c === 'telegram' && !title) {
+            title = conv.username || conv.firstName || conv.lastName || 'Usuario Desconocido';
+          }
+          
+          // Fallback final
+          if (!title) {
+            title = 'Sin nombre';
+          }
+          
+          return {
+            id: String(conv.id), // Asegurarse de que el ID es un string
+            title: title,
+            last: conv.lastMessage || conv.last || 'Último mensaje no disponible',
+            at: conv.lastMessageTime || conv.at || new Date().toISOString(),
+            unread: conv.unreadCount > 0,
+            platform: conv.provider || c,
+            avatar: conv.avatar,
+            // Información adicional para Telegram
+            chatType: conv.chatType,
+            telegramUsername: conv.telegramUsername,
+            contactPhone: conv.contactPhone
+          };
+        });
       } else {
         // Si la propiedad esperada no existe, devolver un array vacío para evitar errores
         data.conversations = [];
@@ -112,11 +127,13 @@ export default function InboxPage() {
       
       console.log('Mensaje enviado correctamente');
       
-      // Refrescar las conversaciones para actualizar el último mensaje y la hora
+      // 1. Refrescar las conversaciones (actualizar el 'lastMessage' en el sidebar)
       await mutateConversations();
       
-      // Importante: Emitir evento DESPUÉS de que el mensaje se envió
-      // Esto dispara el refresco en MessageThread
+      // 2. ⏳ Añadir un pequeño retraso de 200ms para dar tiempo al backend
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // 3. Emitir evento para que MessageThread actualice el hilo
       window.dispatchEvent(new CustomEvent('messageSent', { 
         detail: { threadId: activeId } 
       }));

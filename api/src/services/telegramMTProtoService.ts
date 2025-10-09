@@ -18,6 +18,8 @@ export interface TelegramChat {
   title?: string;
   username?: string;
   accessHash?: string;
+  lastMessage?: string;
+  lastMessageTime?: string;
 }
 
 export interface TelegramMessage {
@@ -330,12 +332,24 @@ export class TelegramMTProtoService {
           username = entity.username || undefined;
         }
 
+        // Obtener información del último mensaje
+        const lastMessage = dialog.message;
+        let lastMessageText = 'Último mensaje no disponible';
+        let lastMessageTime = new Date().toISOString();
+
+        if (lastMessage) {
+          lastMessageText = lastMessage.message || 'Mensaje no disponible';
+          lastMessageTime = new Date(lastMessage.date * 1000).toISOString();
+        }
+
         return {
           id: dialog.id?.toJSNumber() || 0,
           type,
           title,
           username,
           accessHash: (entity as any).accessHash ? (entity as any).accessHash.toString() : undefined,
+          lastMessage: lastMessageText,
+          lastMessageTime: lastMessageTime,
         };
       });
 
