@@ -285,7 +285,7 @@ export class TelegramMTProtoService {
         const sessionString = client.session.save() as unknown as string;
         
         const userInfo: TelegramUser = {
-          id: result.id.toJSNumber(),
+          id: extractIdFromPeer(result.id) || 0,
           username: (result as any).username || undefined,
           firstName: (result as any).firstName || undefined,
           lastName: (result as any).lastName || undefined,
@@ -377,7 +377,7 @@ export class TelegramMTProtoService {
         }
 
         return {
-          id: dialog.id?.toJSNumber() || 0,
+          id: extractIdFromPeer(dialog.id) || 0,
           type,
           title,
           username,
@@ -539,17 +539,17 @@ export class TelegramMTProtoService {
             logger.info('Nuevo mensaje recibido', { 
               userId, 
               messageId: message.id,
-              chatId: message.chatId?.toJSNumber(),
-              fromId: message.fromId?.toJSNumber()
+              chatId: extractIdFromPeer(message.chatId),
+              fromId: extractIdFromPeer(message.fromId)
             });
 
             // Procesar el mensaje y llamar al callback
             const processedMessage = {
               id: message.id,
-              chatId: message.chatId?.toJSNumber(),
+              chatId: extractIdFromPeer(message.chatId),
               text: message.message || '',
               date: new Date(message.date * 1000),
-              fromId: message.fromId?.toJSNumber(),
+              fromId: extractIdFromPeer(message.fromId),
               isOutgoing: message.out,
               userId: userId
             };

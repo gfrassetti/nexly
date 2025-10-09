@@ -230,7 +230,7 @@ export default function InboxPage() {
         
         {/* Área de conversación */}
         {/* flex-1 flex flex-col min-w-0 es correcto para el layout de la conversación */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
           
           {/* Área de mensajes con scroll independiente */}
           {/* flex-1 y overflow-y-auto hacen que el hilo de mensajes crezca y tenga SCROLL */}
