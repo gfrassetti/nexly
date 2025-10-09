@@ -84,17 +84,30 @@ export default function InboxPage() {
     if (!token || !activeId) return;
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/integrations/conversations/${activeId}/reply`, {
+      let endpoint;
+      
+      // Determinar el endpoint según el canal
+      if (channel === 'telegram') {
+        endpoint = `/telegram/send-message`;
+      } else {
+        endpoint = `/integrations/conversations/${activeId}/reply`;
+      }
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ 
+          message: text,
+          ...(channel === 'telegram' && { chatId: activeId })
+        })
       });
       
       if (!response.ok) {
-        throw new Error('Error enviando mensaje');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
       
       console.log('Mensaje enviado correctamente');

@@ -25,8 +25,8 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
 
   // Validar que el threadId corresponda al canal actual
   const isValidThread = threadId && channel && (
-    // Para Telegram, el threadId debe contener "telegram_"
-    (channel === 'telegram' && threadId.includes('telegram_')) ||
+    // Para Telegram, el threadId debe contener "telegram_" o ser un ID numérico (como 777000)
+    (channel === 'telegram' && (threadId.includes('telegram_') || /^\d+$/.test(threadId))) ||
     // Para WhatsApp, el threadId debe contener "whatsapp_" o ser un número de teléfono
     (channel === 'whatsapp' && (threadId.includes('whatsapp_') || /^\d+$/.test(threadId))) ||
     // Para Instagram, el threadId debe contener "instagram_"
@@ -36,10 +36,17 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
   );
 
   const { data: messagesData, mutate: mutateMessages, isLoading } = useSWR(
-    threadId && token && isValidThread ? [`/integrations/conversations/${threadId}/messages`, token] : null,
-    async ([url, t]) => {
-      console.log('🔄 Fetching messages for:', url);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
+    threadId && token && isValidThread ? [`/integrations/conversations/${threadId}/messages`, token, channel] : null,
+    async ([url, t, c]) => {
+      let fetchUrl = url;
+      
+      // Para Telegram, usar endpoint específico
+      if (c === 'telegram') {
+        fetchUrl = `/telegram/messages/${threadId}`;
+      }
+      
+      console.log('🔄 Fetching messages for:', fetchUrl);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${fetchUrl}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
