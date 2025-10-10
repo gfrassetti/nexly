@@ -5,6 +5,7 @@ import { Integration } from '../models/Integration';
 import { Contact } from '../models/Contact';
 import { Message } from '../models/Message';
 import { Conversation } from '../models/Conversation';
+import { cacheService } from '../services/cacheService';
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -16,14 +17,9 @@ const router = Router();
  */
 router.get('/dashboard', async (req: AuthRequest, res: Response) => {
   try {
-    console.log('Dashboard analytics request received');
-    console.log('User from token:', req.user);
-    
     const userId = req.user?.id || req.user?._id;
-    console.log('Extracted userId:', userId);
     
     if (!userId) {
-      console.log('No userId found, returning 401');
       return res.status(401).json({
         success: false,
         error: 'authentication_required',
@@ -31,8 +27,19 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Estadísticas útiles del dashboard
-    console.log('Fetching stats for userId:', userId);
+    // 🚀 CACHE: Intentar obtener desde Redis primero
+    const cachedStats = await cacheService.getStats(userId);
+    if (cachedStats) {
+      logger.info('Stats served from cache', { userId });
+      return res.status(200).json({
+        success: true,
+        data: cachedStats,
+        cached: true
+      });
+    }
+
+    // 📊 DB: Calcular estadísticas desde la base de datos
+    logger.info('Calculating fresh stats from DB', { userId });
     
     const [
       activeIntegrations,
@@ -55,34 +62,26 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
       })
     ]);
 
-    // Debug: Verificar todas las integraciones del usuario
-    const allIntegrations = await Integration.find({
-      userId: new Types.ObjectId(userId)
-    });
-    
-    console.log('All integrations for user:', allIntegrations.map(i => ({
-      id: i._id,
-      provider: i.provider,
-      status: (i as any).meta?.status || (i as any).status,
-      userId: i.userId
-    })));
-    
-    console.log('Stats results:', {
-      activeIntegrations,
-      unreadMessages,
-      userId,
-      allIntegrationsCount: allIntegrations.length
-    });
-
     const stats = {
       activeIntegrations,
       unreadMessages
     };
 
-    console.log('Final stats object:', stats);
+    // 💾 CACHE: Guardar en Redis para próximas consultas (15 min TTL)
+    await cacheService.setStats(userId, stats, 900);
+
+    logger.info('Stats calculated and cached', { 
+      userId, 
+      stats: {
+        activeIntegrations,
+        unreadMessages
+      }
+    });
+
     res.status(200).json({
       success: true,
-      data: stats
+      data: stats,
+      cached: false
     });
 
   } catch (error: unknown) {

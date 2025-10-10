@@ -4,6 +4,7 @@ import handleAuth from "../middleware/auth";
 import { Contact } from "../models/Contact";
 import { Integration } from "../models/Integration";
 import { contactSyncService } from "../services/contactSyncService";
+import { cacheService } from "../services/cacheService";
 import logger from "../utils/logger";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
@@ -25,13 +26,42 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
 
     const integrationId = req.query.integrationId as string | undefined;
+    
+    // 🚀 CACHE: Intentar obtener desde Redis primero
+    const cachedContacts = await cacheService.getContacts(rawUserId, integrationId);
+    if (cachedContacts) {
+      logger.info('Contacts served from cache', { 
+        userId: rawUserId, 
+        integrationId,
+        count: cachedContacts.length 
+      });
+      return res.json({
+        data: cachedContacts,
+        cached: true
+      });
+    }
+
+    // 📊 DB: Consultar desde la base de datos
     const filter: any = { userId: buildUserIdFilter(rawUserId) };
     if (integrationId) filter.integrationId = integrationId;
 
     const contacts = await Contact.find(filter).lean();
-    return res.json(contacts ?? []);
+    
+    // 💾 CACHE: Guardar en Redis para próximas consultas (10 min TTL)
+    await cacheService.setContacts(rawUserId, contacts, 600, integrationId);
+
+    logger.info('Contacts fetched from DB and cached', { 
+      userId: rawUserId, 
+      integrationId,
+      count: contacts.length 
+    });
+
+    return res.json({
+      data: contacts ?? [],
+      cached: false
+    });
   } catch (err: any) {
-    console.error("contacts_list_failed:", err?.message || err);
+    logger.error("contacts_list_failed:", err?.message || err);
     return res.status(500).json({ error: "contacts_list_failed", detail: err?.message });
   }
 });
@@ -71,6 +101,16 @@ router.post("/sync", async (req: AuthRequest, res: Response) => {
     const totalCreated = results.reduce((acc, r) => acc + r.contactsCreated, 0);
     const totalUpdated = results.reduce((acc, r) => acc + r.contactsUpdated, 0);
     const hasErrors = results.some(r => !r.success);
+
+    // 🗑️ CACHE: Invalidar cache de contactos y stats después de sincronización
+    if (totalCreated > 0 || totalUpdated > 0) {
+      await cacheService.invalidateUserCache(rawUserId);
+      logger.info('Cache invalidated after contact sync', { 
+        userId: rawUserId,
+        totalCreated,
+        totalUpdated
+      });
+    }
 
     logger.info('Sincronización completada', { 
       userId: rawUserId,

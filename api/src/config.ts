@@ -4,6 +4,7 @@ dotenv.config();
 export const config = {
   port: process.env.PORT || "4000",
   mongoUri: process.env.MONGO_URI || "",
+  redisUrl: process.env.REDIS_URL || "", // Redis para cache de alta performance
   jwtSecret: process.env.JWT_SECRET || (() => {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('JWT_SECRET must be set in production');

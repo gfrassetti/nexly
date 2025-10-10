@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./db/connect";
+import { cacheService } from "./services/cacheService";
 import healthRouter from "./routes/health";
 import webhookRouter from "./routes/webhook";
 import authRouter from "./routes/auth";
@@ -165,14 +166,16 @@ app.use(errorLogging);
 // Error handler (debe ir al final)
 app.use(errorHandler);
 
-// 👇 conectar DB primero, después arrancar server
+// 👇 conectar DB y Redis, después arrancar server
 connectDB()
+  .then(() => cacheService.connect())
   .then(() => {
     app.listen(PORT, "0.0.0.0", () => {
-      console.log("✅ up", PORT);
+      console.log("✅ Server up on port", PORT);
       logger.info("Server started", {
         port: PORT,
         environment: process.env.NODE_ENV,
+        redisConnected: false, // Se actualizará en cacheService
         timestamp: new Date().toISOString()
       });
     });
@@ -186,5 +189,12 @@ connectDB()
     console.error("❌ Error al conectar DB:", err);
     process.exit(1);
   });
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  logger.info('Shutting down gracefully...');
+  await cacheService.disconnect();
+  process.exit(0);
+});
 
 export default app;
