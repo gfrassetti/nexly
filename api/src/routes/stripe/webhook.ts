@@ -44,7 +44,7 @@ router.post("/", async (req: Request, res: Response) => {
       case "invoice.paid":
         await handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
-      case 'invoice.payment_failed':
+      case "invoice.payment_failed":
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
       case "customer.subscription.updated":
@@ -86,16 +86,30 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         lastPaymentDate: new Date(),
       },
       { new: true }
-    ); // 2. CRÍTICO: Sincronizar el estado del usuario para actualizar la UI
-    if (updatedSubscription) {
-      const user = await User.findById(updatedSubscription.userId); // Eliminamos la condición redundante (user.subscription_status !== 'active_paid') // para forzar la actualización del estado y asegurar que la UI se refresque.
-      if (user) {
-        user.subscription_status = "active_paid";
-        await user.save();
-        console.log(
-          `User ${user._id} status updated to active_paid after successful payment.`
-        );
-      }
+    ); // DIAGNÓSTICO CRÍTICO 1: ¿Se encontró la suscripción?
+    if (!updatedSubscription) {
+      console.error(
+        `🚨 ERROR DB: Subscription NO encontrada en DB para Stripe ID: ${subscriptionId}`
+      );
+      return;
+    } // 2. CRÍTICO: Sincronizar el estado del usuario para actualizar la UI
+    const user = await User.findById(updatedSubscription.userId); // DIAGNÓSTICO CRÍTICO 2: ¿Se encontró el usuario?
+    if (!user) {
+      console.error(
+        `🚨 ERROR DB: Usuario NO encontrado en DB para User ID: ${updatedSubscription.userId}`
+      );
+      return;
+    } // Si llegamos aquí, se encontraron ambos documentos. Forzamos la actualización.
+    if (user.subscription_status !== "active_paid") {
+      user.subscription_status = "active_paid";
+      await user.save();
+      console.log(
+        `✅ ÉXITO UI: User ${user._id} status actualizado a active_paid.`
+      );
+    } else {
+      console.log(
+        `INFO: User ${user._id} ya estaba en active_paid. No se requirió cambio.`
+      );
     }
     console.log(`Subscription ${subscriptionId} activated after payment`);
   }
