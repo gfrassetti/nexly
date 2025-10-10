@@ -203,7 +203,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
-    // Determinar el tipo de plan desde los metadatos o desde la suscripción
+    // Determinar el tipo de plan desde los metadatos o desde la suscripción :)
     let planType = 'basic';
     if (session.metadata?.planType) {
       planType = session.metadata.planType;
