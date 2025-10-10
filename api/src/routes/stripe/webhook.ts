@@ -44,7 +44,7 @@ router.post("/", async (req: Request, res: Response) => {
       case "invoice.paid":
         await handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
-      case "invoice.payment_failed":
+      case 'invoice.payment_failed':
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
       case "customer.subscription.updated":
@@ -86,10 +86,10 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         lastPaymentDate: new Date(),
       },
       { new: true }
-    ); // 2. CRÍTICO: Sincronizar el estado del usuario para actualizar la UI (Problema reportado)
+    ); // 2. CRÍTICO: Sincronizar el estado del usuario para actualizar la UI
     if (updatedSubscription) {
-      const user = await User.findById(updatedSubscription.userId);
-      if (user && user.subscription_status !== "active_paid") {
+      const user = await User.findById(updatedSubscription.userId); // Eliminamos la condición redundante (user.subscription_status !== 'active_paid') // para forzar la actualización del estado y asegurar que la UI se refresque.
+      if (user) {
         user.subscription_status = "active_paid";
         await user.save();
         console.log(
@@ -108,11 +108,11 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     (invoice as any).subscription &&
     typeof (invoice as any).subscription === "string"
   ) {
-    const subscriptionId = (invoice as any).subscription as string; // Buscar y actualizar la suscripción en la base de datos // SOLO actualizamos lastPaymentAttempt. El cambio de status a 'past_due' // debe ser manejado por customer.subscription.updated (más confiable).
+    const subscriptionId = (invoice as any).subscription as string; // Buscar y actualizar la suscripción en la base de datos (solo la fecha del intento)
     await SubscriptionModel.findOneAndUpdate(
       { stripeSubscriptionId: subscriptionId },
       {
-        lastPaymentAttempt: new Date(), // Eliminamos la lógica de `...(subscription.status === 'trialing' && ...)` // para evitar errores de estado; confiamos en customer.subscription.updated.
+        lastPaymentAttempt: new Date(), // El cambio de status a 'past_due' es manejado por customer.subscription.updated
       },
       { new: true }
     );
@@ -158,16 +158,16 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         case "trialing":
           newUserStatus = "active_trial";
           break;
-        case "active": // Si está activo, ya sea por pago exitoso o porque pasó el trial, es pagado
+        case "active": // Si está activo, el pago fue exitoso
           newUserStatus = "active_paid";
           break;
         case "past_due":
         case "canceled":
         case "unpaid":
         case "incomplete": // Cualquier estado que implique pérdida de acceso/pago fallido
-          newUserStatus = "none";
+          newUserStatus = "none"; // Usamos valor permitido 'none'
           break;
-      }
+      } // Ahora siempre guardamos el nuevo estado si es diferente, sin condición extra.
       if (user.subscription_status !== newUserStatus) {
         user.subscription_status = newUserStatus;
         await user.save();
@@ -225,7 +225,7 @@ async function handleCheckoutSessionCompleted(
     ); // Si tiene trial_end, el estado DEBE ser 'trialing'
     const initialStatus = stripeSubscription.trial_end
       ? "trialing"
-      : stripeSubscription.status; // CORRECCIÓN: Usar las fechas reales de Stripe, no calcularlas manualmente
+      : stripeSubscription.status; // CORRECCIÓN: Usar las fechas reales de Stripe
     const startDate = new Date(
       (stripeSubscription as any).current_period_start * 1000
     );
