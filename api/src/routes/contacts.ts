@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import handleAuth from "../middleware/auth";
 import { Contact } from "../models/Contact";
 import { Integration } from "../models/Integration";
+import { contactSyncService } from "../services/contactSyncService";
+import logger from "../utils/logger";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -54,6 +56,91 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 // 🚨 Eliminamos create/update manuales → contactos ahora se crean vía sincronización automática
+
+// Sincronizar todos los contactos del usuario
+router.post("/sync", async (req: AuthRequest, res: Response) => {
+  try {
+    const rawUserId = req.user?.id || req.user?._id;
+    if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
+
+    logger.info('Iniciando sincronización de contactos', { userId: rawUserId });
+
+    const results = await contactSyncService.syncAllIntegrations(rawUserId.toString());
+
+    const totalSynced = results.reduce((acc, r) => acc + r.contactsSynced, 0);
+    const totalCreated = results.reduce((acc, r) => acc + r.contactsCreated, 0);
+    const totalUpdated = results.reduce((acc, r) => acc + r.contactsUpdated, 0);
+    const hasErrors = results.some(r => !r.success);
+
+    logger.info('Sincronización completada', { 
+      userId: rawUserId,
+      totalSynced,
+      totalCreated,
+      totalUpdated,
+      hasErrors
+    });
+
+    return res.json({
+      success: !hasErrors,
+      message: hasErrors 
+        ? 'Sincronización completada con algunos errores'
+        : 'Contactos sincronizados exitosamente',
+      results,
+      summary: {
+        totalSynced,
+        totalCreated,
+        totalUpdated
+      }
+    });
+  } catch (err: any) {
+    logger.error("contacts_sync_failed:", err?.message || err);
+    return res.status(500).json({ 
+      error: "contacts_sync_failed", 
+      detail: err?.message 
+    });
+  }
+});
+
+// Sincronizar contactos de una integración específica
+router.post("/sync/:integrationId", async (req: AuthRequest, res: Response) => {
+  try {
+    const rawUserId = req.user?.id || req.user?._id;
+    if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { integrationId } = req.params;
+
+    logger.info('Sincronizando integración específica', { 
+      userId: rawUserId,
+      integrationId
+    });
+
+    const result = await contactSyncService.syncIntegration(
+      rawUserId.toString(),
+      integrationId
+    );
+
+    logger.info('Sincronización de integración completada', { 
+      userId: rawUserId,
+      integrationId,
+      success: result.success,
+      synced: result.contactsSynced
+    });
+
+    return res.json({
+      success: result.success,
+      message: result.success 
+        ? `Contactos de ${result.provider} sincronizados exitosamente`
+        : `Error sincronizando contactos: ${result.error}`,
+      result
+    });
+  } catch (err: any) {
+    logger.error("contacts_sync_integration_failed:", err?.message || err);
+    return res.status(500).json({ 
+      error: "contacts_sync_integration_failed", 
+      detail: err?.message 
+    });
+  }
+});
 
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {

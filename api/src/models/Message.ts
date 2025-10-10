@@ -12,6 +12,9 @@ const messageSchema = new Schema(
     provider: { type: String, enum: ["whatsapp", "instagram", "messenger", "telegram"], required: true },
     externalMessageId: { type: String }, // ID del mensaje en el proveedor externo (WhatsApp, etc.)
     integration: { type: Schema.Types.ObjectId, ref: "Integration" }, // Referencia a la integración
+    from: { type: String }, // ID del remitente (número de teléfono, usuario de Telegram, etc.)
+    senderName: { type: String }, // Nombre del remitente
+    timestamp: { type: Date, default: Date.now }, // Timestamp del mensaje
   },
   { timestamps: true }
 );

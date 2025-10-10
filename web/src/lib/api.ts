@@ -134,6 +134,51 @@ export function deleteContact(contactId: string, token?: string) {
   }, token);
 }
 
+/**
+ * Sincronizar todos los contactos del usuario
+ */
+export function syncAllContacts(token?: string) {
+  return apiFetch<{
+    success: boolean;
+    message: string;
+    results: Array<{
+      success: boolean;
+      provider: string;
+      contactsSynced: number;
+      contactsCreated: number;
+      contactsUpdated: number;
+      error?: string;
+    }>;
+    summary: {
+      totalSynced: number;
+      totalCreated: number;
+      totalUpdated: number;
+    };
+  }>("/contacts/sync", {
+    method: "POST",
+  }, token);
+}
+
+/**
+ * Sincronizar contactos de una integración específica
+ */
+export function syncIntegrationContacts(integrationId: string, token?: string) {
+  return apiFetch<{
+    success: boolean;
+    message: string;
+    result: {
+      success: boolean;
+      provider: string;
+      contactsSynced: number;
+      contactsCreated: number;
+      contactsUpdated: number;
+      error?: string;
+    };
+  }>(`/contacts/sync/${integrationId}`, {
+    method: "POST",
+  }, token);
+}
+
 export function getMessages(params: { contactId?: string; provider?: Provider; integrationId?: string } = {}) {
   const q = new URLSearchParams();
   if (params.contactId) q.set("contactId", params.contactId);

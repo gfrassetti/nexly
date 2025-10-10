@@ -54,6 +54,11 @@ export interface TelegramChat {
   accessHash?: string;
   lastMessage?: string;
   lastMessageTime?: string;
+  phone?: string;
+  photo?: string;
+  firstName?: string;
+  lastName?: string;
+  lastMessageDate?: number;
 }
 
 export interface TelegramMessage {

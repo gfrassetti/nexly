@@ -88,10 +88,16 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
           };
         });
         
-        console.log('✅ Mapped messages:', mappedMessages.length, 'messages');
-        console.log('📋 Sample message:', mappedMessages[0]);
-        console.log('📋 All mapped messages:', mappedMessages);
-        return mappedMessages;
+        // ✅ INVERTIR ORDEN: Más viejos arriba, más nuevos abajo (como WhatsApp)
+        console.log('🔄 Before reverse - first 3 messages:', mappedMessages.slice(0, 3));
+        const sortedMessages = mappedMessages.reverse();
+        console.log('🔄 After reverse - first 3 messages:', sortedMessages.slice(0, 3));
+        
+        console.log('✅ Mapped messages:', sortedMessages.length, 'messages');
+        console.log('📋 Sample message (oldest):', sortedMessages[0]);
+        console.log('📋 Sample message (newest):', sortedMessages[sortedMessages.length - 1]);
+        console.log('📋 All mapped messages (oldest first):', sortedMessages);
+        return sortedMessages;
       }
       
       console.log('⚠️ No messages in response');
