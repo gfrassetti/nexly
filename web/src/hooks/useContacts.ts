@@ -26,9 +26,9 @@ export function useContacts(integrationId: string) {
     try {
       const data = await getContacts(token);
       
-      // Filtrar por integración si no es "all"
+      // Filtrar por provider si no es "all"
       const filtered = integrationId && integrationId !== "all"
-        ? data.filter((c: any) => c.integrationId === integrationId)
+        ? data.filter((c: any) => c.provider === integrationId)
         : data;
       
       setItems(filtered);

@@ -57,20 +57,15 @@ const ALLOWED_ORIGINS = [
 
 app.use(cors({
   origin(origin, cb) {
-    console.log("🔍 CORS check - Origin:", origin);
-    console.log("🔍 CORS check - Allowed origins:", ALLOWED_ORIGINS);
     
     if (!origin) {
-      console.log("🔍 CORS check - No origin, allowing");
       return cb(null, true);
     }
     
     if (ALLOWED_ORIGINS.includes(origin)) {
-      console.log("🔍 CORS check - Origin allowed:", origin);
       return cb(null, true);
     }
     
-    console.log("🔍 CORS check - Origin NOT allowed:", origin);
     return cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -83,9 +78,6 @@ app.use(cors({
 // Middleware adicional para manejar CORS de manera más permisiva temporalmente
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  console.log("🔍 Request origin:", origin);
-  console.log("🔍 Request method:", req.method);
-  console.log("🔍 Request path:", req.path);
   
   // Permitir CORS para requests de preflight
   if (req.method === 'OPTIONS') {

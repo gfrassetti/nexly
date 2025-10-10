@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import Logo from "@/components/Logo";
+import Loader from "@/components/Loader";
 
 // Forzar SSR para páginas de pago (requieren autenticación)
 export const dynamic = 'force-dynamic';
@@ -64,7 +65,7 @@ function SubscriptionSuccessContent() {
           <div className="flex justify-center mb-6">
             <Logo size="lg" />
           </div>
-          <div className="animate-spin h-12 w-12 border-4 border-nexly-teal border-t-transparent rounded-full mx-auto mb-4"></div>
+          <Loader size="lg" />
           <h2 className="text-xl font-semibold mb-2">Procesando tu pago...</h2>
           <p className="text-neutral-400">Por favor espera mientras activamos tu prueba gratuita</p>
         </div>
@@ -129,7 +130,7 @@ export default function SubscriptionSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
+        <Loader size="md" />
       </div>
     }>
       <SubscriptionSuccessContent />

@@ -45,17 +45,11 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
         fetchUrl = `/telegram/messages/${threadId}`;
       }
       
-      console.log('🔄 Fetching messages for:', fetchUrl);
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${fetchUrl}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
       
-      console.log('📨 Messages received:', data);
-      console.log('📋 Raw messages array:', data.messages);
-      if (data.messages && data.messages.length > 0) {
-        console.log('🔍 First message sample:', data.messages[0]);
-      }
       
       // Mapear los datos del backend al formato esperado por el componente
       if (data.messages) {
@@ -70,7 +64,6 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
             content = msg.text || '';
             timestamp = msg.date ? new Date(msg.date).toISOString() : new Date().toISOString();
             direction = msg.isOutgoing ? 'outbound' : 'inbound';
-            console.log(`📝 Telegram msg mapping: text="${content}", date="${msg.date}", isOutgoing=${msg.isOutgoing}`);
           } else {
             // Estructura genérica para otras plataformas
             content = msg.body || msg.content || msg.text || '';
@@ -89,18 +82,10 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
         });
         
         // ✅ INVERTIR ORDEN: Más viejos arriba, más nuevos abajo (como WhatsApp)
-        console.log('🔄 Before reverse - first 3 messages:', mappedMessages.slice(0, 3));
         const sortedMessages = mappedMessages.reverse();
-        console.log('🔄 After reverse - first 3 messages:', sortedMessages.slice(0, 3));
-        
-        console.log('✅ Mapped messages:', sortedMessages.length, 'messages');
-        console.log('📋 Sample message (oldest):', sortedMessages[0]);
-        console.log('📋 Sample message (newest):', sortedMessages[sortedMessages.length - 1]);
-        console.log('📋 All mapped messages (oldest first):', sortedMessages);
         return sortedMessages;
       }
       
-      console.log('⚠️ No messages in response');
       return [];
     },
     {
@@ -118,7 +103,6 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
       const customEvent = event as CustomEvent;
       // Opcional: Solo refrescar si es el thread activo
       // if (customEvent.detail.threadId === threadId) { 
-        console.log('Evento messageSent recibido, refrescando mensajes para threadId:', threadId);
         mutateMessages();
       // }
     };
@@ -272,9 +256,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
 
       {/* Área de mensajes */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {console.log('🎨 Rendering messages:', messages.length, 'messages')}
         {messages.map((message: Message, index: number) => {
-          console.log(`🎨 Rendering message ${index}:`, message);
           return (
           <div
             key={message.id}

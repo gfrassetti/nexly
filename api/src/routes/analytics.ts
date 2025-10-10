@@ -11,6 +11,95 @@ type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 const router = Router();
 
 /**
+ * GET /analytics/dashboard
+ * Endpoint simplificado para estadísticas del dashboard principal
+ */
+router.get('/dashboard', async (req: AuthRequest, res: Response) => {
+  try {
+    console.log('Dashboard analytics request received');
+    console.log('User from token:', req.user);
+    
+    const userId = req.user?.id || req.user?._id;
+    console.log('Extracted userId:', userId);
+    
+    if (!userId) {
+      console.log('No userId found, returning 401');
+      return res.status(401).json({
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    // Estadísticas útiles del dashboard
+    console.log('Fetching stats for userId:', userId);
+    
+    const [
+      activeIntegrations,
+      unreadMessages
+    ] = await Promise.all([
+      // Integraciones activas (verificar tanto status como meta.status)
+      Integration.countDocuments({
+        userId: new Types.ObjectId(userId),
+        $or: [
+          { status: 'linked' },
+          { 'meta.status': 'linked' }
+        ]
+      }),
+
+      // Mensajes sin leer (solo mensajes entrantes que no se han leído)
+      Message.countDocuments({
+        userId: new Types.ObjectId(userId),
+        direction: 'in',
+        isRead: false
+      })
+    ]);
+
+    // Debug: Verificar todas las integraciones del usuario
+    const allIntegrations = await Integration.find({
+      userId: new Types.ObjectId(userId)
+    });
+    
+    console.log('All integrations for user:', allIntegrations.map(i => ({
+      id: i._id,
+      provider: i.provider,
+      status: (i as any).meta?.status || (i as any).status,
+      userId: i.userId
+    })));
+    
+    console.log('Stats results:', {
+      activeIntegrations,
+      unreadMessages,
+      userId,
+      allIntegrationsCount: allIntegrations.length
+    });
+
+    const stats = {
+      activeIntegrations,
+      unreadMessages
+    };
+
+    console.log('Final stats object:', stats);
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error obteniendo estadísticas del dashboard', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
  * GET /analytics/dashboard-stats
  * Obtener estadísticas del dashboard basadas en integraciones exitosas
  */

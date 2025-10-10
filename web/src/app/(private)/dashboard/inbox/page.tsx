@@ -125,7 +125,6 @@ export default function InboxPage() {
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
       
-      console.log('Mensaje enviado correctamente');
       
       // 1. Refrescar las conversaciones (actualizar el 'lastMessage' en el sidebar)
       await mutateConversations();

@@ -99,9 +99,7 @@ export default function Composer({
     setError(null);
     
     try {
-      console.log('📤 Enviando mensaje:', text.trim());
       await onSend(text.trim());
-      console.log('✅ Mensaje enviado exitosamente');
       setText("");
       setError(null);
       

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useStats } from "@/hooks/useStats";
+import { Skeleton } from "@/components/ui/skeleton";
+import StatCard from "@/components/StatCard";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 
 export default function DashboardPage() {
@@ -12,14 +15,8 @@ export default function DashboardPage() {
   const [showPaymentError, setShowPaymentError] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
 
-  // Datos estáticos simples - sin hooks complejos
-  const stats = {
-    totalContacts: 0,
-    totalMessages: 0,
-    conversationsToday: 0,
-    averageResponseTime: 0,
-    activeIntegrations: 0
-  };
+  // Obtener estadísticas reales desde el backend
+  const { stats, loading: statsLoading, error: statsError } = useStats();
 
   // Show trial notification only if trial is active
   useEffect(() => {
@@ -145,106 +142,60 @@ export default function DashboardPage() {
         <SubscriptionStatus />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Contacts */}
-          <div className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted/80 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Total Contacts</p>
-                <p className="text-2xl font-semibold text-foreground mt-1">{stats.totalContacts}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {statsLoading ? (
+            // Skeleton para las estadísticas usando shadcn/ui
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="bg-muted/50 border border-border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-8 w-12" />
+                  </div>
+                  <Skeleton className="w-8 h-8 rounded-md" />
+                </div>
+                <div className="mt-3">
+                  <Skeleton className="h-3 w-24" />
+                </div>
               </div>
-              <div className="w-8 h-8 bg-accent-blue/20 rounded-md flex items-center justify-center">
-                <svg className="w-4 h-4 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center">
-              {stats.totalContacts > 0 ? (
-                <>
-                  <span className="text-xs text-accent-green">+12%</span>
-                  <span className="text-xs text-muted-foreground ml-2">vs last month</span>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">Sin datos aún</span>
-              )}
-            </div>
-          </div>
+            ))
+          ) : (
+            <>
+              <StatCard
+                title="Integrations"
+                value={stats.activeIntegrations}
+                subtitle={stats.activeIntegrations > 0 ? undefined : "Sin integraciones activas"}
+                color="blue"
+                icon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                }
+                trend={stats.activeIntegrations > 0 ? {
+                  value: 2,
+                  label: "this month",
+                  isPositive: true
+                } : undefined}
+              />
 
-          {/* Conversations Today */}
-          <div className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted/80 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Conversations Today</p>
-                <p className="text-2xl font-semibold text-foreground mt-1">{stats.conversationsToday}</p>
-              </div>
-              <div className="w-8 h-8 bg-accent-green/20 rounded-md flex items-center justify-center">
-                <svg className="w-4 h-4 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center">
-              {stats.conversationsToday > 0 ? (
-                <>
-                  <span className="text-xs text-accent-green">+8%</span>
-                  <span className="text-xs text-muted-foreground ml-2">vs yesterday</span>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">Sin conversaciones hoy</span>
-              )}
-            </div>
-          </div>
-
-          {/* Response Time */}
-          <div className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted/80 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Response Time</p>
-                <p className="text-2xl font-semibold text-foreground mt-1">{stats.averageResponseTime}m</p>
-              </div>
-              <div className="w-8 h-8 bg-accent-cream/20 rounded-md flex items-center justify-center">
-                <svg className="w-4 h-4 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center">
-              {stats.averageResponseTime > 0 ? (
-                <>
-                  <span className="text-xs text-accent-green">-15%</span>
-                  <span className="text-xs text-muted-foreground ml-2">vs last week</span>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">Sin datos de respuesta</span>
-              )}
-            </div>
-          </div>
-
-          {/* Active Integrations */}
-          <div className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted/80 transition-colors">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Integrations</p>
-                <p className="text-2xl font-semibold text-foreground mt-1">{stats.activeIntegrations}</p>
-              </div>
-              <div className="w-8 h-8 bg-accent-blue/20 rounded-md flex items-center justify-center">
-                <svg className="w-4 h-4 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center">
-              {stats.activeIntegrations > 0 ? (
-                <>
-                  <span className="text-xs text-accent-green">+2</span>
-                  <span className="text-xs text-muted-foreground ml-2">this month</span>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">Sin integraciones activas</span>
-              )}
-            </div>
-          </div>
+              <StatCard
+                title="Mensajes Sin Leer"
+                value={stats.unreadMessages}
+                subtitle={stats.unreadMessages > 0 ? undefined : "Todo al día"}
+                color="red"
+                icon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                }
+                trend={stats.unreadMessages > 0 ? {
+                  value: stats.unreadMessages,
+                  label: "pendientes",
+                  isPositive: false
+                } : undefined}
+              />
+            </>
+          )}
         </div>
 
         {/* Quick Actions */}

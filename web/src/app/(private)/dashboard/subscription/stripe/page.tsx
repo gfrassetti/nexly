@@ -8,6 +8,7 @@ import { useStripeOperations } from "@/hooks/useStripeOperations";
 import BillingInfo from "@/components/BillingInfo";
 import InvoiceHistory from "@/components/InvoiceHistory";
 import SubscriptionActions from "@/components/SubscriptionActions";
+import Loader from "@/components/Loader";
 
 // Iconos de tarjetas de pago
 const paymentIcons = {
@@ -219,10 +220,7 @@ export default function SubscriptionInfo() {
   if (loading || stripeLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
-        <span className="ml-2 text-muted-foreground text-sm">
-          Cargando Suscripción...
-        </span>
+        <Loader size="md" text="Cargando Suscripción..." />
       </div>
     );
   }

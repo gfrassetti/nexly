@@ -7,8 +7,6 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
   const clientIP = req.ip || req.connection.remoteAddress;
   
-  console.log(`Auth check for ${req.method} ${req.path} from IP ${clientIP}`);
-  console.log(`Authorization header: ${authHeader ? 'Present' : 'Missing'}`);
   
   if (!authHeader) {
     console.warn(`Auth failed: No token provided from IP ${clientIP}`);
@@ -27,7 +25,6 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     
     // Log successful authentication (solo en desarrollo)
     if (config.isDevelopment) {
-      console.log(`Auth success: User ${decoded.id} from IP ${clientIP}`);
     }
     
     next();

@@ -5,14 +5,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiFetch } from '@/lib/api';
 
 interface DashboardStats {
-  totalContacts: number;
-  totalMessages: number;
-  conversationsToday: number;
-  averageResponseTime: number;
   activeIntegrations: number;
-  messagesByPlatform: Record<string, number>;
-  recentMessages: any[];
-  unreadConversations: number;
+  unreadMessages: number;
 }
 
 interface StatsContextType {
@@ -27,14 +21,8 @@ const StatsContext = createContext<StatsContextType | undefined>(undefined);
 export function StatsProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
-    totalContacts: 0,
-    totalMessages: 0,
-    conversationsToday: 0,
-    averageResponseTime: 0,
     activeIntegrations: 0,
-    messagesByPlatform: {},
-    recentMessages: [],
-    unreadConversations: 0,
+    unreadMessages: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +35,7 @@ export function StatsProvider({ children }: { children: ReactNode }) {
       setError(null);
       
       // Obtener estadísticas reales del backend
-      const response = await apiFetch('/analytics/dashboard-stats', {}, token);
+      const response = await apiFetch('/analytics/dashboard', {}, token);
       
       if (response.success) {
         setStats(response.data);
@@ -55,28 +43,16 @@ export function StatsProvider({ children }: { children: ReactNode }) {
         console.warn('Error en respuesta de stats:', response.message);
         // No establecer error, usar datos por defecto
         setStats({
-          totalContacts: 0,
-          totalMessages: 0,
-          conversationsToday: 0,
-          averageResponseTime: 0,
           activeIntegrations: 0,
-          messagesByPlatform: {},
-          recentMessages: [],
-          unreadConversations: 0,
+          unreadMessages: 0,
         });
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
       // No establecer error, usar datos por defecto
       setStats({
-        totalContacts: 0,
-        totalMessages: 0,
-        conversationsToday: 0,
-        averageResponseTime: 0,
         activeIntegrations: 0,
-        messagesByPlatform: {},
-        recentMessages: [],
-        unreadConversations: 0,
+        unreadMessages: 0,
       });
     } finally {
       setIsLoading(false);

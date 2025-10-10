@@ -294,10 +294,6 @@ export default function SubscriptionStatus() {
   }
 
   const sub = subscription.subscription!;
-  console.log("sub: ", sub);
-  console.log("subscription: ", subscription);
-  console.log("sub.status: ", sub.status);
-  console.log("sub.isActive: ", sub.isActive);
   const isExpired = sub.isCancelled && !sub.isInGracePeriod;
 
   // Mapeo de estados de suscripción
@@ -361,7 +357,6 @@ export default function SubscriptionStatus() {
       }
     };
 
-    console.log("sub.status: ", subscription);
     return statusConfig[sub.status as keyof typeof statusConfig] || {
       text: `Desconocido (${sub.status})`,
       className: 'text-muted-foreground boimage.pngrder border-border',
@@ -452,7 +447,8 @@ export default function SubscriptionStatus() {
                 const planFromStorage = localStorage.getItem("selectedPlan");
                 const selectedPlan = planFromSubscription || planFromStorage || "basic";
                 
-                console.log('🔍 Debug Completar Pago:', {
+                // Debug Completar Pago:
+                console.log({
                   planFromSubscription,
                   planFromStorage,
                   selectedPlan,

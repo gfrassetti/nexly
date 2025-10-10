@@ -2,7 +2,7 @@
 
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/hooks/useAuth";
-import { PageLoader } from "@/components/Loader";
+import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -33,7 +33,7 @@ export default function SubscriptionPage() {
 
   // Mostrar loading mientras se carga la suscripción
   if (loading) {
-    return <PageLoader text="Cargando suscripción..." />;
+    return <Loader size="md" text="Cargando suscripción..." />;
   }
 
   // Lógica simple: si hay suscripción activa
@@ -75,7 +75,7 @@ export default function SubscriptionPage() {
   // Si hay suscripción activa, mostrar loading mientras redirige
   return (
     <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nexly-green"></div>
+      <Loader size="md" />
       <span className="ml-2 text-gray-600">Redirigiendo a tu suscripción...</span>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type ContactItem = {
   id: string;
@@ -23,12 +24,14 @@ interface ContactListProps {
   items: ContactItem[];
   onDelete: (id: string) => void;
   isDeleting?: string | null;
+  loading?: boolean;
 }
 
 export default function ContactList({
   items,
   onDelete,
   isDeleting = null,
+  loading = false,
 }: ContactListProps) {
 
   const getPlatformIcon = (provider?: string) => {
@@ -90,6 +93,52 @@ export default function ContactList({
       .toUpperCase()
       .slice(0, 2);
   };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="bg-neutral-800 rounded-lg p-4 border border-neutral-700"
+          >
+            <div className="flex items-start gap-3">
+              {/* Avatar skeleton */}
+              <div className="relative flex-shrink-0">
+                <Skeleton className="w-12 h-12 rounded-full" />
+                {/* Platform badge skeleton */}
+                <Skeleton className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full" />
+              </div>
+
+              {/* Content skeleton */}
+              <div className="flex-1 min-w-0 space-y-2">
+                {/* Name skeleton */}
+                <div className="flex items-center justify-between gap-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-12" />
+                </div>
+                
+                {/* Username skeleton */}
+                <Skeleton className="h-3 w-20" />
+                
+                {/* Message preview skeleton */}
+                <Skeleton className="h-3 w-32" />
+                
+                {/* Phone skeleton */}
+                <Skeleton className="h-3 w-28" />
+              </div>
+            </div>
+
+            {/* Actions skeleton */}
+            <div className="flex justify-between items-center mt-4 pt-3 border-t border-neutral-700">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

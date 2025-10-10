@@ -15,6 +15,10 @@ const messageSchema = new Schema(
     from: { type: String }, // ID del remitente (número de teléfono, usuario de Telegram, etc.)
     senderName: { type: String }, // Nombre del remitente
     timestamp: { type: Date, default: Date.now }, // Timestamp del mensaje
+    
+    // Campos para mensajes no leídos
+    isRead: { type: Boolean, default: false }, // Si el mensaje fue leído por el usuario
+    readAt: { type: Date }, // Timestamp cuando se leyó el mensaje
   },
   { timestamps: true }
 );

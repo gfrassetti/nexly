@@ -4,7 +4,10 @@ import { config } from '../config';
 import logger from '../utils/logger';
 
 // Cliente principal de Twilio (para operaciones administrativas)
-const mainClient = new Twilio(config.twilioAccountSid, config.twilioAuthToken);
+// Solo inicializar si tenemos credenciales válidas
+const mainClient = config.twilioAccountSid && config.twilioAuthToken && config.twilioAccountSid.startsWith('AC') 
+  ? new Twilio(config.twilioAccountSid, config.twilioAuthToken)
+  : null;
 
 export interface TwilioWhatsAppMessage {
   to: string;
@@ -360,6 +363,10 @@ export async function verifyTwilioConfig(): Promise<{
   try {
     if (!config.twilioAccountSid || !config.twilioAuthToken) {
       return { success: false, error: "Twilio Account SID or Auth Token not configured." };
+    }
+
+    if (!mainClient) {
+      return { success: false, error: "Twilio client not initialized. Check your credentials." };
     }
 
     // Test authentication by fetching account details

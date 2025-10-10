@@ -28,11 +28,9 @@ export default function RegisterForm() {
       const plan = searchParams.get('plan');
       const paymentMethod = searchParams.get('payment') || 'stripe';
       
-      console.log('🚀 Starting registration...', { username, email, plan, paymentMethod });
       
       const response = await registerApi({ username, email, password, plan: plan || undefined });
       
-      console.log('✅ Registration response:', response);
       
       setSuccess(true);
       
@@ -66,7 +64,6 @@ export default function RegisterForm() {
       console.error('❌ Registration error:', err);
       setError(err.message || "Error al crear la cuenta");
     } finally {
-      console.log('🏁 Registration process finished');
       setLoading(false);
     }
   };
