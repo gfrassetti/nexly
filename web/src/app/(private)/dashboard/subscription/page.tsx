@@ -33,7 +33,7 @@ export default function SubscriptionPage() {
 
   // Mostrar loading mientras se carga la suscripción
   if (loading) {
-    return <Loader size="md" text="Cargando suscripción..." />;
+    return <Loader size="lg" text="Cargando suscripción..." />;
   }
 
   // Lógica simple: si hay suscripción activa

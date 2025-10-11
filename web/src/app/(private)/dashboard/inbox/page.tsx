@@ -9,10 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect, useMemo } from "react";
 import { sendMessage } from "@/hooks/sendMessage";
 import { CHANNELS } from "@/lib/constants";
+import { useSearchParams } from "next/navigation";
 
 export default function InboxPage() {
   const { token } = useAuth();
   const { refreshInbox } = useDataRefresh();
+  const searchParams = useSearchParams();
+  const contactId = searchParams.get('contact');
+  
   const [channel, setChannel] = useState<(typeof CHANNELS)[number]>("whatsapp");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -88,12 +92,53 @@ export default function InboxPage() {
   // Obtener conversaciones directamente
   const conversations = conversationsData?.conversations || [];
 
+  // Hook para obtener información del contacto si hay contactId en la URL
+  const { data: contactData, isLoading: isLoadingContact } = useSWR(
+    contactId && token ? `/contacts/${contactId}` : null,
+    async (url) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        throw new Error('Contact not found');
+      }
+      return res.json();
+    }
+  );
+
+  // Auto-seleccionar integración y conversación cuando hay contactId
+  useEffect(() => {
+    if (contactId && contactData && conversationsData) {
+      // 1. Auto-seleccionar la integración correcta basada en el contacto
+      const contactProvider = contactData.provider || contactData.integrationId;
+      if (contactProvider && CHANNELS.includes(contactProvider)) {
+        setChannel(contactProvider);
+      }
+
+      // 2. Buscar y seleccionar la conversación correspondiente al contacto
+      const conversations = conversationsData.conversations || [];
+      const matchingConversation = conversations.find((conv: any) => {
+        // Buscar por diferentes campos que puedan coincidir
+        return conv.id === contactId || 
+               conv.contactId === contactId ||
+               conv.contactPhone === contactData.phone ||
+               conv.telegramUsername === contactData.telegramUsername;
+      });
+
+      if (matchingConversation) {
+        setActiveId(matchingConversation.id);
+      }
+    }
+  }, [contactId, contactData, conversationsData]);
+
   // Refrescar datos cuando se cambie el canal
   useEffect(() => {
     refreshInbox();
-    // Limpiar la conversación activa cuando cambies de canal
-    setActiveId(null);
-  }, [channel, refreshInbox]);
+    // Limpiar la conversación activa cuando cambies de canal (solo si no hay contactId)
+    if (!contactId) {
+      setActiveId(null);
+    }
+  }, [channel, refreshInbox, contactId]);
 
   async function handleSend(text: string) {
     if (!token || !activeId) return;
@@ -168,9 +213,23 @@ export default function InboxPage() {
             ))}
           </div>
           
-          {/* Contador de conversaciones */}
-          <div className="text-sm text-neutral-400">
-            {conversationsData?.conversations?.length || 0} conversaciones
+          {/* Contador de conversaciones y estado de contacto */}
+          <div className="flex items-center gap-4 text-sm text-neutral-400">
+            {contactId && isLoadingContact && (
+              <div className="flex items-center gap-2 text-blue-400">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                Cargando contacto...
+              </div>
+            )}
+            {contactId && contactData && (
+              <div className="flex items-center gap-2 text-green-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {contactData.name || contactData.phone || 'Contacto seleccionado'}
+              </div>
+            )}
+            <span>{conversationsData?.conversations?.length || 0} conversaciones</span>
           </div>
         </div>
         

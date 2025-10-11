@@ -79,6 +79,47 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Archivar/desarchivar un contacto
+router.patch("/:id/archive", async (req: AuthRequest, res: Response) => {
+  try {
+    const rawUserId = req.user?.id || req.user?._id;
+    if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { archived = true } = req.body;
+    const newStatus = archived ? "archived" : "active";
+
+    const contact = await Contact.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        userId: buildUserIdFilter(rawUserId),
+      },
+      { status: newStatus },
+      { new: true }
+    );
+
+    if (!contact) return res.status(404).json({ error: "not_found" });
+
+    // Limpiar cache
+    await cacheService.clearContacts(rawUserId);
+    await cacheService.clearContacts(rawUserId, contact.integrationId);
+
+    logger.info('Contact archived/unarchived', { 
+      userId: rawUserId, 
+      contactId: req.params.id,
+      status: newStatus 
+    });
+
+    return res.json({ 
+      success: true, 
+      message: archived ? "Contacto archivado" : "Contacto desarchivado",
+      contact 
+    });
+  } catch (err: any) {
+    logger.error("contacts_archive_failed:", err?.message || err);
+    return res.status(500).json({ error: "contacts_archive_failed", detail: err?.message });
+  }
+});
+
 // 🚨 Eliminamos create/update manuales → contactos ahora se crean vía sincronización automática
 
 // Sincronizar todos los contactos del usuario

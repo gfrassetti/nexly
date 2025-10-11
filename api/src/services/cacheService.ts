@@ -109,6 +109,20 @@ class CacheService {
     }
   }
 
+  // Clear specific contacts cache
+  async clearContacts(userId: string, integrationId?: string): Promise<void> {
+    if (!this.ensureConnected()) return;
+    
+    try {
+      const key = integrationId 
+        ? `contacts:${userId}:${integrationId}`
+        : `contacts:${userId}:all`;
+      await this.client!.del(key);
+    } catch (error) {
+      logger.error('Error clearing contacts cache:', error);
+    }
+  }
+
   // Invalidar cache cuando hay cambios
   async invalidateUserCache(userId: string): Promise<void> {
     if (!this.ensureConnected()) return;

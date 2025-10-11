@@ -19,25 +19,36 @@ export default function ContactsPage() {
   const { refreshContacts } = useDataRefresh();
   const [integrationId, setIntegrationId] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isArchiving, setIsArchiving] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const { showSuccess, showError } = useNotificationHelpers();
   const { syncAll, isSyncing, syncProgress } = useSyncContacts();
 
   const { items: contacts, loading, error, refetch } = useContacts(integrationId);
 
-  // Filtrar contactos basado en la búsqueda
+  // Filtrar contactos basado en la búsqueda y estado de archivado
   const filteredContacts = useMemo(() => {
     // Asegurar que contacts siempre sea un array
     const contactsArray = Array.isArray(contacts) ? contacts : [];
     
-    if (!searchQuery.trim()) return contactsArray;
+    // Filtrar por estado de archivado
+    const filteredByArchive = contactsArray.filter((contact: any) => {
+      if (showArchived) {
+        return contact.status === "archived";
+      } else {
+        return contact.status !== "archived"; // Mostrar contactos no archivados (incluye "active" y undefined)
+      }
+    });
     
-    return contactsArray.filter((contact: any) => 
+    // Filtrar por búsqueda
+    if (!searchQuery.trim()) return filteredByArchive;
+    
+    return filteredByArchive.filter((contact: any) => 
       contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [contacts, searchQuery]);
+  }, [contacts, searchQuery, showArchived]);
 
   // Manejo de errores mejorado
   const handleError = (error: any, context: string) => {
@@ -47,26 +58,36 @@ export default function ContactsPage() {
   };
 
 
-  async function handleDeleteContact(id: string) {
+  async function handleArchiveContact(id: string) {
     if (!token) {
       showError("Error", "No tienes permisos para realizar esta acción");
       return;
     }
 
-    if (!confirm('¿Estás seguro de que quieres eliminar este contacto?')) {
-      return;
-    }
-
-    setIsDeleting(id);
+    setIsArchiving(id);
     try {
-      await deleteContact(id, token);
-      showSuccess("Contacto eliminado", "Contacto eliminado exitosamente");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/contacts/${id}/archive`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ archived: true })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      showSuccess("Contacto archivado", result.message || "Contacto archivado exitosamente. Puedes recuperarlo más tarde.");
       refreshContacts();
       refetch();
     } catch (error) {
-      handleError(error, 'eliminar contacto');
+      handleError(error, 'archivar contacto');
     } finally {
-      setIsDeleting(null);
+      setIsArchiving(null);
     }
   }
 
@@ -75,6 +96,11 @@ export default function ContactsPage() {
       refreshContacts();
       refetch();
     });
+  }
+
+  function handleMessageContact(contact: any) {
+    // Abrir inbox con este contacto específico
+    window.location.href = `/dashboard/inbox?contact=${contact.id}`;
   }
 
   return (
@@ -90,6 +116,30 @@ export default function ContactsPage() {
           </div>
           
           <div className="flex gap-3">
+            {/* Tabs para contactos activos/archivados */}
+            <div className="flex bg-neutral-700 rounded-lg p-1">
+              <button
+                onClick={() => setShowArchived(false)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  !showArchived 
+                    ? "bg-neutral-600 text-white" 
+                    : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                Activos ({contacts.filter((c: any) => c.status !== "archived").length})
+              </button>
+              <button
+                onClick={() => setShowArchived(true)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  showArchived 
+                    ? "bg-neutral-600 text-white" 
+                    : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                Archivados ({contacts.filter((c: any) => c.status === "archived").length})
+              </button>
+            </div>
+
             <button
               onClick={handleSyncContacts}
               disabled={isSyncing}
@@ -203,8 +253,9 @@ export default function ContactsPage() {
               lastMessagePreview: c.lastMessagePreview,
               platformData: c.platformData,
             }))}
-            onDelete={handleDeleteContact}
-            isDeleting={isDeleting}
+            onArchive={handleArchiveContact}
+            onMessage={handleMessageContact}
+            isArchiving={isArchiving}
             loading={loading}
           />
         )}

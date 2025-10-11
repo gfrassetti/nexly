@@ -130,7 +130,7 @@ export default function SubscriptionSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
-        <Loader size="md" />
+        <Loader size="lg" />
       </div>
     }>
       <SubscriptionSuccessContent />

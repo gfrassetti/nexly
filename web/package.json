@@ -11,6 +11,7 @@
         "@auth/mongodb-adapter": "^3.10.0",
         "@emailjs/browser": "^4.4.1",
         "@formspree/react": "^3.0.0",
+        "@radix-ui/react-alert-dialog": "^1.1.15",
         "clsx": "^2.1.1",
         "framer-motion": "^12.23.18",
         "jsonwebtoken": "^9.0.2",
