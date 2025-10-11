@@ -11,7 +11,7 @@
         "@auth/mongodb-adapter": "^3.10.0",
         "@emailjs/browser": "^4.4.1",
         "@formspree/react": "^3.0.0",
-        "clsx": "2.1.1",
+        "clsx": "^2.1.1",
         "framer-motion": "^12.23.18",
         "jsonwebtoken": "^9.0.2",
         "lucide-react": "^0.544.0",
@@ -20,7 +20,9 @@
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "react-hot-toast": "^2.6.0",
+        "recharts": "^3.2.1",
         "swr": "2.2.5",
+        "tailwind-merge": "^3.3.1",
         "zustand": "4.5.2"
     },
     "devDependencies": {

@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useStats } from "@/hooks/useStats";
+import { useMessagesTimeline } from "@/hooks/useMessagesTimeline";
 import { Skeleton } from "@/components/ui/skeleton";
 import StatCard from "@/components/StatCard";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
+import { MessagesChart } from "@/components/MessagesChart";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -17,6 +19,9 @@ export default function DashboardPage() {
 
   // Obtener estadísticas reales desde el backend
   const { stats, loading: statsLoading, error: statsError } = useStats();
+  
+  // Obtener timeline de mensajes para el gráfico
+  const { data: messagesData, loading: messagesLoading } = useMessagesTimeline();
 
   // Show trial notification only if trial is active
   useEffect(() => {
@@ -197,6 +202,9 @@ export default function DashboardPage() {
             </>
           )}
         </div>
+
+        {/* Messages Activity Chart */}
+        <MessagesChart data={messagesData} loading={messagesLoading} />
 
         {/* Quick Actions */}
         <div className="bg-muted/30 border border-border rounded-lg p-6">

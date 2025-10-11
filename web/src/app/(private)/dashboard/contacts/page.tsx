@@ -27,9 +27,12 @@ export default function ContactsPage() {
 
   // Filtrar contactos basado en la búsqueda
   const filteredContacts = useMemo(() => {
-    if (!searchQuery.trim()) return contacts;
+    // Asegurar que contacts siempre sea un array
+    const contactsArray = Array.isArray(contacts) ? contacts : [];
     
-    return contacts.filter((contact: any) => 
+    if (!searchQuery.trim()) return contactsArray;
+    
+    return contactsArray.filter((contact: any) => 
       contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -161,9 +164,9 @@ export default function ContactsPage() {
 
         {/* Estadísticas */}
         <div className="flex items-center gap-6 mt-4 text-sm text-neutral-400">
-          <span>Total: {contacts.length} contactos</span>
+          <span>Total: {Array.isArray(contacts) ? contacts.length : 0} contactos</span>
           {searchQuery && (
-            <span>Filtrados: {filteredContacts.length} resultados</span>
+            <span>Filtrados: {Array.isArray(filteredContacts) ? filteredContacts.length : 0} resultados</span>
           )}
         </div>
       </div>

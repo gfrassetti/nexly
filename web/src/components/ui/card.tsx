@@ -26,7 +26,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     <div
       ref={ref}
       className={clsx(
-        "rounded-lg border bg-card text-card-foreground shadow-sm",
+        "rounded-lg border bg-card text-card-foreground shadow-sm h-fit sm:h-[38rem]",
         className
       )}
       {...props}
@@ -87,3 +87,20 @@ export const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
   )
 );
 CardContent.displayName = "CardContent";
+
+interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
+export const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
+  ({ className, children, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={clsx("flex items-center p-6 pt-0", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+);
+CardFooter.displayName = "CardFooter";

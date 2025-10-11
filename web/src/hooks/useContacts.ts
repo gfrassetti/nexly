@@ -24,7 +24,15 @@ export function useContacts(integrationId: string) {
     setError(null);
 
     try {
-      const data = await getContacts(token);
+      const response = await getContacts(token);
+      
+      // Asegurarse de que tenemos un array
+      let data = Array.isArray(response) ? response : [];
+      
+      // Si la respuesta tiene un campo 'data', usarlo
+      if (!Array.isArray(response) && response?.data) {
+        data = Array.isArray(response.data) ? response.data : [];
+      }
       
       // Filtrar por provider si no es "all"
       const filtered = integrationId && integrationId !== "all"
@@ -37,6 +45,7 @@ export function useContacts(integrationId: string) {
                           err?.message || 
                           "No se pudieron cargar los contactos";
       setError(errorMessage);
+      setItems([]); // Asegurar que items sea un array vacío en caso de error
     } finally {
       setLoading(false);
     }

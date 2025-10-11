@@ -33,8 +33,7 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
       logger.info('Stats served from cache', { userId });
       return res.status(200).json({
         success: true,
-        data: cachedStats,
-        cached: true
+        data: cachedStats
       });
     }
 
@@ -80,8 +79,7 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({
       success: true,
-      data: stats,
-      cached: false
+      data: stats
     });
 
   } catch (error: unknown) {
@@ -223,6 +221,115 @@ router.get('/dashboard-stats', async (req: AuthRequest, res: Response) => {
 
   } catch (error: unknown) {
     logger.error('Error obteniendo estadísticas del dashboard', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * GET /analytics/messages-timeline
+ * Obtener estadísticas de mensajes por día (últimos 7 días)
+ */
+router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Obteniendo timeline de mensajes', { userId });
+
+    // Calcular fecha de hace 7 días
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    // Agregar mensajes por día y dirección
+    const messagesTimeline = await Message.aggregate([
+      {
+        $match: {
+          userId: new Types.ObjectId(userId),
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            direction: "$direction"
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.date": 1 }
+      }
+    ]);
+
+    // Formatear datos para el gráfico
+    const dateMap = new Map<string, { date: string; sent: number; received: number }>();
+    
+    // Inicializar todos los días de los últimos 7 días
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      dateMap.set(dateStr, {
+        date: dateStr,
+        sent: 0,
+        received: 0
+      });
+    }
+
+    // Llenar con datos reales
+    messagesTimeline.forEach((item: any) => {
+      const dateStr = item._id.date;
+      const direction = item._id.direction;
+      const count = item.count;
+
+      if (dateMap.has(dateStr)) {
+        const entry = dateMap.get(dateStr)!;
+        if (direction === 'out') {
+          entry.sent = count;
+        } else if (direction === 'in') {
+          entry.received = count;
+        }
+      }
+    });
+
+    // Convertir a array y formatear fechas
+    const formattedData = Array.from(dateMap.values()).map(item => ({
+      date: new Date(item.date).toLocaleDateString('es-ES', { 
+        month: 'short', 
+        day: 'numeric' 
+      }),
+      sent: item.sent,
+      received: item.received
+    }));
+
+    logger.info('Timeline de mensajes calculado', { 
+      userId, 
+      dataPoints: formattedData.length 
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedData
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error obteniendo timeline de mensajes', {
       userId: req.user?.id || req.user?._id,
       error: error instanceof Error ? error.message : 'Error desconocido'
     });

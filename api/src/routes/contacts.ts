@@ -35,10 +35,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         integrationId,
         count: cachedContacts.length 
       });
-      return res.json({
-        data: cachedContacts,
-        cached: true
-      });
+      return res.json(cachedContacts);
     }
 
     // 📊 DB: Consultar desde la base de datos
@@ -56,10 +53,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       count: contacts.length 
     });
 
-    return res.json({
-      data: contacts ?? [],
-      cached: false
-    });
+    return res.json(contacts ?? []);
   } catch (err: any) {
     logger.error("contacts_list_failed:", err?.message || err);
     return res.status(500).json({ error: "contacts_list_failed", detail: err?.message });
