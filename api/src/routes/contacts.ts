@@ -35,7 +35,9 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     if (archived) {
       // Obtener contactos archivados
       const filter: any = { userId: buildUserIdFilter(rawUserId) };
-      if (integrationId) filter.integrationId = integrationId;
+      if (integrationId && integrationId !== "all") {
+        filter.integrationId = integrationId;
+      }
 
       const archivedContacts = await Archive.find(filter).lean();
       
@@ -83,7 +85,9 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     // 📊 DB: Consultar desde la base de datos (solo contactos activos)
     const filter: any = { userId: buildUserIdFilter(rawUserId) };
-    if (integrationId) filter.integrationId = integrationId;
+    if (integrationId && integrationId !== "all") {
+      filter.integrationId = integrationId;
+    }
 
     const contacts = await Contact.find(filter).lean();
     
@@ -318,6 +322,96 @@ router.post("/sync/:integrationId", async (req: AuthRequest, res: Response) => {
       error: "contacts_sync_integration_failed", 
       detail: err?.message 
     });
+  }
+});
+
+// Archivar/desarchivar contacto
+router.patch("/:contactId/archive", async (req: AuthRequest, res: Response) => {
+  try {
+    const rawUserId = req.user?.id || req.user?._id;
+    if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
+
+    const { contactId } = req.params;
+    const { archived } = req.body;
+
+    if (typeof archived !== 'boolean') {
+      return res.status(400).json({ error: "archived parameter must be boolean" });
+    }
+
+    const userId = buildUserIdFilter(rawUserId);
+
+    if (archived) {
+      // Archivar contacto
+      const contact = await Contact.findOne({ _id: contactId, userId });
+      if (!contact) {
+        return res.status(404).json({ error: "contact_not_found" });
+      }
+
+      // Verificar si ya está archivado
+      const existingArchive = await Archive.findOne({ contactId, userId });
+      if (existingArchive) {
+        return res.status(400).json({ error: "contact_already_archived" });
+      }
+
+      // Crear entrada en Archive
+      await Archive.create({
+        contactId,
+        userId,
+        integrationId: contact.integrationId,
+        provider: contact.provider,
+        contactSnapshot: {
+          name: contact.name,
+          phone: contact.phone,
+          email: contact.email,
+          externalId: contact.externalId,
+          avatar: contact.avatar,
+          profilePicture: contact.profilePicture,
+          platformData: contact.platformData,
+          lastInteraction: contact.lastInteraction,
+          lastMessagePreview: contact.lastMessagePreview,
+          unreadCount: contact.unreadCount,
+          tags: contact.tags,
+          notes: contact.notes,
+          isFavorite: contact.isFavorite,
+          isBlocked: contact.isBlocked,
+          status: contact.status
+        }
+      });
+
+      // Eliminar de Contact
+      await Contact.deleteOne({ _id: contactId, userId });
+
+      logger.info('Contact archived', { contactId, userId, provider: contact.provider });
+      res.json({ message: "Contacto archivado exitosamente" });
+    } else {
+      // Desarchivar contacto
+      const archive = await Archive.findOne({ contactId, userId });
+      if (!archive) {
+        return res.status(404).json({ error: "archived_contact_not_found" });
+      }
+
+      // Restaurar contacto
+      await Contact.create({
+        _id: contactId,
+        userId: archive.userId,
+        integrationId: archive.integrationId,
+        provider: archive.provider,
+        ...archive.contactSnapshot
+      });
+
+      // Eliminar de Archive
+      await Archive.deleteOne({ _id: archive._id });
+
+      logger.info('Contact unarchived', { contactId, userId, provider: archive.provider });
+      res.json({ message: "Contacto recuperado exitosamente" });
+    }
+
+    // Invalidar cache
+    await cacheService.invalidateUserCache(rawUserId);
+
+  } catch (err: any) {
+    logger.error("archive_contact_failed:", err?.message || err);
+    return res.status(500).json({ error: "archive_contact_failed", detail: err?.message });
   }
 });
 

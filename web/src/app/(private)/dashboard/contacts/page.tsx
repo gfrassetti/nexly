@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useContacts } from "@/hooks/useContacts";
+import { useContactCounts } from "@/hooks/useContactCounts";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import ContactList, { ContactItem } from "@/components/ContactList";
 import { deleteContact } from "@/lib/api";
@@ -25,6 +26,7 @@ export default function ContactsPage() {
   const { syncAll, isSyncing, syncProgress } = useSyncContacts();
 
   const { items: contacts, loading, error, refetch } = useContacts(integrationId, showArchived);
+  const { counts, refetch: refetchCounts } = useContactCounts(integrationId);
 
   // Filtrar contactos basado en la búsqueda (el filtrado por archivado se hace en el backend)
   const filteredContacts = useMemo(() => {
@@ -71,10 +73,11 @@ export default function ContactsPage() {
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      showSuccess("Contacto archivado", result.message || "Contacto archivado exitosamente. Puedes recuperarlo más tarde.");
-      refreshContacts();
-      refetch();
+       const result = await response.json();
+       showSuccess("Contacto archivado", result.message || "Contacto archivado exitosamente. Puedes recuperarlo más tarde.");
+       refreshContacts();
+       refetch();
+       refetchCounts();
     } catch (error) {
       handleError(error, 'archivar contacto');
     } finally {
@@ -104,10 +107,11 @@ export default function ContactsPage() {
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      showSuccess("Contacto recuperado", result.message || "Contacto recuperado exitosamente.");
-      refreshContacts();
-      refetch();
+       const result = await response.json();
+       showSuccess("Contacto recuperado", result.message || "Contacto recuperado exitosamente.");
+       refreshContacts();
+       refetch();
+       refetchCounts();
     } catch (error) {
       handleError(error, 'recuperar contacto');
     } finally {
@@ -140,29 +144,29 @@ export default function ContactsPage() {
           </div>
           
           <div className="flex gap-3">
-            {/* Tabs para contactos activos/archivados */}
-            <div className="flex bg-neutral-700 rounded-lg p-1">
-              <button
-                onClick={() => setShowArchived(false)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  !showArchived 
-                    ? "bg-neutral-600 text-white" 
-                    : "text-neutral-300 hover:text-white"
-                }`}
-              >
-                Activos ({showArchived ? 0 : contacts.length})
-              </button>
-              <button
-                onClick={() => setShowArchived(true)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  showArchived 
-                    ? "bg-neutral-600 text-white" 
-                    : "text-neutral-300 hover:text-white"
-                }`}
-              >
-                📦 Archivados ({showArchived ? contacts.length : 0})
-              </button>
-            </div>
+             {/* Tabs para contactos activos/archivados */}
+             <div className="flex bg-neutral-700 rounded-lg p-1">
+               <button
+                 onClick={() => setShowArchived(false)}
+                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                   !showArchived 
+                     ? "bg-neutral-600 text-white" 
+                     : "text-neutral-300 hover:text-white"
+                 }`}
+               >
+                 Activos ({counts.active})
+               </button>
+               <button
+                 onClick={() => setShowArchived(true)}
+                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                   showArchived 
+                     ? "bg-neutral-600 text-white" 
+                     : "text-neutral-300 hover:text-white"
+                 }`}
+               >
+                 📦 Archivados ({counts.archived})
+               </button>
+             </div>
 
             <button
               onClick={handleSyncContacts}
@@ -238,7 +242,12 @@ export default function ContactsPage() {
 
         {/* Estadísticas */}
         <div className="flex items-center gap-6 mt-4 text-sm text-neutral-400">
-          <span>Total: {Array.isArray(contacts) ? contacts.length : 0} contactos</span>
+          <span>
+            {showArchived 
+              ? `Archivados: ${Array.isArray(contacts) ? contacts.length : 0} contactos`
+              : `Activos: ${Array.isArray(contacts) ? contacts.length : 0} contactos`
+            }
+          </span>
           {searchQuery && (
             <span>Filtrados: {Array.isArray(filteredContacts) ? filteredContacts.length : 0} resultados</span>
           )}
