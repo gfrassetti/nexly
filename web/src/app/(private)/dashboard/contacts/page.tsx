@@ -24,31 +24,22 @@ export default function ContactsPage() {
   const { showSuccess, showError } = useNotificationHelpers();
   const { syncAll, isSyncing, syncProgress } = useSyncContacts();
 
-  const { items: contacts, loading, error, refetch } = useContacts(integrationId);
+  const { items: contacts, loading, error, refetch } = useContacts(integrationId, showArchived);
 
-  // Filtrar contactos basado en la búsqueda y estado de archivado
+  // Filtrar contactos basado en la búsqueda (el filtrado por archivado se hace en el backend)
   const filteredContacts = useMemo(() => {
     // Asegurar que contacts siempre sea un array
     const contactsArray = Array.isArray(contacts) ? contacts : [];
     
-    // Filtrar por estado de archivado
-    const filteredByArchive = contactsArray.filter((contact: any) => {
-      if (showArchived) {
-        return contact.status === "archived";
-      } else {
-        return contact.status !== "archived"; // Mostrar contactos no archivados (incluye "active" y undefined)
-      }
-    });
-    
     // Filtrar por búsqueda
-    if (!searchQuery.trim()) return filteredByArchive;
+    if (!searchQuery.trim()) return contactsArray;
     
-    return filteredByArchive.filter((contact: any) => 
+    return contactsArray.filter((contact: any) => 
       contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [contacts, searchQuery, showArchived]);
+  }, [contacts, searchQuery]);
 
   // Manejo de errores mejorado
   const handleError = (error: any, context: string) => {
@@ -91,6 +82,39 @@ export default function ContactsPage() {
     }
   }
 
+  async function handleUnarchiveContact(id: string) {
+    if (!token) {
+      showError("Error", "No tienes permisos para realizar esta acción");
+      return;
+    }
+
+    setIsArchiving(id);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/contacts/${id}/archive`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ archived: false })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      showSuccess("Contacto recuperado", result.message || "Contacto recuperado exitosamente.");
+      refreshContacts();
+      refetch();
+    } catch (error) {
+      handleError(error, 'recuperar contacto');
+    } finally {
+      setIsArchiving(null);
+    }
+  }
+
   async function handleSyncContacts() {
     await syncAll(() => {
       refreshContacts();
@@ -126,7 +150,7 @@ export default function ContactsPage() {
                     : "text-neutral-300 hover:text-white"
                 }`}
               >
-                Activos ({contacts.filter((c: any) => c.status !== "archived").length})
+                Activos ({showArchived ? 0 : contacts.length})
               </button>
               <button
                 onClick={() => setShowArchived(true)}
@@ -136,7 +160,7 @@ export default function ContactsPage() {
                     : "text-neutral-300 hover:text-white"
                 }`}
               >
-                Archivados ({contacts.filter((c: any) => c.status === "archived").length})
+                📦 Archivados ({showArchived ? contacts.length : 0})
               </button>
             </div>
 
@@ -254,9 +278,11 @@ export default function ContactsPage() {
               platformData: c.platformData,
             }))}
             onArchive={handleArchiveContact}
+            onUnarchive={handleUnarchiveContact}
             onMessage={handleMessageContact}
             isArchiving={isArchiving}
             loading={loading}
+            showArchived={showArchived}
           />
         )}
       </div>

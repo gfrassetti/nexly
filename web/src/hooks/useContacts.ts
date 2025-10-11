@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { getContacts } from "@/lib/api";
 
-export function useContacts(integrationId: string) {
+export function useContacts(integrationId: string, showArchived: boolean = false) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,22 +23,30 @@ export function useContacts(integrationId: string) {
     setError(null);
 
     try {
-      const response = await getContacts(token);
-      
-      // Asegurarse de que tenemos un array
-      let data = Array.isArray(response) ? response : [];
-      
-      // Si la respuesta tiene un campo 'data', usarlo
-      if (!Array.isArray(response) && response?.data) {
-        data = Array.isArray(response.data) ? response.data : [];
+      // Construir URL con parámetros
+      const params = new URLSearchParams();
+      if (integrationId && integrationId !== "all") {
+        params.set("integrationId", integrationId);
+      }
+      if (showArchived) {
+        params.set("archived", "true");
       }
       
-      // Filtrar por provider si no es "all"
-      const filtered = integrationId && integrationId !== "all"
-        ? data.filter((c: any) => c.provider === integrationId)
-        : data;
+      const url = `/contacts${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
-      setItems(filtered);
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Asegurarse de que tenemos un array
+      let contacts = Array.isArray(data) ? data : [];
+      
+      setItems(contacts);
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || 
                           err?.message || 
@@ -49,7 +56,7 @@ export function useContacts(integrationId: string) {
     } finally {
       setLoading(false);
     }
-  }, [integrationId, token]);
+  }, [integrationId, token, showArchived]);
 
   useEffect(() => {
     fetchContacts();

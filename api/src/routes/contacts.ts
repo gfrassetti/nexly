@@ -1,8 +1,9 @@
 import { Router, Request, Response } from "express";
 import mongoose from "mongoose";
-import handleAuth from "../middleware/auth";
+import requireAuth from "../middleware/auth";
 import { Contact } from "../models/Contact";
 import { Integration } from "../models/Integration";
+import { Archive } from "../models/Archive";
 import { contactSyncService } from "../services/contactSyncService";
 import { cacheService } from "../services/cacheService";
 import logger from "../utils/logger";
@@ -10,9 +11,12 @@ import logger from "../utils/logger";
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
 const router = Router();
-router.use(handleAuth);
+router.use(requireAuth);
 
-function buildUserIdFilter(rawUserId: string) {
+function buildUserIdFilter(rawUserId: string | null | undefined) {
+  if (!rawUserId) {
+    throw new Error("User ID is required");
+  }
   if (mongoose.isValidObjectId(rawUserId)) {
     return new mongoose.Types.ObjectId(rawUserId);
   }
@@ -26,8 +30,47 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
 
     const integrationId = req.query.integrationId as string | undefined;
+    const archived = req.query.archived === 'true';
     
-    // 🚀 CACHE: Intentar obtener desde Redis primero
+    if (archived) {
+      // Obtener contactos archivados
+      const filter: any = { userId: buildUserIdFilter(rawUserId) };
+      if (integrationId) filter.integrationId = integrationId;
+
+      const archivedContacts = await Archive.find(filter).lean();
+      
+      // Transformar datos del Archive al formato de Contact
+      const contacts = archivedContacts.map(archive => ({
+        _id: archive.contactId,
+        userId: archive.userId,
+        integrationId: archive.integrationId,
+        provider: archive.provider,
+        name: archive.contactSnapshot?.name || '',
+        phone: archive.contactSnapshot?.phone || '',
+        email: archive.contactSnapshot?.email || '',
+        avatar: archive.contactSnapshot?.avatar || '',
+        profilePicture: archive.contactSnapshot?.profilePicture || '',
+        platformData: archive.contactSnapshot?.platformData || {},
+        archivedAt: archive.archivedAt,
+        archivedBy: archive.archivedBy,
+        reason: archive.reason,
+        notes: archive.notes,
+        tags: archive.tags,
+        status: "archived",
+        createdAt: archive.createdAt,
+        updatedAt: archive.updatedAt
+      }));
+
+      logger.info('Archived contacts fetched', { 
+        userId: rawUserId, 
+        integrationId,
+        count: contacts.length 
+      });
+
+      return res.json(contacts);
+    }
+
+    // 🚀 CACHE: Intentar obtener desde Redis primero (solo para contactos activos)
     const cachedContacts = await cacheService.getContacts(rawUserId, integrationId);
     if (cachedContacts) {
       logger.info('Contacts served from cache', { 
@@ -38,7 +81,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       return res.json(cachedContacts);
     }
 
-    // 📊 DB: Consultar desde la base de datos
+    // 📊 DB: Consultar desde la base de datos (solo contactos activos)
     const filter: any = { userId: buildUserIdFilter(rawUserId) };
     if (integrationId) filter.integrationId = integrationId;
 
@@ -86,34 +129,95 @@ router.patch("/:id/archive", async (req: AuthRequest, res: Response) => {
     if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
 
     const { archived = true } = req.body;
-    const newStatus = archived ? "archived" : "active";
 
-    const contact = await Contact.findOneAndUpdate(
-      {
+    if (archived) {
+      // ARCHIVAR: Crear entrada en Archive y eliminar de Contact
+      const contact = await Contact.findOne({
         _id: req.params.id,
         userId: buildUserIdFilter(rawUserId),
-      },
-      { status: newStatus },
-      { new: true }
-    );
+      });
 
-    if (!contact) return res.status(404).json({ error: "not_found" });
+      if (!contact) return res.status(404).json({ error: "not_found" });
+
+      // Crear snapshot del contacto en Archive
+      const archiveEntry = new Archive({
+        userId: buildUserIdFilter(rawUserId),
+        contactId: contact._id,
+        integrationId: contact.integrationId,
+        provider: contact.provider,
+        contactSnapshot: {
+          name: contact.name,
+          phone: contact.phone,
+          email: contact.email,
+          avatar: contact.avatar,
+          profilePicture: contact.profilePicture,
+          platformData: contact.platformData
+        },
+        archivedBy: "user",
+        reason: "manual"
+      });
+
+      await archiveEntry.save();
+
+      // Eliminar de Contact
+      await Contact.findByIdAndDelete(contact._id);
+
+      logger.info('Contact archived', { 
+        userId: rawUserId, 
+        contactId: req.params.id,
+        archiveId: archiveEntry._id
+      });
+
+      return res.json({ 
+        success: true, 
+        message: "Contacto archivado exitosamente",
+        archiveId: archiveEntry._id
+      });
+
+    } else {
+      // DESARCHIVAR: Restaurar desde Archive a Contact
+      const archiveEntry = await Archive.findOne({
+        contactId: req.params.id,
+        userId: buildUserIdFilter(rawUserId),
+      });
+
+      if (!archiveEntry) return res.status(404).json({ error: "not_found" });
+
+      // Restaurar contacto
+      const restoredContact = new Contact({
+        userId: archiveEntry.userId,
+        integrationId: archiveEntry.integrationId,
+        provider: archiveEntry.provider,
+        name: archiveEntry.contactSnapshot?.name || '',
+        phone: archiveEntry.contactSnapshot?.phone || '',
+        email: archiveEntry.contactSnapshot?.email || '',
+        avatar: archiveEntry.contactSnapshot?.avatar || '',
+        profilePicture: archiveEntry.contactSnapshot?.profilePicture || '',
+        platformData: archiveEntry.contactSnapshot?.platformData || {},
+        status: "active"
+      });
+
+      await restoredContact.save();
+
+      // Eliminar de Archive
+      await Archive.findByIdAndDelete(archiveEntry._id);
+
+      logger.info('Contact unarchived', { 
+        userId: rawUserId, 
+        contactId: req.params.id,
+        restoredContactId: restoredContact._id
+      });
+
+      return res.json({ 
+        success: true, 
+        message: "Contacto desarchivado exitosamente",
+        contact: restoredContact
+      });
+    }
 
     // Limpiar cache
-    await cacheService.clearContacts(rawUserId);
-    await cacheService.clearContacts(rawUserId, contact.integrationId);
+    await cacheService.clearContacts(rawUserId || '');
 
-    logger.info('Contact archived/unarchived', { 
-      userId: rawUserId, 
-      contactId: req.params.id,
-      status: newStatus 
-    });
-
-    return res.json({ 
-      success: true, 
-      message: archived ? "Contacto archivado" : "Contacto desarchivado",
-      contact 
-    });
   } catch (err: any) {
     logger.error("contacts_archive_failed:", err?.message || err);
     return res.status(500).json({ error: "contacts_archive_failed", detail: err?.message });

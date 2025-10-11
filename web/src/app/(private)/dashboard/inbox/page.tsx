@@ -109,24 +109,64 @@ export default function InboxPage() {
   // Auto-seleccionar integración y conversación cuando hay contactId
   useEffect(() => {
     if (contactId && contactData && conversationsData) {
+      console.log("Auto-selecting conversation for contact:", {
+        contactId,
+        contactData,
+        conversationsCount: conversationsData.conversations?.length || 0
+      });
+
       // 1. Auto-seleccionar la integración correcta basada en el contacto
-      const contactProvider = contactData.provider || contactData.integrationId;
+      const contactProvider = contactData.provider;
       if (contactProvider && CHANNELS.includes(contactProvider)) {
         setChannel(contactProvider);
+        console.log("Set channel to:", contactProvider);
       }
 
       // 2. Buscar y seleccionar la conversación correspondiente al contacto
       const conversations = conversationsData.conversations || [];
+      console.log("Available conversations:", conversations.map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        contactId: c.contactId,
+        contactPhone: c.contactPhone,
+        telegramUsername: c.telegramUsername
+      })));
+
+      // Buscar por múltiples criterios
       const matchingConversation = conversations.find((conv: any) => {
-        // Buscar por diferentes campos que puedan coincidir
-        return conv.id === contactId || 
-               conv.contactId === contactId ||
-               conv.contactPhone === contactData.phone ||
-               conv.telegramUsername === contactData.telegramUsername;
+        // 1. ID directo del contacto
+        if (conv.id === contactId || conv.contactId === contactId) {
+          console.log("Found by ID match:", conv.id);
+          return true;
+        }
+
+        // 2. Por teléfono
+        if (contactData.phone && conv.contactPhone === contactData.phone) {
+          console.log("Found by phone match:", conv.contactPhone);
+          return true;
+        }
+
+        // 3. Por username de Telegram
+        if (contactData.platformData?.telegramUsername && 
+            conv.telegramUsername === contactData.platformData.telegramUsername) {
+          console.log("Found by Telegram username:", conv.telegramUsername);
+          return true;
+        }
+
+        // 4. Por nombre (como último recurso)
+        if (contactData.name && conv.title?.toLowerCase().includes(contactData.name.toLowerCase())) {
+          console.log("Found by name match:", conv.title);
+          return true;
+        }
+
+        return false;
       });
 
       if (matchingConversation) {
+        console.log("Auto-selecting conversation:", matchingConversation.id);
         setActiveId(matchingConversation.id);
+      } else {
+        console.log("No matching conversation found");
       }
     }
   }, [contactId, contactData, conversationsData]);

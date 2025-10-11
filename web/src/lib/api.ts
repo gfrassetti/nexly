@@ -188,6 +188,20 @@ export function getMessages(params: { contactId?: string; provider?: Provider; i
   return apiFetch<any[]>(`/messages${suffix}`);
 }
 
+/**
+ * Obtener timeline de mensajes de los últimos 7 días
+ */
+export function getMessagesTimeline(token?: string) {
+  return apiFetch<{
+    success: boolean;
+    data: Array<{
+      date: string;
+      sent: number;
+      received: number;
+    }>;
+  }>("/analytics/messages-timeline", { method: "GET" }, token);
+}
+
 export function sendMessageApi(body: {
   provider: Provider;
   to?: string;

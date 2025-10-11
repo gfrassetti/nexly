@@ -28,7 +28,7 @@ export function useMessagesTimeline(): UseMessagesTimelineReturn {
         throw new Error('No authentication token found');
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       const response = await fetch(`${apiUrl}/analytics/messages-timeline`, {
         headers: {
           'Authorization': `Bearer ${token}`,
