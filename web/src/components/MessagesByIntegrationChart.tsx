@@ -22,19 +22,19 @@ import { Skeleton } from "@/components/ui/skeleton"
 const chartConfig = {
   whatsapp: {
     label: "WhatsApp",
-    color: "#25D366", // Verde de WhatsApp
+    color: "#22c55e", // Nexly green
   },
   telegram: {
     label: "Telegram",
-    color: "#0088cc", // Azul de Telegram
+    color: "#14b8a6", // Nexly teal
   },
   instagram: {
     label: "Instagram",
-    color: "#E4405F", // Rosa de Instagram
+    color: "#f97316", // Orange
   },
   messenger: {
     label: "Messenger",
-    color: "#0084FF", // Azul de Messenger
+    color: "#3b82f6", // Blue
   },
 } satisfies ChartConfig
 
@@ -97,16 +97,18 @@ export function MessagesByIntegrationChart({ data = [], loading = false }: Messa
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-[15rem] w-full">
           <LineChart
             accessibilityLayer
             data={data}
             margin={{
-              left: 12,
-              right: 12,
+              left: 0,
+              right: 0,
+              top: 12,
+              bottom: 12,
             }}
           >
-            <CartesianGrid vertical={false} />
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -164,9 +166,14 @@ export function MessagesByIntegrationChart({ data = [], loading = false }: Messa
                 </div>
               </>
             ) : (
-              <div className="text-muted-foreground leading-none">
-                No hay mensajes registrados aún
-              </div>
+              <>
+                <div className="text-muted-foreground leading-none">
+                  No hay mensajes registrados aún
+                </div>
+                <div className="text-muted-foreground text-xs leading-none">
+                  {dateRange}
+                </div>
+              </>
             )}
           </div>
         </div>

@@ -22,11 +22,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 const chartConfig = {
   received: {
     label: "Recibidos",
-    color: "hsl(var(--chart-1))",
+    color: "#14b8a6", // Nexly teal
   },
   sent: {
     label: "Enviados",
-    color: "hsl(var(--chart-2))",
+    color: "#22c55e", // Nexly green
   },
 } satisfies ChartConfig
 
@@ -77,13 +77,13 @@ export function MessagesChart({ data = [], loading = false }: MessagesChartProps
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-[15rem] w-full">
           <AreaChart
             accessibilityLayer
             data={data}
             margin={{
-              left: 12,
-              right: 12,
+              left: 0,
+              right: 0,
             }}
           >
             <CartesianGrid vertical={false} />

@@ -26,7 +26,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     <div
       ref={ref}
       className={clsx(
-        "rounded-lg border bg-card text-card-foreground shadow-sm h-fit sm:h-[38rem]",
+        "rounded-lg border bg-card text-card-foreground shadow-sm h-fit sm:h-auto",
         className
       )}
       {...props}

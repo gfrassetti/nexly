@@ -27,7 +27,9 @@ export function useMessagesByIntegration(): UseMessagesByIntegrationReturn {
 
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No authentication token found');
+        setLoading(false);
+        setError('No authentication token found');
+        return;
       }
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -44,17 +46,12 @@ export function useMessagesByIntegration(): UseMessagesByIntegrationReturn {
 
       const result = await response.json();
       
-      console.log('📊 Messages by Integration Response:', {
-        success: result.success,
-        dataLength: result.data?.length,
-        data: result.data
-      });
-      
       if (result.success && result.data) {
         setData(result.data);
+        console.log('✅ Using real data from API');
       } else {
-        console.error('❌ Invalid response format:', result);
-        throw new Error('Invalid response format');
+        console.log('📊 No data available from API');
+        setData([]);
       }
     } catch (err) {
       console.error('Error fetching messages by integration:', err);

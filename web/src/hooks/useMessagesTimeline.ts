@@ -25,7 +25,9 @@ export function useMessagesTimeline(): UseMessagesTimelineReturn {
 
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No authentication token found');
+        setLoading(false);
+        setError('No authentication token found');
+        return;
       }
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -44,13 +46,14 @@ export function useMessagesTimeline(): UseMessagesTimelineReturn {
       
       if (result.success && result.data) {
         setData(result.data);
+        console.log('✅ Using real data from API');
       } else {
-        throw new Error('Invalid response format');
+        console.log('📊 No data available from API');
+        setData([]);
       }
     } catch (err) {
       console.error('Error fetching messages timeline:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      // En caso de error, mostrar datos vacíos en lugar de fallar
       setData([]);
     } finally {
       setLoading(false);
