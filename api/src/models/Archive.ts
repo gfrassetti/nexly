@@ -3,7 +3,10 @@ import { Schema, model } from "mongoose";
 const archiveSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    contactId: { type: Schema.Types.ObjectId, ref: "Contact", required: true },
+    // Puede ser ObjectId (para contactos en DB) o String (para IDs de plataforma como Telegram)
+    contactId: { type: Schema.Types.Mixed, required: true },
+    // Para facilitar búsquedas, guardamos también el ID como string
+    contactIdString: { type: String, required: true },
     integrationId: { type: String, required: true },
     provider: { 
       type: String, 
@@ -43,7 +46,7 @@ const archiveSchema = new Schema(
 );
 
 // Índices para búsqueda rápida
-archiveSchema.index({ userId: 1, contactId: 1 }, { unique: true });
+archiveSchema.index({ userId: 1, contactIdString: 1 }, { unique: true });
 archiveSchema.index({ userId: 1, provider: 1 });
 archiveSchema.index({ userId: 1, integrationId: 1 });
 archiveSchema.index({ userId: 1, archivedAt: -1 });

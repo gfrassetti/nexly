@@ -40,17 +40,6 @@ export default function Loader({
     <div className={`flex flex-col items-center justify-center gap-4 ${className}`}>
       {/* Spinner con logo de Nexly */}
       <div className="relative">
-        {/* Círculo de fondo con gradiente */}
-        <div 
-          className={`
-            ${sizeClasses[size]}
-            rounded-full
-            bg-gradient-to-br from-neutral-800 to-neutral-900
-            absolute inset-0
-            shadow-xl
-          `}
-        />
-        
         {/* Spinner giratorio con colores Nexly */}
         <div 
           className={`
@@ -63,7 +52,6 @@ export default function Loader({
             animate-spin
             shadow-2xl
             shadow-nexly-green/30
-            relative
           `}
           style={{ 
             animationDuration: '1s',

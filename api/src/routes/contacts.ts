@@ -34,6 +34,18 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     // 🚀 TELEGRAM: Si es Telegram, usar la misma lógica que inbox
     if (integrationId === 'telegram') {
+      // Intentar obtener desde cache primero (solo para contactos no archivados)
+      if (!archived) {
+        const cachedTelegramContacts = await cacheService.getContacts(rawUserId, 'telegram');
+        if (cachedTelegramContacts && cachedTelegramContacts.length > 0) {
+          logger.info('Telegram contacts served from cache', { 
+            userId: rawUserId, 
+            count: cachedTelegramContacts.length 
+          });
+          return res.json(cachedTelegramContacts);
+        }
+      }
+
       logger.info('Fetching Telegram contacts via API (like inbox)', { userId: rawUserId });
       
       // Importar el servicio de Telegram
@@ -71,14 +83,23 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         return res.json([]);
       }
 
+      // Obtener lista de contactos archivados
+      const archivedContactIds = await Archive.find({
+        userId: new mongoose.Types.ObjectId(rawUserId as string),
+        provider: 'telegram'
+      }).distinct('contactIdString');
+
+      const archivedIdsSet = new Set(archivedContactIds.map(id => String(id)));
+
       // Mapear los chats a formato de contactos
       const telegramContacts = (result.chats || []).map((chat: any) => ({
         _id: chat.id,
+        id: String(chat.id), // Asegurar que sea string
         name: chat.title || chat.firstName || 'Sin nombre',
         provider: 'telegram',
         integrationId: session._id,
         userId: rawUserId,
-        isArchived: false, // Por ahora siempre false, ya que Telegram no tiene concepto de "archivado"
+        isArchived: archivedIdsSet.has(String(chat.id)),
         lastMessage: chat.lastMessage,
         unreadCount: chat.unreadCount || 0,
         avatar: chat.photo,
@@ -88,22 +109,23 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       }));
 
       // 🚀 FILTRAR por estado de archivado
-      // Para Telegram, si se piden archivados, devolver array vacío
-      // ya que Telegram no tiene concepto de contactos archivados
-      if (archived) {
-        logger.info('Telegram contacts: requested archived but Telegram has no archived concept', { 
-          userId: rawUserId, 
-          count: 0 
-        });
-        return res.json([]);
-      }
+      const filteredContacts = archived 
+        ? telegramContacts.filter((c: any) => c.isArchived)
+        : telegramContacts.filter((c: any) => !c.isArchived);
 
       logger.info('Telegram contacts fetched via API', { 
         userId: rawUserId, 
-        count: telegramContacts.length 
+        total: telegramContacts.length,
+        archived: telegramContacts.filter((c: any) => c.isArchived).length,
+        returned: filteredContacts.length
       });
 
-      return res.json(telegramContacts);
+      // Guardar en caché los contactos no archivados (TTL de 5 minutos para Telegram)
+      if (!archived && filteredContacts.length > 0) {
+        await cacheService.setContacts(rawUserId, filteredContacts, 300, 'telegram');
+      }
+
+      return res.json(filteredContacts);
     }
 
     // 🚀 CACHE: Intentar obtener desde Redis primero (solo para contactos activos)
@@ -166,15 +188,70 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
     const rawUserId = req.user?.id || req.user?._id;
     if (!rawUserId) return res.status(401).json({ error: "no_user_in_token" });
 
-    const contact = await Contact.findOne({
-      _id: req.params.id,
-      userId: buildUserIdFilter(rawUserId),
-    }).lean();
+    const contactId = req.params.id;
+    let contact;
+
+    // Intentar buscar por ObjectId si es válido
+    if (mongoose.isValidObjectId(contactId)) {
+      contact = await Contact.findOne({
+        _id: contactId,
+        userId: buildUserIdFilter(rawUserId),
+      }).lean();
+    }
+
+    // Si no se encontró o el ID no es ObjectId, buscar por teléfono o ID de plataforma
+    if (!contact) {
+      // Para Telegram, el ID puede ser el ID de chat de Telegram
+      // Buscar por teléfono (asumiendo que el ID podría ser un número de teléfono)
+      contact = await Contact.findOne({
+        userId: buildUserIdFilter(rawUserId),
+        $or: [
+          { phone: contactId },
+          { 'platformData.chatId': contactId },
+          { 'platformData.telegramId': contactId }
+        ]
+      }).lean();
+
+      // Si aún no se encuentra, podría ser un ID de Telegram directo
+      // En ese caso, construir un contacto virtual desde los datos de Telegram
+      if (!contact) {
+        logger.info('Contact not found in DB, checking if it\'s a Telegram contact', {
+          userId: rawUserId,
+          contactId
+        });
+
+        // Buscar si hay una sesión activa de Telegram
+        const { TelegramSession } = require('../models/TelegramSession');
+        const session = await TelegramSession.findOne({
+          userId: new mongoose.Types.ObjectId(rawUserId as string),
+          isActive: true,
+          authState: 'authenticated'
+        });
+
+        if (session) {
+          // Retornar un contacto virtual para Telegram
+          // El inbox intentará buscar la conversación directamente
+          return res.json({
+            _id: contactId,
+            id: contactId,
+            provider: 'telegram',
+            integrationId: session._id,
+            userId: rawUserId,
+            name: 'Contacto de Telegram',
+            phone: contactId,
+            platformData: {
+              telegramId: contactId,
+              chatId: contactId
+            }
+          });
+        }
+      }
+    }
 
     if (!contact) return res.status(404).json({ error: "not_found" });
     return res.json(contact);
   } catch (err: any) {
-    console.error("contacts_get_failed:", err?.message || err);
+    logger.error("contacts_get_failed:", { error: err?.message || err, contactId: req.params.id });
     return res.status(500).json({ error: "contacts_get_failed", detail: err?.message });
   }
 });
@@ -391,25 +468,101 @@ router.patch("/:contactId/archive", async (req: AuthRequest, res: Response) => {
     }
 
     const userId = buildUserIdFilter(rawUserId);
+    let contact;
+    let provider: string = 'unknown';
 
-    // Actualizar el campo isArchived directamente
-    const contact = await Contact.findOneAndUpdate(
-      { _id: contactId, userId },
-      { 
-        isArchived: archived,
-        status: archived ? "archived" : "active"
-      },
-      { new: true }
-    );
+    // Intentar buscar el contacto en MongoDB si es un ObjectId válido
+    if (mongoose.isValidObjectId(contactId)) {
+      contact = await Contact.findOneAndUpdate(
+        { _id: contactId, userId },
+        { 
+          isArchived: archived,
+          status: archived ? "archived" : "active"
+        },
+        { new: true }
+      );
+      
+      if (contact) {
+        provider = contact.provider || 'unknown';
+      }
+    }
 
+    // Si no se encontró en MongoDB, es probablemente un contacto de Telegram
     if (!contact) {
-      return res.status(404).json({ error: "contact_not_found" });
+      logger.info('Contact not in DB, handling as platform contact (e.g., Telegram)', {
+        contactId,
+        userId: rawUserId,
+        archived
+      });
+
+      // Para contactos de plataforma (Telegram), usamos el modelo Archive
+      if (archived) {
+        // Crear registro de archivo
+        // Primero, intentar obtener info del contacto desde Telegram
+        const { TelegramSession } = require('../models/TelegramSession');
+        const session = await TelegramSession.findOne({
+          userId: new mongoose.Types.ObjectId(rawUserId as string),
+          isActive: true,
+          authState: 'authenticated'
+        });
+
+        if (session) {
+          provider = 'telegram';
+          
+          // Verificar si ya existe un registro de archivo
+          const existingArchive = await Archive.findOne({
+            userId: new mongoose.Types.ObjectId(rawUserId as string),
+            contactIdString: contactId
+          });
+
+          if (!existingArchive) {
+            // Crear nuevo registro de archivo
+            await Archive.create({
+              userId: new mongoose.Types.ObjectId(rawUserId as string),
+              contactId: contactId, // Guardamos el ID de Telegram como string
+              contactIdString: contactId,
+              integrationId: session._id.toString(),
+              provider: 'telegram',
+              contactSnapshot: {
+                name: 'Contacto de Telegram',
+                platformData: {
+                  telegramUserId: contactId
+                }
+              },
+              archivedAt: new Date(),
+              archivedBy: 'user',
+              reason: 'manual'
+            });
+          }
+        } else {
+          // No hay sesión de Telegram activa, asumir que es un contacto genérico
+          logger.warn('No Telegram session found for archiving platform contact', {
+            contactId,
+            userId: rawUserId
+          });
+          
+          return res.status(404).json({ 
+            error: "contact_not_found",
+            detail: "Contact not found in database and no platform session available"
+          });
+        }
+      } else {
+        // Desarchivar: eliminar del modelo Archive
+        const deleted = await Archive.findOneAndDelete({
+          userId: new mongoose.Types.ObjectId(rawUserId as string),
+          contactIdString: contactId
+        });
+
+        if (deleted) {
+          provider = deleted.provider;
+        }
+      }
     }
 
     logger.info('Contact archive status updated', { 
       contactId, 
       userId, 
-      provider: contact.provider,
+      provider,
       isArchived: archived 
     });
 
@@ -422,7 +575,7 @@ router.patch("/:contactId/archive", async (req: AuthRequest, res: Response) => {
     await cacheService.invalidateUserCache(rawUserId);
 
   } catch (err: any) {
-    logger.error("archive_contact_failed:", err?.message || err);
+    logger.error("archive_contact_failed:", { error: err?.message || err, stack: err?.stack });
     return res.status(500).json({ error: "archive_contact_failed", detail: err?.message });
   }
 });
