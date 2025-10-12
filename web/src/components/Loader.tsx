@@ -50,7 +50,6 @@ export default function Loader({
             border-t-nexly-green 
             border-r-nexly-teal
             animate-spin
-            shadow-2xl
             shadow-nexly-green/30
           `}
           style={{ 

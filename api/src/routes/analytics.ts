@@ -257,6 +257,20 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
+    // 🔍 DEBUG: Verificar si hay mensajes en la base de datos
+    const totalMessages = await Message.countDocuments({ userId: new Types.ObjectId(userId) });
+    const recentMessages = await Message.countDocuments({ 
+      userId: new Types.ObjectId(userId),
+      createdAt: { $gte: sevenDaysAgo }
+    });
+
+    logger.info('Debug messages count', { 
+      userId, 
+      totalMessages, 
+      recentMessages,
+      sevenDaysAgo: sevenDaysAgo.toISOString()
+    });
+
     // Agregar mensajes por día y dirección
     const messagesTimeline = await Message.aggregate([
       {
@@ -278,6 +292,12 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
         $sort: { "_id.date": 1 }
       }
     ]);
+
+    logger.info('Messages timeline aggregation result', { 
+      userId, 
+      aggregationCount: messagesTimeline.length,
+      rawData: messagesTimeline
+    });
 
     // Formatear datos para el gráfico
     const dateMap = new Map<string, { date: string; sent: number; received: number }>();
@@ -302,10 +322,10 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
 
       if (dateMap.has(dateStr)) {
         const entry = dateMap.get(dateStr)!;
-        if (direction === 'out') {
-          entry.sent = count;
-        } else if (direction === 'in') {
-          entry.received = count;
+        if (direction === 'out' || direction === 'outbound') {
+          entry.sent += count;
+        } else if (direction === 'in' || direction === 'inbound') {
+          entry.received += count;
         }
       }
     });
@@ -320,9 +340,13 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
       received: item.received
     }));
 
+    const totalInTimeline = formattedData.reduce((sum, item) => sum + item.sent + item.received, 0);
+
     logger.info('Timeline de mensajes calculado', { 
       userId, 
-      dataPoints: formattedData.length 
+      dataPoints: formattedData.length,
+      totalMessagesInTimeline: totalInTimeline,
+      formattedData
     });
 
     res.status(200).json({
@@ -333,7 +357,8 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     logger.error('Error obteniendo timeline de mensajes', {
       userId: req.user?.id || req.user?._id,
-      error: error instanceof Error ? error.message : 'Error desconocido'
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
     });
 
     res.status(500).json({
@@ -341,6 +366,48 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
       error: 'server_error',
       message: 'Error interno del servidor'
     });
+  }
+});
+
+/**
+ * GET /analytics/debug-messages
+ * DEBUG: Verificar mensajes en la base de datos
+ */
+router.get('/debug-messages', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'authentication_required'
+      });
+    }
+
+    // Obtener algunos mensajes de ejemplo
+    const messages = await Message.find({ userId: new Types.ObjectId(userId) })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean();
+
+    const totalCount = await Message.countDocuments({ userId: new Types.ObjectId(userId) });
+
+    res.json({
+      success: true,
+      data: {
+        totalMessages: totalCount,
+        sampleMessages: messages.map(msg => ({
+          id: msg._id,
+          direction: (msg as any).direction,
+          provider: (msg as any).provider,
+          body: (msg as any).body?.substring(0, 50),
+          createdAt: msg.createdAt,
+          timestamp: (msg as any).timestamp
+        }))
+      }
+    });
+  } catch (error) {
+    logger.error('Error in debug-messages', { error });
+    res.status(500).json({ success: false, error: 'server_error' });
   }
 });
 
@@ -395,101 +462,6 @@ router.get('/integration-stats', async (req: AuthRequest, res: Response) => {
 
   } catch (error: unknown) {
     logger.error('Error obteniendo estadísticas de integraciones', {
-      userId: req.user?.id || req.user?._id,
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
-
-    res.status(500).json({
-      success: false,
-      error: 'server_error',
-      message: 'Error interno del servidor'
-    });
-  }
-});
-
-/**
- * GET /analytics/messages-timeline
- * Obtener timeline de mensajes de los últimos 7 días
- */
-router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id || req.user?._id;
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: 'authentication_required',
-        message: 'Token de autenticación requerido'
-      });
-    }
-
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
-
-    const messagesTimeline = await Message.aggregate([
-      {
-        $match: {
-          userId: new Types.ObjectId(userId),
-          createdAt: { $gte: sevenDaysAgo }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-            direction: "$direction"
-          },
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { "_id.date": 1 }
-      }
-    ]);
-
-    // Inicializar mapa de fechas para los últimos 7 días
-    const dateMap = new Map<string, { date: string; sent: number; received: number }>();
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      dateMap.set(dateStr, { date: dateStr, sent: 0, received: 0 });
-    }
-
-    // Llenar el mapa con datos reales
-    messagesTimeline.forEach((item: any) => {
-      const dateStr = item._id.date;
-      const direction = item._id.direction;
-      const count = item.count;
-      if (dateMap.has(dateStr)) {
-        const entry = dateMap.get(dateStr)!;
-        if (direction === 'out') {
-          entry.sent = count;
-        } else if (direction === 'in') {
-          entry.received = count;
-        }
-      }
-    });
-
-    // Formatear datos para el frontend
-    const formattedData = Array.from(dateMap.values()).map(item => ({
-      date: new Date(item.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
-      sent: item.sent,
-      received: item.received
-    }));
-
-    logger.info('Messages timeline generated', { 
-      userId, 
-      days: formattedData.length,
-      totalMessages: messagesTimeline.reduce((acc, item) => acc + item.count, 0)
-    });
-
-    res.status(200).json({ 
-      success: true, 
-      data: formattedData 
-    });
-  } catch (error: unknown) {
-    logger.error('Error obteniendo timeline de mensajes', {
       userId: req.user?.id || req.user?._id,
       error: error instanceof Error ? error.message : 'Error desconocido'
     });

@@ -4,6 +4,7 @@ import logger from '../utils/logger';
 import { telegramMTProtoService } from '../services/telegramMTProtoService';
 import { TelegramSession } from '../models/TelegramSession';
 import { Integration } from '../models/Integration';
+import { Message } from '../models/Message';
 import { checkIntegrationLimits } from '../services/messageLimits';
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
@@ -749,6 +750,42 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
         success: false,
         error: 'send_message_failed',
         message: result.error || 'Error enviando mensaje'
+      });
+    }
+
+    // 💾 Guardar mensaje en la base de datos para analíticas
+    try {
+      // Buscar la integración de Telegram
+      const integration = await Integration.findOne({
+        userId: new Types.ObjectId(userId),
+        provider: 'telegram',
+        status: 'linked'
+      });
+
+      if (integration) {
+        await Message.create({
+          userId: new Types.ObjectId(userId),
+          integrationId: integration._id,
+          direction: 'out',
+          body: message,
+          provider: 'telegram',
+          externalMessageId: result.messageId?.toString(),
+          from: chatId.toString(),
+          timestamp: new Date()
+        });
+
+        logger.info('Mensaje de Telegram guardado en DB', {
+          userId,
+          chatId,
+          messageId: result.messageId
+        });
+      }
+    } catch (saveError) {
+      // No fallar la respuesta si no se pudo guardar en DB
+      logger.error('Error guardando mensaje de Telegram en DB', {
+        userId,
+        chatId,
+        error: saveError instanceof Error ? saveError.message : 'Error desconocido'
       });
     }
 
