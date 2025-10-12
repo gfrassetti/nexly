@@ -5,10 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useStats } from "@/hooks/useStats";
 import { useMessagesTimeline } from "@/hooks/useMessagesTimeline";
+import { useMessagesByIntegration } from "@/hooks/useMessagesByIntegration";
 import { Skeleton } from "@/components/ui/skeleton";
 import StatCard from "@/components/StatCard";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { MessagesChart } from "@/components/MessagesChart";
+import { MessagesByIntegrationChart } from "@/components/MessagesByIntegrationChart";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -22,6 +24,9 @@ export default function DashboardPage() {
   
   // Obtener timeline de mensajes para el gráfico
   const { data: messagesData, loading: messagesLoading } = useMessagesTimeline();
+  
+  // Obtener mensajes por integración
+  const { data: messagesByIntegrationData, loading: byIntegrationLoading } = useMessagesByIntegration();
 
   // Show trial notification only if trial is active
   useEffect(() => {
@@ -205,6 +210,9 @@ export default function DashboardPage() {
 
         {/* Messages Activity Chart */}
         <MessagesChart data={messagesData} loading={messagesLoading} />
+
+        {/* Messages by Integration Chart */}
+        <MessagesByIntegrationChart data={messagesByIntegrationData} loading={byIntegrationLoading} />
 
         {/* Quick Actions */}
         <div className="bg-muted/30 border border-border rounded-lg p-6">

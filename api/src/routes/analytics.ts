@@ -370,6 +370,125 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * GET /analytics/messages-by-integration
+ * Obtener mensajes agrupados por integración (últimos 7 días)
+ */
+router.get('/messages-by-integration', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Obteniendo mensajes por integración', { userId });
+
+    // Calcular fecha de hace 7 días
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    // Agregar mensajes por día y proveedor
+    const messagesByProvider = await Message.aggregate([
+      {
+        $match: {
+          userId: new Types.ObjectId(userId),
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            provider: "$provider"
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.date": 1 }
+      }
+    ]);
+
+    logger.info('Messages by provider aggregation', {
+      userId,
+      resultCount: messagesByProvider.length,
+      rawData: messagesByProvider
+    });
+
+    // Formatear datos para el gráfico
+    const dateMap = new Map<string, any>();
+    
+    // Inicializar todos los días de los últimos 7 días
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      dateMap.set(dateStr, {
+        date: dateStr,
+        whatsapp: 0,
+        telegram: 0,
+        instagram: 0,
+        messenger: 0
+      });
+    }
+
+    // Llenar con datos reales
+    messagesByProvider.forEach((item: any) => {
+      const dateStr = item._id.date;
+      const provider = item._id.provider;
+      const count = item.count;
+
+      if (dateMap.has(dateStr)) {
+        const entry = dateMap.get(dateStr)!;
+        if (provider === 'whatsapp' || provider === 'telegram' || provider === 'instagram' || provider === 'messenger') {
+          entry[provider] = count;
+        }
+      }
+    });
+
+    // Convertir a array y formatear fechas
+    const formattedData = Array.from(dateMap.values()).map(item => ({
+      date: new Date(item.date).toLocaleDateString('es-ES', { 
+        month: 'short', 
+        day: 'numeric' 
+      }),
+      whatsapp: item.whatsapp,
+      telegram: item.telegram,
+      instagram: item.instagram,
+      messenger: item.messenger
+    }));
+
+    logger.info('Messages by integration calculated', { 
+      userId, 
+      dataPoints: formattedData.length,
+      formattedData
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedData
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error obteniendo mensajes por integración', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
  * GET /analytics/debug-messages
  * DEBUG: Verificar mensajes en la base de datos
  */
