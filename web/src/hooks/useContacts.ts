@@ -56,7 +56,7 @@ export function useContacts(integrationId: string, showArchived: boolean = false
   );
 
   // Fetch de contadores (solo si getCounts es true)
-  const { data: activeContacts } = useSWR(
+  const { data: activeContacts, mutate: mutateActive } = useSWR(
     activeKey,
     (url) => fetcher(url, token!),
     {
@@ -66,7 +66,7 @@ export function useContacts(integrationId: string, showArchived: boolean = false
     }
   );
 
-  const { data: archivedContacts } = useSWR(
+  const { data: archivedContacts, mutate: mutateArchived } = useSWR(
     archivedKey,
     (url) => fetcher(url, token!),
     {
@@ -92,11 +92,21 @@ export function useContacts(integrationId: string, showArchived: boolean = false
 
   const error = contactsError ? (contactsError.message || "No se pudieron cargar los contactos") : null;
 
+  // Función para refetch todos los cachés (lista + contadores)
+  const refetchAll = async () => {
+    await Promise.all([
+      mutate(), // Refetch lista principal
+      getCounts ? mutateActive() : Promise.resolve(), // Refetch contador activos
+      getCounts ? mutateArchived() : Promise.resolve(), // Refetch contador archivados
+    ]);
+  };
+
   return {
     items,
     loading: contactsLoading,
     error,
     refetch: mutate,
+    refetchAll, // Nueva función que refetch todos los cachés
     counts,
   };
 }

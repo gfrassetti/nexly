@@ -22,7 +22,7 @@ export default function ContactsPage() {
   const { showSuccess, showError } = useNotificationHelpers();
   const { syncAll, syncIntegration, isSyncing, syncProgress } = useSyncContacts();
 
-  const { items: contacts, loading, error, refetch, counts } = useContacts(integrationId, showArchived, true);
+  const { items: contacts, loading, error, refetch, refetchAll, counts } = useContacts(integrationId, showArchived, true);
 
   // DEBUG: Log para verificar qué datos llegan
   console.log('ContactsPage debug:', {
@@ -83,7 +83,7 @@ export default function ContactsPage() {
       const result = await response.json();
       showSuccess("Contacto archivado", result.message || "Contacto archivado exitosamente. Puedes recuperarlo más tarde.");
       refreshContacts();
-      refetch();
+      await refetchAll(); // Refetch todos los cachés (lista + contadores)
     } catch (error) {
       handleError(error, 'archivar contacto');
     } finally {
@@ -116,7 +116,7 @@ export default function ContactsPage() {
       const result = await response.json();
       showSuccess("Contacto recuperado", result.message || "Contacto recuperado exitosamente.");
       refreshContacts();
-      refetch();
+      await refetchAll(); // Refetch todos los cachés (lista + contadores)
     } catch (error) {
       handleError(error, 'recuperar contacto');
     } finally {
