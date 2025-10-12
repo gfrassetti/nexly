@@ -88,7 +88,7 @@ export default function CheckoutClient() {
           <Logo size="md" />
         </div>
         <div className="rounded-2xl">
-          <Loader size="xl" text="Redirigiendo a Stripe para completar tu suscripción" showLogo={true} />
+          <Loader size="xl" text="Redirigiendo a Stripe para completar tu suscripción" />
         </div>
       </div>
     );
