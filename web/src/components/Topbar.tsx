@@ -4,22 +4,12 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useRouter } from "next/navigation";
 
 export default function Topbar() {
-  const { user, clear } = useAuth();
+  const { user, logout } = useAuth();
   const { subscription, status } = useSubscription();
   const router = useRouter();
 
   const handleLogout = () => {
-    // Limpiar localStorage
-    localStorage.removeItem("token");
-    
-    // Limpiar cookie
-    document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
-    
-    // Limpiar estado de Zustand
-    clear();
-    
-    // Forzar recarga completa para limpiar todo el estado
-    window.location.replace("/login");
+    logout();
   };
 
   const getPlanBadge = () => {

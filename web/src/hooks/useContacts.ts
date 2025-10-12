@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 
-export function useContacts(integrationId: string, showArchived: boolean = false) {
+export function useContacts(integrationId: string, showArchived: boolean = false, getCounts: boolean = false) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string>("");
+  const [counts, setCounts] = useState({ active: 0, archived: 0 });
 
   useEffect(() => {
     // esto se ejecuta solo en cliente
@@ -23,9 +24,47 @@ export function useContacts(integrationId: string, showArchived: boolean = false
     setError(null);
 
     try {
-      // Construir URL con parámetros
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      
+      if (getCounts) {
+        // Obtener contactos activos y archivados en paralelo para contadores
+        const activeParams = new URLSearchParams();
+        if (integrationId) {
+          activeParams.set("integrationId", integrationId);
+        }
+        const activeUrl = `/contacts${activeParams.toString() ? `?${activeParams.toString()}` : ""}`;
+        
+        const archivedParams = new URLSearchParams();
+        if (integrationId) {
+          archivedParams.set("integrationId", integrationId);
+        }
+        archivedParams.set("archived", "true");
+        const archivedUrl = `/contacts?${archivedParams.toString()}`;
+        
+        const [activeResponse, archivedResponse] = await Promise.all([
+          fetch(`${baseUrl}${activeUrl}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${baseUrl}${archivedUrl}`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        
+        if (!activeResponse.ok || !archivedResponse.ok) {
+          throw new Error(`Error en peticiones de contadores`);
+        }
+        
+        const activeData = await activeResponse.json();
+        const archivedData = await archivedResponse.json();
+        
+        const activeContacts = Array.isArray(activeData) ? activeData : [];
+        const archivedContacts = Array.isArray(archivedData) ? archivedData : [];
+        
+        setCounts({
+          active: activeContacts.length,
+          archived: archivedContacts.length
+        });
+      }
+      
+      // Obtener contactos según el filtro actual
       const params = new URLSearchParams();
-      if (integrationId && integrationId !== "all") {
+      if (integrationId) {
         params.set("integrationId", integrationId);
       }
       if (showArchived) {
@@ -33,7 +72,7 @@ export function useContacts(integrationId: string, showArchived: boolean = false
       }
       
       const url = `/contacts${params.toString() ? `?${params.toString()}` : ""}`;
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
+      const response = await fetch(`${baseUrl}${url}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -46,6 +85,16 @@ export function useContacts(integrationId: string, showArchived: boolean = false
       // Asegurarse de que tenemos un array
       let contacts = Array.isArray(data) ? data : [];
       
+      // DEBUG: Log para verificar datos del backend
+      console.log('useContacts debug:', {
+        integrationId,
+        showArchived,
+        responseStatus: response.status,
+        rawData: data,
+        contactsCount: contacts.length,
+        contacts: contacts.slice(0, 2) // Solo los primeros 2
+      });
+      
       setItems(contacts);
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || 
@@ -53,10 +102,11 @@ export function useContacts(integrationId: string, showArchived: boolean = false
                           "No se pudieron cargar los contactos";
       setError(errorMessage);
       setItems([]); // Asegurar que items sea un array vacío en caso de error
+      setCounts({ active: 0, archived: 0 });
     } finally {
       setLoading(false);
     }
-  }, [integrationId, token, showArchived]);
+  }, [integrationId, token, showArchived, getCounts]);
 
   useEffect(() => {
     fetchContacts();
@@ -71,6 +121,7 @@ export function useContacts(integrationId: string, showArchived: boolean = false
     items, 
     loading, 
     error, 
-    refetch 
+    refetch,
+    counts: getCounts ? counts : undefined
   };
 }

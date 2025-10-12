@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { syncAllContacts, syncIntegrationContacts } from "@/lib/api";
+import { syncAllContacts, syncIntegrationContacts, syncProviderContacts } from "@/lib/api";
 import { useAuth } from "./useAuth";
 import { useNotificationHelpers } from "./useNotification";
 
@@ -77,26 +77,26 @@ export function useSyncContacts() {
   };
 
   /**
-   * Sincronizar contactos de una integración específica
+   * Sincronizar contactos de una integración específica (por provider)
    */
-  const syncIntegration = async (integrationId: string, onComplete?: () => void) => {
+  const syncIntegration = async (provider: string, onComplete?: () => void) => {
     if (!token) {
       showError("Error", "No estás autenticado");
       return null;
     }
 
     setIsSyncing(true);
-    setSyncProgress("Sincronizando integración...");
+    setSyncProgress(`Sincronizando ${provider}...`);
 
     try {
-      const response = await syncIntegrationContacts(integrationId, token);
+      const response = await syncProviderContacts(provider, token);
 
       if (response.success && response.result) {
-        const { contactsSynced, contactsCreated, contactsUpdated, provider } = response.result;
+        const { contactsSynced, contactsCreated, contactsUpdated, provider: resultProvider } = response.result;
 
         showSuccess(
           "Sincronización completada",
-          `${contactsSynced} contactos de ${provider} sincronizados (${contactsCreated} nuevos, ${contactsUpdated} actualizados)`
+          `${contactsSynced} contactos de ${resultProvider} sincronizados (${contactsCreated} nuevos, ${contactsUpdated} actualizados)`
         );
 
         if (onComplete) onComplete();

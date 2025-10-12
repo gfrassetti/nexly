@@ -48,6 +48,7 @@ const contactSchema = new Schema(
     notes: String,
     isFavorite: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
     
     // Status
     status: {

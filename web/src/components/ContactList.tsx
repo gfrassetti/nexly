@@ -24,6 +24,7 @@ export type ContactItem = {
   profilePicture?: string;
   lastInteraction?: string | Date;
   lastMessagePreview?: string;
+  isArchived?: boolean;
   platformData?: {
     telegramUsername?: string;
     firstName?: string;
@@ -190,10 +191,19 @@ export default function ContactList({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {items.map((contact) => (
+            {items.map((contact) => {
+              console.log('Contact debug:', { 
+                id: contact.id, 
+                name: contact.name, 
+                isArchived: contact.isArchived, 
+                showArchived 
+              });
+              return (
               <div
                 key={contact.id}
-                className="bg-neutral-800 rounded-lg p-4 border border-neutral-700 hover:border-green-600/30 transition-all cursor-pointer group"
+                className={`bg-neutral-800 rounded-lg p-4 border border-neutral-700 hover:border-green-600/30 transition-all cursor-pointer group ${
+                  contact.isArchived && !showArchived ? 'hidden' : ''
+                }`}
               >
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
@@ -455,7 +465,8 @@ export default function ContactList({
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

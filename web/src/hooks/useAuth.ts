@@ -35,11 +35,22 @@ export function useAuth() {
     localStorage.removeItem("user");
   };
 
+  // Función de logout que puede ser llamada manualmente
+  const logout = () => {
+    console.log('🔄 Logout manual iniciado...');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
+    sessionStorage.clear();
+    window.location.replace("/login");
+  };
+
   return {
     user,
     token,
     setAuth,
     clear,
+    logout,
     isLoading,
     isAuthenticated: !!token && !!user,
   };

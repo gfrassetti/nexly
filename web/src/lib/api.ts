@@ -55,6 +55,26 @@ export async function apiFetch<T = any>(
   });
 
   if (!res.ok) {
+    // 🚨 MANEJO ESPECIAL PARA TOKEN EXPIRADO (401)
+    if (res.status === 401) {
+      console.warn('🔒 Token expirado detectado en:', path);
+      console.warn('📅 Timestamp:', new Date().toISOString());
+      
+      // Logout automático directo
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      document.cookie = "token=; Path=/; Max-Age=0; SameSite=Lax";
+      sessionStorage.clear();
+      
+      console.warn('🚀 Ejecutando logout automático...');
+      
+      // Redirigir al login
+      window.location.replace("/login");
+      
+      throw new Error("Sesión expirada. Redirigiendo al login...");
+    }
+    
+    // Manejo normal de otros errores HTTP
     let msg = `HTTP ${res.status}`;
     try {
       const data = await res.json();
@@ -175,6 +195,26 @@ export function syncIntegrationContacts(integrationId: string, token?: string) {
       error?: string;
     };
   }>(`/contacts/sync/${integrationId}`, {
+    method: "POST",
+  }, token);
+}
+
+/**
+ * Sincronizar contactos por provider (telegram, whatsapp, etc.)
+ */
+export function syncProviderContacts(provider: string, token?: string) {
+  return apiFetch<{
+    success: boolean;
+    message: string;
+    result: {
+      success: boolean;
+      provider: string;
+      contactsSynced: number;
+      contactsCreated: number;
+      contactsUpdated: number;
+      error?: string;
+    };
+  }>(`/contacts/sync/provider/${provider}`, {
     method: "POST",
   }, token);
 }

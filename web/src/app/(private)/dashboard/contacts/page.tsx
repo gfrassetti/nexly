@@ -1,10 +1,8 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useContacts } from "@/hooks/useContacts";
-import { useContactCounts } from "@/hooks/useContactCounts";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import ContactList, { ContactItem } from "@/components/ContactList";
-import { deleteContact } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationHelpers } from "@/hooks/useNotification";
 import { useSyncContacts } from "@/hooks/useSyncContacts";
@@ -12,21 +10,30 @@ import { INTEGRATIONS } from "@/lib/constants";
 
 const ALL_INTEGRATIONS = [
   ...INTEGRATIONS,
-  { id: "all", label: "Todos", color: "bg-neutral-500", description: "Mostrar todos los contactos" },
 ];
 
 export default function ContactsPage() {
   const { token } = useAuth();
   const { refreshContacts } = useDataRefresh();
-  const [integrationId, setIntegrationId] = useState("all");
+  const [integrationId, setIntegrationId] = useState("telegram");
   const [searchQuery, setSearchQuery] = useState("");
   const [isArchiving, setIsArchiving] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const { showSuccess, showError } = useNotificationHelpers();
-  const { syncAll, isSyncing, syncProgress } = useSyncContacts();
+  const { syncAll, syncIntegration, isSyncing, syncProgress } = useSyncContacts();
 
-  const { items: contacts, loading, error, refetch } = useContacts(integrationId, showArchived);
-  const { counts, refetch: refetchCounts } = useContactCounts(integrationId);
+  const { items: contacts, loading, error, refetch, counts } = useContacts(integrationId, showArchived, true);
+
+  // DEBUG: Log para verificar qué datos llegan
+  console.log('ContactsPage debug:', {
+    integrationId,
+    showArchived,
+    contactsCount: contacts?.length || 0,
+    contacts: contacts?.slice(0, 2), // Solo los primeros 2 para no saturar
+    loading,
+    error,
+    counts
+  });
 
   // Filtrar contactos basado en la búsqueda (el filtrado por archivado se hace en el backend)
   const filteredContacts = useMemo(() => {
@@ -73,11 +80,10 @@ export default function ContactsPage() {
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-       const result = await response.json();
-       showSuccess("Contacto archivado", result.message || "Contacto archivado exitosamente. Puedes recuperarlo más tarde.");
-       refreshContacts();
-       refetch();
-       refetchCounts();
+      const result = await response.json();
+      showSuccess("Contacto archivado", result.message || "Contacto archivado exitosamente. Puedes recuperarlo más tarde.");
+      refreshContacts();
+      refetch();
     } catch (error) {
       handleError(error, 'archivar contacto');
     } finally {
@@ -107,11 +113,10 @@ export default function ContactsPage() {
         throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
       }
 
-       const result = await response.json();
-       showSuccess("Contacto recuperado", result.message || "Contacto recuperado exitosamente.");
-       refreshContacts();
-       refetch();
-       refetchCounts();
+      const result = await response.json();
+      showSuccess("Contacto recuperado", result.message || "Contacto recuperado exitosamente.");
+      refreshContacts();
+      refetch();
     } catch (error) {
       handleError(error, 'recuperar contacto');
     } finally {
@@ -121,6 +126,13 @@ export default function ContactsPage() {
 
   async function handleSyncContacts() {
     await syncAll(() => {
+      refreshContacts();
+      refetch();
+    });
+  }
+
+  async function handleSyncIntegration(integrationId: string) {
+    await syncIntegration(integrationId, () => {
       refreshContacts();
       refetch();
     });
@@ -154,7 +166,7 @@ export default function ContactsPage() {
                      : "text-neutral-300 hover:text-white"
                  }`}
                >
-                 Activos ({counts.active})
+                 Activos ({counts?.active || 0})
                </button>
                <button
                  onClick={() => setShowArchived(true)}
@@ -164,7 +176,7 @@ export default function ContactsPage() {
                      : "text-neutral-300 hover:text-white"
                  }`}
                >
-                 📦 Archivados ({counts.archived})
+                 📦 Archivados ({counts?.archived || 0})
                </button>
              </div>
 
@@ -208,18 +220,41 @@ export default function ContactsPage() {
           {/* Filtro por plataforma */}
           <div className="flex gap-2">
             {ALL_INTEGRATIONS.map((integration) => (
-              <button
-                key={integration.id}
-                onClick={() => setIntegrationId(integration.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize flex items-center gap-2 ${
-                  integrationId === integration.id
-                    ? `${integration.color} text-white shadow-lg`
-                    : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
-                }`}
-              >
-                <div className={`w-2 h-2 rounded-full ${integration.color}`}></div>
-                {integration.label}
-              </button>
+              <div key={integration.id} className="relative group">
+                <button
+                  onClick={() => setIntegrationId(integration.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize flex items-center gap-2 ${
+                    integrationId === integration.id
+                      ? `${integration.color} text-white shadow-lg`
+                      : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${integration.color}`}></div>
+                  {integration.label}
+                </button>
+                
+                {/* Botón de sincronización */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSyncIntegration(integration.id);
+                  }}
+                  disabled={isSyncing}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                  title={`Sincronizar ${integration.label}`}
+                >
+                  {isSyncing ? (
+                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             ))}
           </div>
 
@@ -284,6 +319,7 @@ export default function ContactsPage() {
               profilePicture: c.profilePicture,
               lastInteraction: c.lastInteraction,
               lastMessagePreview: c.lastMessagePreview,
+              isArchived: c.isArchived,
               platformData: c.platformData,
             }))}
             onArchive={handleArchiveContact}
