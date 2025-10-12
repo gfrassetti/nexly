@@ -78,7 +78,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         provider: 'telegram',
         integrationId: session._id,
         userId: rawUserId,
-        isArchived: false,
+        isArchived: false, // Por ahora siempre false, ya que Telegram no tiene concepto de "archivado"
         lastMessage: chat.lastMessage,
         unreadCount: chat.unreadCount || 0,
         avatar: chat.photo,
@@ -86,6 +86,17 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         createdAt: new Date(),
         updatedAt: new Date()
       }));
+
+      // 🚀 FILTRAR por estado de archivado
+      // Para Telegram, si se piden archivados, devolver array vacío
+      // ya que Telegram no tiene concepto de contactos archivados
+      if (archived) {
+        logger.info('Telegram contacts: requested archived but Telegram has no archived concept', { 
+          userId: rawUserId, 
+          count: 0 
+        });
+        return res.json([]);
+      }
 
       logger.info('Telegram contacts fetched via API', { 
         userId: rawUserId, 

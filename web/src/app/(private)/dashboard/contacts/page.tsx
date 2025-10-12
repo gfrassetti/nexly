@@ -139,8 +139,14 @@ export default function ContactsPage() {
   }
 
   function handleMessageContact(contact: any) {
-    // Abrir inbox con este contacto específico
-    window.location.href = `/dashboard/inbox?contact=${contact.id}`;
+    // Abrir inbox con este contacto específico y el canal correspondiente
+    const contactId = contact.id;
+    const provider = contact.provider || integrationId || 'telegram';
+    
+    console.log('Opening inbox for contact:', { contactId, provider, integrationId });
+    
+    // Navegar al inbox con el contacto y canal específico
+    window.location.href = `/dashboard/inbox?contact=${contactId}&channel=${provider}`;
   }
 
   return (
