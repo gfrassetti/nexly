@@ -184,7 +184,7 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
       {/* Lista de conversaciones */}
       <div className="w-1/3 border-r border-neutral-700 bg-neutral-800">
         <div className="p-4 border-b border-neutral-700">
-          <h3 className="font-semibold text-white capitalize">{channel}</h3>
+          <h3 className="font-semibold text-accent-cream capitalize">{channel}</h3>
           <p className="text-sm text-neutral-400">
             {chats.length} conversaciones
           </p>
@@ -226,7 +226,7 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white truncate">
+                      <p className="font-medium text-accent-cream truncate">
                         {chat.title || chat.name || chat.username || `Chat ${chat.id}`}
                       </p>
                       {chat.type && (
@@ -244,7 +244,7 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
       </div>
 
       {/* Área de mensajes */}
-      <div className="flex-1 flex flex-col bg-neutral-900">
+      <div className="flex-1 flex flex-col bg-accent-dark">
         {selectedChat ? (
           <>
             {/* Header de la conversación */}
@@ -257,12 +257,12 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className={`w-10 h-10 ${colorClasses.bg} rounded-full flex items-center justify-center text-white`}>
+                  <div className={`w-10 h-10 ${colorClasses.bg} rounded-full flex items-center justify-center text-accent-cream`}>
                     {getChatIcon(selectedChat.type)}
                   </div>
                 )}
                 <div>
-                  <h3 className="font-semibold text-white">
+                  <h3 className="font-semibold text-accent-cream">
                     {selectedChat.title || selectedChat.name || selectedChat.username || `Chat ${selectedChat.id}`}
                   </h3>
                   <p className="text-sm text-neutral-400 capitalize">
@@ -291,7 +291,7 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center text-neutral-400">
               <MessageSquare className="w-12 h-12 mx-auto mb-4 text-neutral-600" />
-              <h3 className="text-lg font-semibold text-white mb-2">
+              <h3 className="text-lg font-semibold text-accent-cream mb-2">
                 Selecciona una conversación
               </h3>
               <p className="text-neutral-400">

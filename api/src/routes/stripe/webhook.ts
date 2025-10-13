@@ -223,7 +223,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     const subscription = new Subscription({
       userId: user._id.toString(),
-      planType: planType as 'basic' | 'premium',
+      planType: planType as 'basic' | 'premium' | 'enterprise',
       status: 'active', // Cuando el pago se completa, la suscripción debe estar activa
       startDate,
       trialEndDate,

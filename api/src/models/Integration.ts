@@ -20,6 +20,12 @@ export interface IntegrationDoc extends Document {
     telegramPhoneNumber?: string;
     sessionString?: string;
     isActive?: boolean;
+    // Twilio WhatsApp specific fields (Modelo Master - Cuenta Única)
+    channelSid?: string;        // ID del canal de Twilio (MGxxx o WAxxx) - opcional
+    whatsappNumber?: string;    // Número de WhatsApp del usuario (whatsapp:+5491112345678)
+    registeredVia?: string;     // 'meta_embedded_signup' | 'manual'
+    registrationDate?: Date;
+    testMode?: boolean;
   };
   // timestamps agregados para que TS no proteste en las rutas
   createdAt?: Date;
@@ -54,6 +60,12 @@ const integrationSchema = new Schema<IntegrationDoc>(
       telegramPhoneNumber: { type: String },
       sessionString: { type: String },
       isActive: { type: Boolean, default: true },
+      // Twilio WhatsApp specific fields (Modelo Master - Cuenta Única)
+      channelSid: { type: String },        // ID del canal de Twilio (opcional)
+      whatsappNumber: { type: String },    // Número de WhatsApp (whatsapp:+5491112345678)
+      registeredVia: { type: String },     // 'meta_embedded_signup' | 'manual'
+      registrationDate: { type: Date },
+      testMode: { type: Boolean },
     },
   },
   { timestamps: true, versionKey: false }

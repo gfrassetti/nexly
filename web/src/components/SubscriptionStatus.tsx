@@ -258,7 +258,7 @@ export default function SubscriptionStatus() {
                 createStripePaymentLink(selectedPlan as "basic" | "premium");
               }}
               disabled={stripeLoading}
-              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
+              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-accent-cream px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
             >
               <img src="/strapi_logo.png" alt="Stripe" className="h-5 w-auto" />
               <div className="text-left">
@@ -276,7 +276,7 @@ export default function SubscriptionStatus() {
     return (
       <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-white mb-2">
+          <h3 className="text-lg font-semibold text-accent-cream mb-2">
             Sin suscripción activa
           </h3>
           <p className="text-neutral-400 mb-4">
@@ -284,7 +284,7 @@ export default function SubscriptionStatus() {
           </p>
           <a
             href="/pricing"
-            className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
+            className="bg-nexly-teal hover:bg-nexly-green text-accent-cream px-4 py-2 rounded-lg transition-colors duration-300"
           >
             Ver Planes
           </a>
@@ -383,7 +383,7 @@ export default function SubscriptionStatus() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-accent-cream">
               {sub.planType === "basic" ? "Plan Básico" : "Plan Premium"}
             </h3>
             <span
@@ -487,7 +487,7 @@ export default function SubscriptionStatus() {
           {(status.active || status.paused) && (
             <button
               onClick={cancelSubscription}
-              className="bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              className="bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cancelar
             </button>
@@ -497,7 +497,7 @@ export default function SubscriptionStatus() {
           {status.active && (
             <a
               href="/pricing"
-              className="bg-neutral-600 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              className="bg-neutral-600 hover:bg-neutral-700 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cambiar plan
             </a>

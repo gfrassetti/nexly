@@ -108,7 +108,7 @@ export default function CheckoutClient() {
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => router.push('/pricing')}
-            className="bg-nexly-teal hover:bg-nexly-green text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
+            className="bg-nexly-teal hover:bg-nexly-green text-accent-cream font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
           >
             Volver a Planes
           </button>

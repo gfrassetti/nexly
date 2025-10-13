@@ -8,7 +8,7 @@ export interface IUser {
   resetPasswordToken?: string;
   resetPasswordExpiry?: Date;
   subscription_status?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
-  selectedPlan?: 'basic' | 'premium'; // Plan seleccionado durante el registro
+  selectedPlan?: 'basic' | 'premium' | 'enterprise'; // Plan seleccionado durante el registro
   freeTrialUsed?: boolean; // Si ya usó el período de prueba gratuito de 24h
   freeTrialStartDate?: Date; // Fecha de inicio del período de prueba gratuito
   freeTrialEndDate?: Date; // Fecha de fin del período de prueba gratuito
@@ -36,7 +36,7 @@ const userSchema = new Schema<IUser>(
     },
     selectedPlan: {
       type: String,
-      enum: ['basic', 'premium'],
+      enum: ['basic', 'premium', 'enterprise'],
       default: 'basic'
     },
     freeTrialUsed: {

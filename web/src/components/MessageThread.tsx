@@ -157,7 +157,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
 
   if (!threadId || !isValidThread) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-neutral-900">
+      <div className="flex-1 flex items-center justify-center bg-accent-dark">
         <div className="text-center text-neutral-400">
           <svg className="w-16 h-16 mx-auto mb-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -172,7 +172,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
   // Mostrar skeleton mientras carga
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col bg-neutral-900">
+      <div className="flex-1 flex flex-col bg-accent-dark">
         {/* Header skeleton */}
         <div className="border-b border-neutral-700 bg-neutral-800 p-4">
           <div className="flex items-center space-x-3">
@@ -240,15 +240,15 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-neutral-900">
+    <div className="flex-1 flex flex-col bg-accent-dark">
       {/* Header de la conversación */}
       <div className="border-b border-neutral-700 bg-neutral-800 p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
+          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-accent-cream font-semibold">
             {threadId.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <h3 className="font-medium text-white">Conversación {threadId}</h3>
+            <h3 className="font-medium text-accent-cream">Conversación {threadId}</h3>
             <p className="text-sm text-neutral-400 capitalize">{channel} • Activo</p>
           </div>
         </div>
@@ -265,8 +265,8 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                 message.direction === 'outbound'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-neutral-700 text-white'
+                  ? 'bg-green-600 text-accent-cream'
+                  : 'bg-neutral-700 text-accent-cream'
               }`}
             >
               <p className="text-sm">{message.content}</p>

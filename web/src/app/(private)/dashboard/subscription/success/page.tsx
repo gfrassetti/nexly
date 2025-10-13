@@ -60,7 +60,7 @@ function SubscriptionSuccessContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <Logo size="lg" />
@@ -74,7 +74,7 @@ function SubscriptionSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+    <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
       <div className="text-center max-w-md mx-auto px-6">
         <div className="flex justify-center mb-6">
           <Logo size="lg" />
@@ -83,7 +83,7 @@ function SubscriptionSuccessContent() {
         {status === 'success' && (
           <>
             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -104,7 +104,7 @@ function SubscriptionSuccessContent() {
         {status === 'error' && (
           <>
             <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
@@ -129,7 +129,7 @@ function SubscriptionSuccessContent() {
 export default function SubscriptionSuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
         <Loader size="lg" />
       </div>
     }>

@@ -30,7 +30,7 @@ export default function FreeTrialBanner() {
   // Si está activo, mostrar información del tiempo restante
   if (isFreeTrialActive()) {
     return (
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-lg mb-6">
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-accent-cream p-4 rounded-lg mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold">🎉 Período de Prueba Gratuito Activo</h3>
@@ -53,7 +53,7 @@ export default function FreeTrialBanner() {
   // Si puede usar el período de prueba, mostrar botón para activarlo
   if (canUseFreeTrial()) {
     return (
-      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-4 rounded-lg mb-6">
+      <div className="bg-gradient-to-r from-green-500 to-blue-600 text-accent-cream p-4 rounded-lg mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold">🚀 ¡Prueba Gratuita Disponible!</h3>

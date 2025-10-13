@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISubscription extends Document {
   userId: string;
-  planType: 'basic' | 'premium';
+  planType: 'basic' | 'premium' | 'enterprise';
   status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
   stripeSubscriptionId?: string;
   stripeSessionId?: string;
@@ -31,7 +31,7 @@ const SubscriptionSchema: Schema = new Schema({
   },
   planType: {
     type: String,
-    enum: ['basic', 'premium'],
+    enum: ['basic', 'premium', 'enterprise'],
     required: true,
   },
   status: {
@@ -164,7 +164,7 @@ SubscriptionSchema.methods.getMaxIntegrations = function(): number {
   }
   
   
-  return this.planType === 'basic' ? 2 : 999; // Básico: 2 integraciones, Premium: ilimitadas
+  return this.planType === 'basic' ? 3 : this.planType === 'premium' ? 10 : 999; // Básico: 3, Premium: 10, Enterprise: ilimitadas
 };
 
 // Método estático para obtener límite de integraciones considerando período de prueba gratuito

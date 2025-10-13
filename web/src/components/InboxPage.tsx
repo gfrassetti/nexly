@@ -37,7 +37,7 @@ export default function InboxPage() {
             key={c}
             onClick={() => setChannel(c)}
             className={`px-3 py-1 rounded-md border ${
-              channel === c ? "bg-black text-white" : "bg-white text-black"
+              channel === c ? "bg-black text-accent-cream" : "bg-white text-black"
             }`}
           >
             {c}

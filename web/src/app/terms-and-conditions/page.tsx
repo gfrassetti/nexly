@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function TermsAndConditionsPage() {
   return (
-    <div className="min-h-screen bg-neutral-900 text-white">
+    <div className="min-h-screen bg-accent-dark text-accent-cream">
       {/* Header */}
       <Header variant="auth" />
 
@@ -48,13 +48,18 @@ export default function TermsAndConditionsPage() {
               <div className="text-neutral-300 leading-relaxed mb-4">
                 <p className="mb-4">Nexly ofrece los siguientes planes de suscripción:</p>
                 <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Plan Básico:</strong> $2.999 ARS/mes - Hasta 2 integraciones (WhatsApp, Instagram)</li>
-                  <li><strong>Plan Premium:</strong> $5.999 ARS/mes - Todas las integraciones disponibles</li>
+                  <li><strong>Plan Básico:</strong> $30 USD/mes (~$30,000 ARS) - 450 conversaciones/mes, hasta 3 integraciones</li>
+                  <li><strong>Plan Premium:</strong> $60 USD/mes (~$60,000 ARS) - 900 conversaciones/mes, hasta 10 integraciones</li>
+                    <li><strong>Plan Enterprise:</strong> $150 USD/mes (~$150,000 ARS) - 2,250 conversaciones/mes, integraciones sin límite</li>
                 </ul>
                 <p className="mt-4">
-                  <strong>Período de prueba:</strong> Todos los planes incluyen un período de prueba gratuito de 7 días. 
-                  Se requiere tarjeta de crédito para iniciar el período de prueba. El cobro se realizará automáticamente 
-                  al finalizar el período de prueba, a menos que se cancele antes.
+                  <strong>Período de prueba:</strong> Todos los planes incluyen un período de prueba gratuito de 7 días 
+                  con 50 conversaciones incluidas. Se requiere tarjeta de crédito para iniciar el período de prueba. 
+                  El cobro se realizará automáticamente al finalizar el período de prueba, a menos que se cancele antes.
+                </p>
+                <p className="mt-4">
+                  <strong>Nota:</strong> Los precios en ARS son aproximados y pueden variar según el tipo de cambio. 
+                  La facturación se realiza en USD.
                 </p>
               </div>
             </section>
@@ -82,14 +87,84 @@ export default function TermsAndConditionsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">6. Límites de Uso</h2>
-              <div className="text-neutral-300 leading-relaxed mb-4">
+              <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">6. Política de Uso Justo y Límites</h2>
+              <div className="text-neutral-300 leading-relaxed space-y-4">
+                <p>
+                  Nexly implementa una <strong>Política de Uso Justo</strong> para garantizar un servicio sostenible 
+                  y de calidad para todos nuestros usuarios. Los límites están diseñados para cubrir el uso normal 
+                  de negocios mientras mantenemos precios accesibles.
+                </p>
+
+                <div className="bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg p-4 my-4">
+                  <h3 className="font-semibold mb-3 text-nexly-light-blue">Límites de Conversaciones por Plan</h3>
+                  <ul className="list-disc list-inside space-y-2">
+                    <li><strong>Free Trial:</strong> 50 conversaciones totales, máximo 5 por día</li>
+                    <li><strong>Plan Básico:</strong> 450 conversaciones/mes, máximo 20 por día</li>
+                    <li><strong>Plan Premium:</strong> 900 conversaciones/mes, máximo 45 por día</li>
+                    <li><strong>Plan Enterprise:</strong> 2,250 conversaciones/mes, máximo 110 por día</li>
+                  </ul>
+                </div>
+
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 text-green-400">¿Qué NO cuenta para tu límite?</h3>
+                  <ul className="list-disc list-inside space-y-2">
+                    <li><strong>Mensajes entrantes:</strong> Todos los mensajes que recibes de clientes son sin límite</li>
+                    <li><strong>Respuestas dentro de 24h:</strong> Si respondes a un cliente dentro de las 24 horas desde su último mensaje, no cuenta para tu límite mensual</li>
+                    <li><strong>Conversaciones iniciadas por cliente:</strong> Cuando el cliente inicia la conversación, puedes responder libremente</li>
+                  </ul>
+                </div>
+
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 text-orange-400">¿Qué SÍ cuenta para tu límite?</h3>
+                  <ul className="list-disc list-inside space-y-2">
+                    <li><strong>Conversaciones iniciadas por tu empresa:</strong> Cuando envías el primer mensaje a un cliente</li>
+                    <li><strong>Mensajes fuera de ventana de 24h:</strong> Mensajes enviados después de 24h sin actividad del cliente</li>
+                    <li><strong>Mensajes con plantillas aprobadas:</strong> Mensajes de marketing, notificaciones programadas</li>
+                    <li><strong>Campañas masivas:</strong> Envíos a múltiples contactos simultáneamente</li>
+                  </ul>
+                </div>
+
+                <h3 className="font-semibold mb-3 text-nexly-teal mt-6">Límites de Integraciones</h3>
                 <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Plan Básico:</strong> Hasta 2 integraciones activas</li>
-                  <li><strong>Plan Premium:</strong> Acceso a todas las integraciones disponibles</li>
-                  <li>Mensajes ilimitados en ambos planes</li>
-                  <li>Nos reservamos el derecho de implementar límites adicionales si es necesario</li>
+                  <li><strong>Free Trial:</strong> Hasta 5 integraciones activas</li>
+                  <li><strong>Plan Básico:</strong> Hasta 3 integraciones activas</li>
+                  <li><strong>Plan Premium:</strong> Hasta 10 integraciones activas</li>
+                  <li><strong>Plan Enterprise:</strong> Integraciones sin límite</li>
                 </ul>
+
+                <h3 className="font-semibold mb-3 text-nexly-teal mt-6">Renovación de Límites</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li><strong>Límite mensual:</strong> Se renueva el día 1 de cada mes a las 00:00 UTC</li>
+                  <li><strong>Límite diario:</strong> Se renueva cada día a las 00:00 UTC</li>
+                </ul>
+
+                <h3 className="font-semibold mb-3 text-nexly-teal mt-6">Exceder Límites</h3>
+                <p>
+                  Si alcanza su límite de conversaciones mensual o diario, el sistema le impedirá enviar más 
+                  mensajes hasta que se renueve el período correspondiente. Para enviar más mensajes inmediatamente, 
+                  puede actualizar su plan a uno superior desde su dashboard.
+                </p>
+
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mt-4">
+                  <h4 className="font-semibold mb-2 text-yellow-400">Uso Prohibido</h4>
+                  <p className="text-sm mb-2">
+                    El uso del servicio para las siguientes actividades está estrictamente prohibido y puede resultar 
+                    en la suspensión inmediata de su cuenta sin reembolso:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>Envío masivo de spam o mensajes no solicitados</li>
+                    <li>Campañas de marketing sin consentimiento de los destinatarios</li>
+                    <li>Automatización excesiva que simule comportamiento humano engañoso</li>
+                    <li>Violación de las políticas de WhatsApp Business o Meta</li>
+                    <li>Cualquier actividad ilegal o fraudulenta</li>
+                  </ul>
+                </div>
+
+                <p className="mt-4">
+                  Nos reservamos el derecho de modificar estos límites con previo aviso de 30 días. 
+                  Los cambios que reduzcan significativamente los límites solo aplicarán a nuevas suscripciones, 
+                  manteniendo los límites existentes para clientes actuales durante al menos 6 meses.
+                </p>
               </div>
             </section>
 

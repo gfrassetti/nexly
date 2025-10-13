@@ -6,9 +6,101 @@ export default function FAQSection() {
     {
       title: "¿Qué incluye la prueba gratuita?",
       content: (
-        <p>
-          Acceso completo a todas las funciones de Nexly durante 7 días. Se requiere tarjeta de crédito.
-        </p>
+        <div>
+          <p className="mb-3">
+            Acceso completo a todas las funciones de Nexly durante 7 días. Se requiere tarjeta de crédito.
+          </p>
+          <div className="bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg p-4">
+            <h4 className="font-semibold mb-2 text-nexly-teal">Durante tu prueba incluye:</h4>
+            <ul className="space-y-2 text-sm">
+              <li>• 50 conversaciones de WhatsApp</li>
+              <li>• Hasta 5 conversaciones/día</li>
+              <li>• Hasta 5 integraciones</li>
+              <li>• Todas las funcionalidades de la plataforma</li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "¿Qué son las 'conversaciones' y cómo se cuentan?",
+      content: (
+        <div>
+          <div className="mb-4 p-4 bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg">
+            <p className="text-nexly-light-blue font-semibold mb-2">
+              <strong>Una conversación</strong> es un mensaje que inicias tú (tu empresa) a un cliente, 
+              especialmente fuera de la ventana de 24 horas.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <h4 className="font-semibold mb-3 text-green-400">NO cuenta para tu límite</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• Responder a un cliente dentro de 24 horas</li>
+                <li>• Mensajes entrantes que recibes</li>
+                <li>• Conversaciones iniciadas por el cliente</li>
+                <li className="font-semibold text-green-300">= Sin límite en todos los planes</li>
+              </ul>
+            </div>
+            
+            <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+              <h4 className="font-semibold mb-3 text-orange-400">SÍ cuenta para tu límite</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• Mensaje a cliente después de 24h sin actividad</li>
+                <li>• Iniciar conversación nueva con cliente</li>
+                <li>• Mensajes de marketing/promociones</li>
+                <li className="font-semibold text-orange-300">= 450/mes (Básico), 900/mes (Premium)</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-neutral-800/50 rounded-lg">
+            <p className="text-sm text-neutral-400">
+              <strong>Tip para ahorrar:</strong> Responde rápido a tus clientes (dentro de 24h) y tendrás 
+              mensajes prácticamente sin límite sin afectar tu cuota.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "¿Qué pasa si alcanzo mi límite de conversaciones?",
+      content: (
+        <div>
+          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-yellow-400 font-semibold mb-2">
+              Si alcanzas tu límite mensual o diario, no podrás enviar más conversaciones hasta que se renueve el período.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-3 text-nexly-teal">¿Cuándo se renuevan los límites?</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• <strong>Límite diario:</strong> Se resetea cada medianoche</li>
+                <li>• <strong>Límite mensual:</strong> Se resetea el día 1 de cada mes</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-3 text-orange-400">Opciones si alcanzas el límite:</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• <strong>Esperar:</strong> El límite diario se resetea en menos de 24h</li>
+                <li>• <strong>Actualizar plan:</strong> Pasa de Básico (450) a Premium (900) inmediatamente</li>
+                <li>• <strong>Optimizar uso:</strong> Responde dentro de 24h para no consumir tu cuota</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg">
+            <h4 className="font-semibold mb-2 text-nexly-teal">Consejo Pro</h4>
+            <p className="text-sm text-neutral-300">
+              Configura respuestas automáticas para mensajes entrantes. De esta forma, siempre respondes dentro de 24h 
+              y no consumes tu cuota de conversaciones iniciadas por empresa.
+            </p>
+          </div>
+        </div>
       )
     },
     {
@@ -44,53 +136,41 @@ export default function FAQSection() {
       )
     },
     {
-      title: "¿Se cobra un costo adicional por los mensajes de WhatsApp?",
+      title: "¿Qué incluye mi suscripción mensual?",
       content: (
         <div>
-          <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-            <p className="text-yellow-400 font-semibold mb-2">
-              <strong>Sí.</strong> Además de tu plan de suscripción a Nexly, Meta cobra una tarifa por "conversación".
+          <div className="mb-4 p-4 bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg">
+            <p className="text-nexly-teal font-semibold mb-2">
+              Tu tarifa plana incluye TODO: plataforma completa, múltiples canales, soporte y tu cuota de mensajes.
             </p>
           </div>
           
           <div className="space-y-4">
             <div>
-              <h4 className="font-semibold mb-3 text-nexly-teal">¿Qué es una conversación?</h4>
-              <p className="text-sm mb-3">
-                Una conversación es un intercambio de mensajes que dura 24 horas. Una vez que se inicia, 
-                todos los mensajes dentro de esas 24 horas se consideran parte de la misma conversación.
-              </p>
+              <h4 className="font-semibold mb-3 text-nexly-teal">Incluido en todos los planes:</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• <strong>Plataforma unificada:</strong> WhatsApp, Instagram, Telegram en un solo inbox</li>
+                <li>• <strong>Respuestas sin límite:</strong> Atender consultas de clientes sin restricciones</li>
+                <li>• <strong>Analytics completos:</strong> Reportes y métricas de todas tus conversaciones</li>
+                <li>• <strong>Gestión de contactos:</strong> Base de datos y etiquetado</li>
+                <li>• <strong>Automatización:</strong> Respuestas automáticas y flujos</li>
+              </ul>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold mb-3 text-green-400">Iniciada por el cliente</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>• Costo menor (varía por país)</li>
-                  <li>• El cliente envía el primer mensaje</li>
-                  <li>• Puedes responder libremente por 24 horas</li>
-                  <li>• Ideal para soporte al cliente</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold mb-3 text-orange-400">Iniciada por tu empresa</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>• Costo mayor (varía por país)</li>
-                  <li>• Tu empresa envía el primer mensaje</li>
-                  <li>• Requiere plantilla aprobada (HSM)</li>
-                  <li>• Ideal para marketing y notificaciones</li>
-                </ul>
-              </div>
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <h4 className="font-semibold mb-2 text-green-400">Capacidad de tu plan:</h4>
+              <ul className="space-y-2 text-sm">
+                <li>• <strong>Plan Básico ($30/mes):</strong> 450 contactos proactivos/mes</li>
+                <li>• <strong>Plan Premium ($60/mes):</strong> 900 contactos proactivos/mes</li>
+                <li>• <strong>Plan Enterprise ($150/mes):</strong> 2,250 contactos proactivos/mes</li>
+              </ul>
             </div>
           </div>
           
           <div className="mt-4 p-3 bg-neutral-800/50 rounded-lg">
             <p className="text-sm text-neutral-400">
-              <strong>Nota:</strong> Los costos exactos varían por país. Puedes consultar las tarifas actuales en la 
-              <a href="https://developers.facebook.com/docs/whatsapp/pricing" target="_blank" rel="noopener noreferrer" className="text-nexly-teal hover:underline ml-1">
-                documentación oficial de Meta
-              </a>.
+              <strong>Sin costos ocultos:</strong> Todo incluido en tu tarifa mensual. 
+              Sin sorpresas, sin facturación variable.
             </p>
           </div>
         </div>

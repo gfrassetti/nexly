@@ -6,6 +6,7 @@ import ContactForm from "./ContactForm";
 import Header from "./Header";
 import Footer from "./Footer";
 import FAQSection from "./FAQSection";
+import HowItWorksTimeline from "./HowItWorksTimeline";
 
 export default function a() {
   const { token, user } = useAuth();
@@ -15,14 +16,14 @@ export default function a() {
   if (token && user) {
     router.replace("/dashboard");
     return (
-      <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white">
+    <div className="min-h-screen bg-accent-dark text-accent-cream">
       {/* Header */}
       <Header />
 
@@ -39,8 +40,7 @@ export default function a() {
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Unifica WhatsApp Business, Instagram y{" "}
-              <span className="text-nexly-teal bg-gradient-to-r from-nexly-teal to-nexly-light-blue bg-clip-text text-transparent">Messenger</span>
+              Unifica WhatsApp Business, Instagram y Messenger
             </h1>
                 <p className="text-xl text-neutral-300 mb-8 max-w-3xl mx-auto">
                   Conecta WhatsApp Business, Instagram y Messenger. Gestiona todas tus conversaciones, 
@@ -57,6 +57,19 @@ export default function a() {
                   <p className="text-neutral-300 text-sm">
                     Nexly se integra con <strong>WhatsApp Business Platform (Cloud API)</strong>, 
                     no con WhatsApp personal. Necesitas un número asignado a una WABA (WhatsApp Business Account).
+                  </p>
+                </div>
+
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="font-semibold text-green-400">Tarifa Plana Sin Sorpresas</span>
+                  </div>
+                  <p className="text-neutral-300 text-sm">
+                    Desde <strong>$30 USD/mes</strong> con 450 conversaciones incluidas. 
+                    Responde a tus clientes sin límite dentro de 24h.
                   </p>
                 </div>
             
@@ -156,6 +169,7 @@ export default function a() {
           </div>
         </div>
       </section>
+
 
       {/* FAQ Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-neutral-800/30">

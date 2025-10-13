@@ -8,11 +8,13 @@ import { useSearchParams } from "next/navigation";
 import FAQSection from "@/components/FAQSection";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import HowItWorksTimeline from "@/components/HowItWorksTimeline";
+import ConversationsExplainer from "@/components/ConversationsExplainer";
 
 function PricingContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium' | 'enterprise'>('basic');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe'>('stripe');
   // const { createPaymentLink, loading } = usePaymentLink();
   // const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
@@ -20,8 +22,8 @@ function PricingContent() {
   // Detectar plan desde query parameters
   useEffect(() => {
     const plan = searchParams.get('plan');
-    if (plan === 'basic' || plan === 'premium') {
-      setSelectedPlan(plan);
+    if (plan === 'basic' || plan === 'premium' || plan === 'enterprise') {
+      setSelectedPlan(plan as 'basic' | 'premium' | 'enterprise');
     }
   }, [searchParams]);
 
@@ -29,40 +31,70 @@ function PricingContent() {
     {
       id: 'basic',
       name: 'Plan Básico',
-      price: '$1000',
+      price: '$30',
+      priceUSD: true,
       period: '/mes',
       description: 'Perfecto para emprendedores y pequeñas empresas',
       features: [
+        '450 conversaciones/mes incluidas',
+        'Hasta 20 conversaciones/día',
         'WhatsApp Business',
         'Instagram',
-        'Hasta 2 integraciones',
-        'Mensajes ilimitados',
-        '7 días gratis, luego $100/mes',
+        'Telegram',
+        'Hasta 3 integraciones',
+        'Respuestas dentro de 24h sin límite*',
+        '7 días gratis, tarjeta requerida',
       ],
       popular: false,
+      note: '* Las respuestas a mensajes de clientes dentro de 24h no cuentan para el límite'
     },
     {
       id: 'premium',
       name: 'Plan Premium',
-      price: '$1500',
+      price: '$60',
+      priceUSD: true,
       period: '/mes',
-      description: 'Para empresas que necesitan más integraciones',
+      description: 'Para empresas en crecimiento',
       features: [
+        '900 conversaciones/mes incluidas',
+        'Hasta 45 conversaciones/día',
         'WhatsApp Business',
         'Instagram',
         'Facebook Messenger',
-        'TikTok',
         'Telegram',
-        'Twitter/X',
-        'Todas las integraciones disponibles',
-        'Mensajes ilimitados',
-        '7 días gratis, luego $200/mes',
+        'Hasta 10 integraciones',
+        'Respuestas dentro de 24h sin límite*',
+        'Soporte prioritario',
+        '7 días gratis, tarjeta requerida',
       ],
       popular: true,
+      note: '* Las respuestas a mensajes de clientes dentro de 24h no cuentan para el límite'
+    },
+    {
+      id: 'enterprise',
+      name: 'Plan Enterprise',
+      price: '$150',
+      priceUSD: true,
+      period: '/mes',
+      description: 'Para empresas con alto volumen de conversaciones',
+      features: [
+        '2,250 conversaciones/mes incluidas',
+        'Hasta 110 conversaciones/día',
+        'WhatsApp Business',
+        'Instagram',
+        'Facebook Messenger',
+        'Telegram',
+        'Integraciones sin límite',
+        'Respuestas dentro de 24h sin límite*',
+        'Soporte prioritario 24/7',
+        '7 días gratis, tarjeta requerida',
+      ],
+      popular: false,
+      note: '* Las respuestas a mensajes de clientes dentro de 24h no cuentan para el límite'
     },
   ];
 
-  const handleStartTrial = async (planType: 'basic' | 'premium') => {
+  const handleStartTrial = async (planType: 'basic' | 'premium' | 'enterprise') => {
     // Guardar el plan seleccionado en localStorage para mantener el contexto
     localStorage.setItem('selectedPlan', planType);
     localStorage.setItem('selectedPaymentMethod', selectedPaymentMethod);
@@ -78,7 +110,7 @@ function PricingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white">
+    <div className="min-h-screen bg-accent-dark text-accent-cream">
       {/* Header */}
       <Header variant="simple" />
 
@@ -132,21 +164,21 @@ function PricingContent() {
 
       {/* Pricing Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative rounded-2xl p-8 border transition-all duration-300 flex flex-col h-full ${
+              className={`relative rounded-2xl p-8 border-2 transition-all duration-300 flex flex-col h-full ${
                 plan.popular
-                  ? 'border-nexly-teal bg-neutral-800/50 scale-105'
+                  ? 'border-nexly-teal bg-neutral-800/50 shadow-2xl'
                   : 'border-neutral-700 bg-neutral-800/30 hover:border-neutral-600'
               }`}
             >
               {plan.popular && (
-                <div className="flex justify-center -mt-6 mb-2">
-                  <span className="bg-nexly-teal text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-20">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg">
                     Más popular
-                  </span>
+                  </div>
                 </div>
               )}
 
@@ -155,8 +187,13 @@ function PricingContent() {
                 <p className="text-neutral-400 mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center">
                   <span className="text-5xl font-bold">{plan.price}</span>
-                  <span className="text-neutral-400 ml-1">{plan.period}</span>
+                  <span className="text-neutral-400 ml-1"> USD{plan.period}</span>
                 </div>
+                {plan.priceUSD && (
+                  <p className="text-sm text-neutral-500 mt-2">
+                    ~${Math.round(parseFloat(plan.price.replace('$', '')) * 1000)} ARS/mes aprox
+                  </p>
+                )}
               </div>
 
               <ul className="space-y-4 mb-8">
@@ -170,10 +207,16 @@ function PricingContent() {
                 ))}
               </ul>
 
+              {plan.note && (
+                <div className="mb-6 p-3 bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg">
+                  <p className="text-xs text-neutral-400">{plan.note}</p>
+                </div>
+              )}
+
               {/* Botón que redirige según el estado de autenticación */}
               <div className="space-y-3 mt-auto">
                 <button
-                  onClick={() => handleStartTrial(plan.id as 'basic' | 'premium')}
+                  onClick={() => handleStartTrial(plan.id as 'basic' | 'premium' | 'enterprise')}
                   className="w-full py-4 rounded-[2rem] font-semibold transition-all duration-300 bg-accent-cream hover:bg-accent-cream/90 text-[#14120b] border border-accent-cream/20 hover:border-accent-cream/40"
                 >
                   {token ? 'Continuar al Pago' : 'Comenzar Prueba Gratis'}
@@ -195,6 +238,85 @@ function PricingContent() {
         </div>
 
 
+        {/* Explicación de Conversaciones */}
+        <div className="mt-16 bg-gradient-to-br from-nexly-azul/10 to-nexly-teal/10 border border-nexly-teal/20 rounded-2xl p-8 max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-4">¿Qué es una conversación?</h2>
+            <p className="text-neutral-300 text-lg">Entender esto te ayudará a aprovechar tu plan al máximo</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-green-400">Respuestas Sin Límite</h3>
+              </div>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 mt-0.5">•</span>
+                  <span><strong>Responder a clientes</strong> dentro de 24h</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 mt-0.5">•</span>
+                  <span><strong>Recibir mensajes</strong> de cualquier cliente</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 mt-0.5">•</span>
+                  <span><strong>Conversaciones iniciadas</strong> por el cliente</span>
+                </li>
+              </ul>
+              <div className="mt-4 p-3 bg-green-500/5 rounded-lg">
+                <p className="text-xs text-green-300 font-medium">
+                  Tip: Responde rápido y tendrás respuestas sin límite
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-orange-400">Con Límite por Plan</h3>
+              </div>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 mt-0.5">•</span>
+                  <span><strong>Iniciar conversaciones</strong> con clientes</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 mt-0.5">•</span>
+                  <span><strong>Mensajes después de 24h</strong> sin actividad</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400 mt-0.5">•</span>
+                  <span><strong>Campañas de marketing</strong> con plantillas</span>
+                </li>
+              </ul>
+              <div className="mt-4 p-3 bg-orange-500/5 rounded-lg">
+                <p className="text-xs text-orange-300 font-medium">
+                  Básico: 450/mes - Premium: 900/mes
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-nexly-teal/10 border border-nexly-teal/30 rounded-lg">
+            <h4 className="font-semibold mb-2 text-nexly-teal text-center">¿Por qué esta diferencia?</h4>
+            <p className="text-sm text-neutral-300 text-center">
+              Los costos de WhatsApp varían según quién inicia la conversación. 
+              Las respuestas a clientes son mucho más económicas (~$0.005) que iniciar conversaciones (~$0.043). 
+              Nexly incluye ambos costos en tu tarifa plana.
+            </p>
+          </div>
+        </div>
+
         {/* Información adicional para usuarios no autenticados */}
         {!token && (
           <div className="mt-16 bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-4xl mx-auto">
@@ -206,7 +328,7 @@ function PricingContent() {
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-lg">1</span>
+                  <span className="text-accent-cream font-bold text-lg">1</span>
                 </div>
                 <h3 className="font-semibold mb-2">Regístrate gratis</h3>
                 <p className="text-neutral-400 text-sm">Crea tu cuenta en menos de 2 minutos</p>
@@ -214,7 +336,7 @@ function PricingContent() {
               
               <div className="text-center">
                 <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-lg">2</span>
+                  <span className="text-accent-cream font-bold text-lg">2</span>
                 </div>
                 <h3 className="font-semibold mb-2">Elige tu plan</h3>
                 <p className="text-neutral-400 text-sm">Selecciona el plan que mejor se adapte a tu negocio</p>
@@ -222,7 +344,7 @@ function PricingContent() {
               
               <div className="text-center">
                 <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-lg">3</span>
+                  <span className="text-accent-cream font-bold text-lg">3</span>
                 </div>
                 <h3 className="font-semibold mb-2">Paga con seguridad</h3>
                 <p className="text-neutral-400 text-sm mb-2">Procesamiento seguro con</p>
@@ -233,6 +355,16 @@ function PricingContent() {
             </div>
           </div>
         )}
+
+        {/* How It Works Timeline */}
+        <div className="mt-24">
+          <HowItWorksTimeline />
+        </div>
+
+        {/* Conversations Explainer */}
+        <div className="mt-24">
+          <ConversationsExplainer />
+        </div>
 
         {/* FAQ Section */}
         <FAQSection />

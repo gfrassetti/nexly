@@ -13,6 +13,7 @@
         "@formspree/react": "^3.0.0",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "clsx": "^2.1.1",
+        "embla-carousel-react": "^8.6.0",
         "framer-motion": "^12.23.18",
         "jsonwebtoken": "^9.0.2",
         "lucide-react": "^0.544.0",

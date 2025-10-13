@@ -148,9 +148,9 @@ export default function TelegramMTProtoConnect({
     <div className="max-w-md mx-auto p-6 bg-neutral-800 rounded-lg border border-neutral-700">
       <div className="text-center mb-6">
         <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <MessageSquare className="w-8 h-8 text-white" />
+          <MessageSquare className="w-8 h-8 text-accent-cream" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Conectar Telegram</h2>
+        <h2 className="text-2xl font-bold text-accent-cream mb-2">Conectar Telegram</h2>
         <p className="text-neutral-400">
           {step === 'phone' && 'Ingresa tu número de teléfono para comenzar'}
           {step === 'code' && `Ingresa el código enviado a ${maskedPhone}`}
@@ -173,7 +173,7 @@ export default function TelegramMTProtoConnect({
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+1234567890"
-                className="w-full pl-10 pr-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={disabled || isLoading}
                 required
               />
@@ -186,7 +186,7 @@ export default function TelegramMTProtoConnect({
           <button
             type="submit"
             disabled={disabled || isLoading || !phoneNumber.trim()}
-            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-600 disabled:cursor-not-allowed text-accent-cream font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
           >
             {isLoading ? (
               <>
@@ -212,7 +212,7 @@ export default function TelegramMTProtoConnect({
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="123456"
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={disabled || isLoading}
               required
             />
@@ -225,7 +225,7 @@ export default function TelegramMTProtoConnect({
             <button
               type="button"
               onClick={resetForm}
-              className="flex-1 bg-neutral-600 hover:bg-neutral-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+              className="flex-1 bg-neutral-600 hover:bg-neutral-700 text-accent-cream font-medium py-3 px-4 rounded-lg transition-colors duration-200"
               disabled={disabled || isLoading}
             >
               Cambiar número
@@ -233,7 +233,7 @@ export default function TelegramMTProtoConnect({
             <button
               type="submit"
               disabled={disabled || isLoading || !code.trim()}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-600 disabled:cursor-not-allowed text-accent-cream font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
               {isLoading ? (
                 <>
@@ -260,7 +260,7 @@ export default function TelegramMTProtoConnect({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Tu contraseña de 2FA"
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={disabled || isLoading}
               required
             />
@@ -273,7 +273,7 @@ export default function TelegramMTProtoConnect({
             <button
               type="button"
               onClick={() => setStep('code')}
-              className="flex-1 bg-neutral-600 hover:bg-neutral-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+              className="flex-1 bg-neutral-600 hover:bg-neutral-700 text-accent-cream font-medium py-3 px-4 rounded-lg transition-colors duration-200"
               disabled={disabled || isLoading}
             >
               Volver
@@ -281,7 +281,7 @@ export default function TelegramMTProtoConnect({
             <button
               type="submit"
               disabled={disabled || isLoading || !password.trim()}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-600 disabled:cursor-not-allowed text-accent-cream font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
               {isLoading ? (
                 <>
@@ -299,15 +299,15 @@ export default function TelegramMTProtoConnect({
       {step === 'success' && (
         <div className="text-center space-y-4">
           <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle className="w-8 h-8 text-white" />
+            <CheckCircle className="w-8 h-8 text-accent-cream" />
           </div>
-          <h3 className="text-xl font-semibold text-white">¡Conectado!</h3>
+          <h3 className="text-xl font-semibold text-accent-cream">¡Conectado!</h3>
           <p className="text-neutral-400">
             Tu cuenta de Telegram ha sido conectada exitosamente. Ahora puedes gestionar todos tus chats desde Nexly.
           </p>
           <button
             onClick={resetForm}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            className="bg-blue-500 hover:bg-blue-600 text-accent-cream font-medium py-2 px-4 rounded-lg transition-colors duration-200"
           >
             Conectar otra cuenta
           </button>

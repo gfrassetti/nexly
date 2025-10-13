@@ -3,12 +3,12 @@ import { Metadata } from "next";
 import PricingClient from "./PricingClient";
 
 export const metadata: Metadata = {
-  title: "Precios - Nexly | Planes desde $2.999 ARS/mes",
-  description: "Elige tu plan perfecto. Plan Básico desde $2.999 ARS/mes o Premium desde $5.999 ARS/mes. 7 días gratis, tarjeta requerida. WhatsApp Business Platform.",
-  keywords: ["precios", "planes", "suscripción", "WhatsApp Business Platform", "WhatsApp Business", "mensajería unificada", "ARS", "Cloud API"],
+  title: "Precios - Nexly | Planes desde $30 USD/mes",
+  description: "Elige tu plan perfecto. Plan Básico $30 USD/mes (450 conversaciones) o Premium $60 USD/mes (900 conversaciones). 7 días gratis. WhatsApp Business Platform.",
+  keywords: ["precios", "planes", "suscripción", "WhatsApp Business Platform", "WhatsApp Business", "mensajería unificada", "USD", "Cloud API", "conversaciones"],
   openGraph: {
-    title: "Precios Nexly - Planes desde $2.999 ARS/mes",
-    description: "Elige tu plan perfecto. 7 días gratis, tarjeta requerida. WhatsApp Business Platform.",
+    title: "Precios Nexly - Planes desde $30 USD/mes",
+    description: "Plan Básico: 450 conversaciones/mes. Plan Premium: 900 conversaciones/mes. 7 días gratis. WhatsApp Business Platform.",
     type: "website",
     locale: "es_AR",
   },

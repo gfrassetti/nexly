@@ -9,7 +9,7 @@ export default function ContactForm() {
     return (
       <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-2xl mx-auto text-center">
         <div className="w-16 h-16 bg-nexly-green rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -19,7 +19,7 @@ export default function ContactForm() {
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="bg-nexly-teal hover:bg-nexly-green text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
+          className="bg-nexly-teal hover:bg-nexly-green text-accent-cream font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
         >
           Enviar otro mensaje
         </button>
@@ -47,7 +47,7 @@ export default function ContactForm() {
               id="name"
               name="name"
               required
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
               placeholder="Tu nombre completo"
             />
             <ValidationError 
@@ -67,7 +67,7 @@ export default function ContactForm() {
               id="email"
               name="email"
               required
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
               placeholder="tu@email.com"
             />
             <ValidationError 
@@ -87,7 +87,7 @@ export default function ContactForm() {
             type="text"
             id="company"
             name="company"
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
             placeholder="Nombre de tu empresa (opcional)"
           />
           <ValidationError 
@@ -107,7 +107,7 @@ export default function ContactForm() {
             name="message"
             required
             rows={5}
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent resize-none"
+            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent resize-none"
             placeholder="Cuéntanos cómo podemos ayudarte..."
           />
           <ValidationError 
@@ -121,7 +121,7 @@ export default function ContactForm() {
         <button
           type="submit"
           disabled={state.submitting}
-          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2"
+          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-accent-cream font-semibold py-4 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2"
         >
           {state.submitting ? (
             <>

@@ -53,7 +53,7 @@ export default function WhatsAppTester() {
 
   return (
     <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">
+      <h3 className="text-lg font-semibold text-accent-cream mb-4">
         🧪 WhatsApp Test Tool
       </h3>
       <p className="text-neutral-400 text-sm mb-6">
@@ -70,7 +70,7 @@ export default function WhatsAppTester() {
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             placeholder="+5491123456789 (include country code)"
-            className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-xs text-neutral-500 mt-1">
             Include country code (e.g., +54 for Argentina)
@@ -85,14 +85,14 @@ export default function WhatsAppTester() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <button
           onClick={handleSendTest}
           disabled={loading || !phoneNumber || !message}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors duration-200"
+          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-accent-cream px-4 py-2 rounded-lg transition-colors duration-200"
         >
           {loading ? 'Sending...' : '🚀 Send Test Message'}
         </button>

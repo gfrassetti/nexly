@@ -111,7 +111,7 @@ export default function AIAssistant({
           flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
           ${!message.trim() || disabled 
             ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
-            : 'bg-purple-600 hover:bg-purple-700 text-white'
+            : 'bg-purple-600 hover:bg-purple-700 text-accent-cream'
           }
         `}
       >
@@ -139,10 +139,10 @@ export default function AIAssistant({
           <div className="p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-white">Análisis de IA</h3>
+              <h3 className="text-sm font-semibold text-accent-cream">Análisis de IA</h3>
               <button
                 onClick={() => setShowPanel(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-accent-cream"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -163,7 +163,7 @@ export default function AIAssistant({
               {/* Categoría */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-300">Categoría:</span>
-                <span className="text-sm font-medium text-white">
+                <span className="text-sm font-medium text-accent-cream">
                   {getCategoryIcon(analysis.category)} {analysis.category}
                 </span>
               </div>
@@ -171,7 +171,7 @@ export default function AIAssistant({
               {/* Confianza */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-300">Confianza:</span>
-                <span className="text-sm font-medium text-white">{analysis.confidence}%</span>
+                <span className="text-sm font-medium text-accent-cream">{analysis.confidence}%</span>
               </div>
 
               {/* Respuesta sugerida */}
@@ -190,13 +190,13 @@ export default function AIAssistant({
               <button
                 onClick={handleGenerateResponse}
                 disabled={isGenerating}
-                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-accent-cream px-3 py-2 rounded text-sm font-medium transition-colors"
               >
                 {isGenerating ? 'Generando...' : 'Usar IA'}
               </button>
               <button
                 onClick={() => setShowPanel(false)}
-                className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm font-medium transition-colors"
+                className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-accent-cream rounded text-sm font-medium transition-colors"
               >
                 Cerrar
               </button>

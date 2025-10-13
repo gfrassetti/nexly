@@ -117,7 +117,7 @@ router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res
       throw new CustomError('Usuario no encontrado', 401);
     }
 
-    if (!planType || !['basic', 'premium'].includes(planType)) {
+    if (!planType || !['basic', 'premium', 'enterprise'].includes(planType)) {
       throw new CustomError('Tipo de plan inválido', 400);
     }
 

@@ -29,38 +29,38 @@ export default function Topbar() {
     if (hasStripeSubscription) {
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
       badgeColor = sub.planType === 'premium' 
-        ? 'bg-accent-dark text-white border border-accent-dark/30' 
+        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
         : 'text-accent-green border border-accent-green/30';
     } else if (rawStatus === 'trialing') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} Trial`;
       badgeColor = sub.planType === 'premium' 
-        ? 'bg-accent-dark text-white border border-accent-dark/30' 
+        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
         : 'text-accent-blue border border-accent-blue/30';
     } else if (rawStatus === 'active') {
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
       badgeColor = sub.planType === 'premium' 
-        ? 'bg-accent-dark text-white border border-accent-dark/30' 
+        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
         : 'text-accent-green border border-accent-green/30';
     } else if (rawStatus === 'paused') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Pausado)`;
       badgeColor = sub.planType === 'premium' 
-        ? 'bg-accent-dark text-white border border-accent-dark/30' 
+        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
         : 'text-accent-cream border border-accent-cream/30';
     } else if (rawStatus === 'past_due' || rawStatus === 'unpaid') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Gracia)`;
       badgeColor = sub.planType === 'premium' 
-        ? 'bg-accent-dark text-white border border-accent-dark/30' 
+        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
         : 'text-warning border border-warning/30';
     } else if (rawStatus === 'canceled') {
       planText = `${sub.planType === 'basic' ? 'Basic' : 'Premium'} (Cancelado)`;
       badgeColor = sub.planType === 'premium' 
-        ? 'bg-accent-dark text-white border border-accent-dark/30' 
+        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
         : 'text-muted-foreground border border-border';
     } else {
       // Estado por defecto - mostrar el plan
       planText = sub.planType === 'basic' ? 'Basic' : 'Premium';
       badgeColor = sub.planType === 'premium' 
-        ? 'bg-accent-dark text-white border border-accent-dark/30' 
+        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
         : 'text-muted-foreground border border-border';
     }
     
@@ -72,7 +72,7 @@ export default function Topbar() {
   };
 
   return (
-    <header className="h-12 flex items-center justify-between px-4 bg-neutral-900">
+    <header className="h-12 flex items-center justify-between px-4 bg-accent-dark">
       <div className="text-sm text-neutral-300">Panel</div>
       <div className="flex items-center gap-2">
         {user && (

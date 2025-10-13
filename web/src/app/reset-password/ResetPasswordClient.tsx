@@ -71,14 +71,14 @@ function ResetPasswordContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
         <div className="w-full max-w-md text-center">
           <div className="flex justify-center mb-6">
             <Logo size="lg" />
           </div>
           <div className="bg-green-900/20 border border-green-700 rounded-lg p-6">
             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -92,13 +92,13 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+    <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <Logo size="md" />
           </div>
-          <h1 className="text-3xl font-bold text-white">Restablecer contraseña</h1>
+          <h1 className="text-3xl font-bold text-accent-cream">Restablecer contraseña</h1>
           <p className="text-neutral-400 mt-2">Ingresa tu nueva contraseña</p>
         </div>
         
@@ -118,7 +118,7 @@ function ResetPasswordContent() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
               placeholder="Ingresa tu nueva contraseña"
               required
             />
@@ -132,7 +132,7 @@ function ResetPasswordContent() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
               placeholder="Confirma tu nueva contraseña"
               required
             />
@@ -141,7 +141,7 @@ function ResetPasswordContent() {
           <button
             type="submit"
             disabled={loading || !token}
-            className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors duration-300"
+            className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-accent-cream font-semibold py-3 rounded-lg disabled:opacity-50 transition-colors duration-300"
           >
             {loading ? "Restableciendo..." : "Restablecer contraseña"}
           </button>
@@ -160,7 +160,7 @@ function ResetPasswordContent() {
 export default function ResetPasswordClient() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
       </div>
     }>

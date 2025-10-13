@@ -78,7 +78,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
     const bgColor = platformColors[platform as keyof typeof platformColors] || 'bg-neutral-500';
 
     return (
-      <div className={`w-12 h-12 rounded-full ${bgColor} flex items-center justify-center text-white font-semibold text-sm`}>
+      <div className={`w-12 h-12 rounded-full ${bgColor} flex items-center justify-center text-accent-cream font-semibold text-sm`}>
         {initials}
       </div>
     );
@@ -123,7 +123,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
                 {/* Contenido */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-white truncate">{item.title}</h3>
+                    <h3 className="font-medium text-accent-cream truncate">{item.title}</h3>
                     <div className="flex items-center gap-2">
                       {item.unread && (
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>

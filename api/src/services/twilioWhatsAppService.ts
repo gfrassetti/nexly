@@ -3,9 +3,9 @@ import { Twilio } from 'twilio';
 import { config } from '../config';
 import logger from '../utils/logger';
 
-// Cliente principal de Twilio (para operaciones administrativas)
-// Solo inicializar si tenemos credenciales válidas
-const mainClient = config.twilioAccountSid && config.twilioAuthToken && config.twilioAccountSid.startsWith('AC') 
+// Cliente Master de Twilio - Cuenta Única para todos los usuarios
+// Este es el único cliente que necesitamos (Modelo Master)
+const twilioClient = config.twilioAccountSid && config.twilioAuthToken && config.twilioAccountSid.startsWith('AC') 
   ? new Twilio(config.twilioAccountSid, config.twilioAuthToken)
   : null;
 
@@ -23,21 +23,28 @@ export interface TwilioWhatsAppResponse {
 }
 
 /**
- * Enviar mensaje de WhatsApp usando la subcuenta del usuario
- * Crea cliente de Twilio dinámicamente con las credenciales del usuario
+ * Enviar mensaje de WhatsApp usando la cuenta Master de Twilio
+ * Modelo de Cuenta Única - Nexly paga todos los costos
  */
 export async function sendWhatsAppMessage(
   message: TwilioWhatsAppMessage,
   userId: string
 ): Promise<TwilioWhatsAppResponse> {
   try {
-    logger.info('Sending WhatsApp message via user subaccount', {
+    if (!twilioClient) {
+      return {
+        success: false,
+        error: "Twilio client not initialized. Check your TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN."
+      };
+    }
+
+    logger.info('Sending WhatsApp message via Master account', {
       to: message.to,
-      body: message.body,
-      userId
+      userId,
+      bodyLength: message.body.length
     });
 
-    // 1. Buscar datos del usuario en la base de datos
+    // 1. Buscar la integración del usuario para obtener su número de WhatsApp
     const Integration = require('../models/Integration').default;
     const integration = await Integration.findOne({
       userId,
@@ -45,34 +52,31 @@ export async function sendWhatsAppMessage(
       status: "linked"
     });
 
-    if (!integration || !integration.meta?.subaccountSid || !integration.meta?.subaccountAuthToken || !integration.meta?.whatsappSenderId) {
+    if (!integration || !integration.meta?.whatsappNumber) {
       return {
         success: false,
-        error: "User WhatsApp integration not found or incomplete. Please complete the setup process."
+        error: "User WhatsApp integration not found or WhatsApp number not configured."
       };
     }
 
-    // 2. Crear cliente de Twilio para la subcuenta del usuario
-    const userClient = new Twilio(
-      integration.meta.subaccountSid,
-      integration.meta.subaccountAuthToken
-    );
+    // 2. Usar el número de WhatsApp del usuario como "from"
+    const fromNumber = integration.meta.whatsappNumber.startsWith('whatsapp:') 
+      ? integration.meta.whatsappNumber 
+      : `whatsapp:${integration.meta.whatsappNumber}`;
 
-    // 3. Enviar mensaje con el Sender ID del usuario
-    const fromNumber = `whatsapp:${integration.meta.whatsappSenderId}`;
-    const twilioMessage = await userClient.messages.create({
+    // 3. Enviar mensaje usando el cliente Master
+    const twilioMessage = await twilioClient.messages.create({
       body: message.body,
       from: fromNumber,
       to: message.to.startsWith('whatsapp:') ? message.to : `whatsapp:${message.to}`,
     });
 
-    logger.info('WhatsApp Business message sent successfully via user subaccount', {
+    logger.info('WhatsApp message sent successfully via Master account', {
       messageSid: twilioMessage.sid,
       to: message.to,
       from: fromNumber,
       status: twilioMessage.status,
-      userId,
-      subaccountSid: integration.meta.subaccountSid
+      userId
     });
 
     return {
@@ -82,7 +86,7 @@ export async function sendWhatsAppMessage(
     };
 
   } catch (error: any) {
-    logger.error('Error sending WhatsApp Business message via user subaccount', {
+    logger.error('Error sending WhatsApp message via Master account', {
       error: error.message,
       code: error.code,
       moreInfo: error.moreInfo,
@@ -173,7 +177,7 @@ export async function processIncomingWhatsAppMessage(
   error?: string;
 }> {
   try {
-    const { Body, From, To, MessageSid, MessageStatus } = payload;
+    const { Body, From, To, MessageSid, MessageStatus, NumMedia, MediaUrl0, MediaContentType0 } = payload;
     
     // Extraer números de teléfono
     const fromNumber = From.replace('whatsapp:', '');
@@ -182,24 +186,148 @@ export async function processIncomingWhatsAppMessage(
     logger.info('Processing incoming WhatsApp message from webhook', { 
       from: fromNumber,
       to: toNumber,
-      body: Body,
+      body: Body?.substring(0, 50),
       messageSid: MessageSid,
       status: MessageStatus,
+      hasMedia: NumMedia > 0,
       userId
     });
 
-    // TODO: Implementar lógica para:
     // 1. Encontrar el usuario propietario del número de WhatsApp Business (toNumber)
+    const Integration = require('../models/Integration').default;
+    const integration = await Integration.findOne({
+      provider: "whatsapp",
+      status: "linked",
+      $or: [
+        { 'meta.whatsappNumber': `whatsapp:${toNumber}` },
+        { 'meta.whatsappNumber': toNumber },
+        { phoneNumberId: toNumber },
+        { externalId: toNumber }
+      ]
+    });
+
+    if (!integration) {
+      logger.warn('No integration found for incoming WhatsApp message', {
+        toNumber,
+        messageSid: MessageSid
+      });
+      return {
+        success: false,
+        error: 'No integration found for this WhatsApp number'
+      };
+    }
+
+    const ownerId = integration.userId;
+
     // 2. Crear/actualizar contacto (fromNumber)
+    const Contact = require('../models/Contact').default;
+    let contact = await Contact.findOne({
+      userId: ownerId,
+      provider: 'whatsapp',
+      $or: [
+        { phone: fromNumber },
+        { externalId: fromNumber }
+      ]
+    });
+
+    if (!contact) {
+      contact = await Contact.create({
+        userId: ownerId,
+        provider: 'whatsapp',
+        phone: fromNumber,
+        externalId: fromNumber,
+        name: fromNumber, // Se actualizará con el nombre real si está disponible
+        integrationId: integration._id.toString(),
+        lastInteraction: new Date(),
+        lastMessagePreview: Body?.substring(0, 100) || '[Media]',
+        unreadCount: 1,
+        platformData: {
+          waId: fromNumber
+        }
+      });
+
+      logger.info('New WhatsApp contact created', {
+        contactId: contact._id.toString(),
+        phone: fromNumber,
+        userId: ownerId.toString()
+      });
+    } else {
+      // Actualizar información del contacto
+      contact.lastInteraction = new Date();
+      contact.lastMessagePreview = Body?.substring(0, 100) || '[Media]';
+      contact.unreadCount = (contact.unreadCount || 0) + 1;
+      await contact.save();
+
+      logger.info('WhatsApp contact updated', {
+        contactId: contact._id.toString(),
+        phone: fromNumber,
+        unreadCount: contact.unreadCount
+      });
+    }
+
     // 3. Crear/actualizar conversación
+    const Conversation = require('../models/Conversation').default;
+    let conversation = await Conversation.findOne({
+      tenantId: ownerId.toString(),
+      contactId: contact._id,
+      channel: 'whatsapp'
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        tenantId: ownerId.toString(),
+        contactId: contact._id,
+        channel: 'whatsapp',
+        status: 'open'
+      });
+
+      logger.info('New WhatsApp conversation created', {
+        conversationId: conversation._id.toString(),
+        contactId: contact._id.toString(),
+        userId: ownerId.toString()
+      });
+    } else {
+      // Reabrir conversación si está cerrada
+      if (conversation.status === 'closed') {
+        conversation.status = 'open';
+        await conversation.save();
+      }
+    }
+
     // 4. Guardar mensaje en la base de datos
-    // 5. Actualizar métricas de uso
+    const Message = require('../models/Message').default;
+    const message = await Message.create({
+      userId: ownerId,
+      contactId: contact._id,
+      integrationId: integration._id,
+      conversationId: conversation._id,
+      direction: 'in',
+      body: Body || '[Media]',
+      provider: 'whatsapp',
+      externalMessageId: MessageSid,
+      from: fromNumber,
+      senderName: contact.name,
+      timestamp: new Date(),
+      isRead: false
+    });
+
+    logger.info('WhatsApp message saved to database', {
+      messageId: message._id.toString(),
+      externalMessageId: MessageSid,
+      from: fromNumber,
+      to: toNumber,
+      userId: ownerId.toString()
+    });
+
+    // 5. Actualizar métricas de uso (opcional - puede implementarse después)
+    // TODO: Implementar sistema de métricas si es necesario
 
     logger.info('WhatsApp message processed successfully from webhook', { 
       messageSid: MessageSid, 
       fromNumber, 
       toNumber,
-      userId 
+      userId: ownerId.toString(),
+      messageId: message._id.toString()
     });
 
     return {
@@ -223,8 +351,9 @@ export async function processIncomingWhatsAppMessage(
 }
 
 /**
- * Obtener métricas de uso de WhatsApp desde la subcuenta del usuario
- * Usa la subcuenta específica para obtener métricas individuales
+ * Obtener métricas de uso de WhatsApp desde la base de datos
+ * En el modelo Master, las métricas se obtienen de los mensajes guardados en la DB
+ * (No desde Twilio, ya que la factura es consolidada)
  */
 export async function fetchWhatsAppUsageMetrics(
   userId: string,
@@ -235,21 +364,18 @@ export async function fetchWhatsAppUsageMetrics(
   metrics?: {
     messagesSent: number;
     messagesReceived: number;
-    totalCost: number;
-    breakdown: any[];
-    twilioCost: number;
-    metaCost: number;
+    totalMessages: number;
   };
   error?: string;
 }> {
   try {
-    logger.info('Fetching WhatsApp usage metrics from user subaccount', {
+    logger.info('Fetching WhatsApp usage metrics from database', {
       userId,
       startDate,
       endDate
     });
 
-    // 1. Buscar datos del usuario en la base de datos
+    // Verificar que el usuario tiene integración de WhatsApp
     const Integration = require('../models/Integration').default;
     const integration = await Integration.findOne({
       userId,
@@ -257,79 +383,41 @@ export async function fetchWhatsAppUsageMetrics(
       status: "linked"
     });
 
-    if (!integration || !integration.meta?.subaccountSid || !integration.meta?.subaccountAuthToken) {
+    if (!integration) {
       return {
         success: false,
-        error: "User WhatsApp integration not found or incomplete"
+        error: "User WhatsApp integration not found"
       };
     }
 
-    // 2. Crear cliente de Twilio para la subcuenta del usuario
-    const userClient = new Twilio(
-      integration.meta.subaccountSid,
-      integration.meta.subaccountAuthToken
-    );
+    // Obtener métricas desde la base de datos (mensajes guardados)
+    const Message = require('../models/Message').default;
+    
+    const dateFilter: any = {
+      userId,
+      provider: 'whatsapp'
+    };
 
-    // 3. Obtener métricas de uso desde la subcuenta del usuario
-    const usage = await userClient.usage.records.list({
-      category: 'whatsapp',
-      startDate: startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-      endDate: endDate || new Date()
-    });
+    if (startDate || endDate) {
+      dateFilter.timestamp = {};
+      if (startDate) dateFilter.timestamp.$gte = startDate;
+      if (endDate) dateFilter.timestamp.$lte = endDate;
+    }
 
-    // Procesar métricas con categorías específicas
-    let messagesSent = 0;
-    let messagesReceived = 0;
-    let totalCost = 0;
-    let twilioCost = 0;
-    let metaCost = 0;
-    const breakdown: any[] = [];
-
-    usage.forEach(record => {
-      const cost = parseFloat(record.price?.toString() || '0');
-      totalCost += cost;
-
-      // Categorizar costos entre Twilio y Meta
-      if (record.category === 'whatsapp' && record.description?.includes('twilio')) {
-        twilioCost += cost;
-      } else if (record.category === 'whatsapp' && record.description?.includes('meta')) {
-        metaCost += cost;
-      }
-
-      breakdown.push({
-        category: record.category,
-        description: record.description,
-        count: record.count?.toString() || '0',
-        price: record.price?.toString() || '0',
-        priceUnit: record.priceUnit,
-        subcategory: record.subresourceUris
-      });
-
-      // Contar mensajes usando categorías específicas
-      if (record.description?.includes('whatsapp-outbound')) {
-        messagesSent += parseInt(record.count?.toString() || '0');
-      } else if (record.description?.includes('whatsapp-inbound')) {
-        messagesReceived += parseInt(record.count?.toString() || '0');
-      }
-    });
+    const [messagesSent, messagesReceived] = await Promise.all([
+      Message.countDocuments({ ...dateFilter, direction: 'out' }),
+      Message.countDocuments({ ...dateFilter, direction: 'in' })
+    ]);
 
     const metrics = {
       messagesSent,
       messagesReceived,
-      totalCost,
-      breakdown,
-      twilioCost,
-      metaCost
+      totalMessages: messagesSent + messagesReceived
     };
 
-    logger.info('WhatsApp usage metrics fetched successfully from user subaccount', {
+    logger.info('WhatsApp usage metrics fetched successfully from database', {
       userId,
-      subaccountSid: integration.meta.subaccountSid,
-      messagesSent,
-      messagesReceived,
-      totalCost,
-      twilioCost,
-      metaCost
+      ...metrics
     });
 
     return {
@@ -338,7 +426,7 @@ export async function fetchWhatsAppUsageMetrics(
     };
 
   } catch (error: any) {
-    logger.error('Error fetching WhatsApp usage metrics from user subaccount', {
+    logger.error('Error fetching WhatsApp usage metrics from database', {
       error: error.message,
       userId
     });
@@ -351,8 +439,7 @@ export async function fetchWhatsAppUsageMetrics(
 }
 
 /**
- * Verificar configuración de Twilio WhatsApp Business
- * Verifica la cuenta principal de Twilio
+ * Verificar configuración de Twilio Master Account
  */
 export async function verifyTwilioConfig(): Promise<{ 
   success: boolean; 
@@ -365,13 +452,13 @@ export async function verifyTwilioConfig(): Promise<{
       return { success: false, error: "Twilio Account SID or Auth Token not configured." };
     }
 
-    if (!mainClient) {
+    if (!twilioClient) {
       return { success: false, error: "Twilio client not initialized. Check your credentials." };
     }
 
     // Test authentication by fetching account details
-    const account = await mainClient.api.v2010.accounts(config.twilioAccountSid).fetch();
-    logger.info('Twilio main account verified successfully', { 
+    const account = await twilioClient.api.v2010.accounts(config.twilioAccountSid).fetch();
+    logger.info('Twilio Master account verified successfully', { 
       accountSid: account.sid, 
       friendlyName: account.friendlyName,
       status: account.status
@@ -383,7 +470,7 @@ export async function verifyTwilioConfig(): Promise<{
       accountStatus: account.status
     };
   } catch (error: any) {
-    logger.error('Error verifying Twilio main account configuration', {
+    logger.error('Error verifying Twilio Master account configuration', {
       error: error.message,
       code: error.code,
       moreInfo: error.moreInfo
@@ -393,19 +480,17 @@ export async function verifyTwilioConfig(): Promise<{
 }
 
 /**
- * Verificar configuración de subcuenta de usuario
- * Verifica las credenciales de la subcuenta del usuario
+ * Verificar que el usuario tiene una integración de WhatsApp configurada
+ * En el modelo Master, solo verificamos que la integración existe
  */
-export async function verifyUserSubaccount(
+export async function verifyUserWhatsAppIntegration(
   userId: string
 ): Promise<{ 
   success: boolean; 
   error?: string; 
-  subaccountSid?: string; 
-  subaccountStatus?: string;
+  whatsappNumber?: string;
 }> {
   try {
-    // 1. Buscar datos del usuario en la base de datos
     const Integration = require('../models/Integration').default;
     const integration = await Integration.findOne({
       userId,
@@ -413,37 +498,25 @@ export async function verifyUserSubaccount(
       status: "linked"
     });
 
-    if (!integration || !integration.meta?.subaccountSid || !integration.meta?.subaccountAuthToken) {
+    if (!integration || !integration.meta?.whatsappNumber) {
       return {
         success: false,
-        error: "User WhatsApp integration not found or incomplete"
+        error: "User WhatsApp integration not found or WhatsApp number not configured"
       };
     }
-
-    // 2. Crear cliente de Twilio para la subcuenta del usuario
-    const userClient = new Twilio(
-      integration.meta.subaccountSid,
-      integration.meta.subaccountAuthToken
-    );
-
-    // 3. Verificar la subcuenta
-    const subaccount = await userClient.api.v2010.accounts(integration.meta.subaccountSid).fetch();
     
-    logger.info('User subaccount verified successfully', {
+    logger.info('User WhatsApp integration verified', {
       userId,
-      subaccountSid: subaccount.sid,
-      status: subaccount.status,
-      friendlyName: subaccount.friendlyName
+      whatsappNumber: integration.meta.whatsappNumber
     });
 
     return {
       success: true,
-      subaccountSid: subaccount.sid,
-      subaccountStatus: subaccount.status
+      whatsappNumber: integration.meta.whatsappNumber
     };
 
   } catch (error: any) {
-    logger.error('Error verifying user subaccount', {
+    logger.error('Error verifying user WhatsApp integration', {
       error: error.message,
       userId
     });

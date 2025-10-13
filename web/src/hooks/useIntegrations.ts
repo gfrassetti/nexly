@@ -85,8 +85,8 @@ export function useIntegrations(): UseIntegrationsReturn {
   };
 
   const getButtonStyle = (integrationName: string): string => {
-    if (integrationName === 'whatsapp') return 'w-full bg-nexly-teal text-white px-4 py-2 rounded hover:bg-nexly-green transition-colors duration-200';
-    if (isIntegrationAvailable(integrationName)) return 'w-full bg-nexly-azul text-white px-4 py-2 rounded hover:bg-nexly-light-blue transition-colors duration-200';
+    if (integrationName === 'whatsapp') return 'w-full bg-nexly-teal text-accent-cream px-4 py-2 rounded hover:bg-nexly-green transition-colors duration-200';
+    if (isIntegrationAvailable(integrationName)) return 'w-full bg-nexly-azul text-accent-cream px-4 py-2 rounded hover:bg-nexly-light-blue transition-colors duration-200';
     return 'w-full bg-neutral-600 text-neutral-400 px-4 py-2 rounded cursor-not-allowed transition-colors duration-200';
   };
 

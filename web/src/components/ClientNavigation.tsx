@@ -9,13 +9,13 @@ export default function ClientNavigation() {
     <>
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center space-x-8">
-        <a href="#features" className="text-neutral-300 hover:text-white transition-colors">
+        <a href="#features" className="text-neutral-300 hover:text-accent-cream transition-colors">
           Características
         </a>
-        <Link href="/pricing" className="text-neutral-300 hover:text-white transition-colors">
+        <Link href="/pricing" className="text-neutral-300 hover:text-accent-cream transition-colors">
           Precios
         </Link>
-        <a href="#contact" className="text-neutral-300 hover:text-white transition-colors">
+        <a href="#contact" className="text-neutral-300 hover:text-accent-cream transition-colors">
           Contacto
         </a>
       </div>
@@ -24,13 +24,13 @@ export default function ClientNavigation() {
       <div className="hidden md:flex items-center space-x-4">
         <Link
           href="/login"
-          className="text-neutral-300 hover:text-white transition-colors duration-300"
+          className="text-neutral-300 hover:text-accent-cream transition-colors duration-300"
         >
           Iniciar sesión
         </Link>
         <Link
           href="/pricing"
-          className="bg-nexly-teal hover:bg-nexly-green text-white px-4 py-2 rounded-lg transition-colors duration-300"
+          className="bg-nexly-teal hover:bg-nexly-green text-accent-cream px-4 py-2 rounded-lg transition-colors duration-300"
         >
           Probar gratis
         </Link>
@@ -40,7 +40,7 @@ export default function ClientNavigation() {
       <div className="md:hidden">
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="text-neutral-300 hover:text-white transition-colors duration-300"
+          className="text-neutral-300 hover:text-accent-cream transition-colors duration-300"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -50,19 +50,19 @@ export default function ClientNavigation() {
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-neutral-800 bg-neutral-900">
+        <div className="md:hidden border-t border-neutral-800 bg-accent-dark">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            <a href="#features" className="block px-3 py-2 text-neutral-300 hover:text-white">
+            <a href="#features" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
               Características
             </a>
-            <Link href="/pricing" className="block px-3 py-2 text-neutral-300 hover:text-white">
+            <Link href="/pricing" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
               Precios
             </Link>
-            <a href="#contact" className="block px-3 py-2 text-neutral-300 hover:text-white">
+            <a href="#contact" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
               Contacto
             </a>
             <div className="border-t border-neutral-800 pt-2 mt-2">
-              <Link href="/login" className="block px-3 py-2 text-neutral-300 hover:text-white">
+              <Link href="/login" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
                 Iniciar sesión
               </Link>
               <Link href="/pricing" className="block px-3 py-2 text-nexly-teal hover:text-nexly-green">

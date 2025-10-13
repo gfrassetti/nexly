@@ -47,12 +47,12 @@ export default function MessageInput({
           onKeyPress={handleKeyPress}
           placeholder={placeholder}
           disabled={disabled || isSending}
-          className="flex-1 px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+          className="flex-1 px-4 py-2 bg-accent-dark border border-neutral-700 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
         />
         <button
           onClick={handleSend}
           disabled={!message.trim() || disabled || isSending}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+          className="px-4 py-2 bg-green-600 text-accent-cream rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
         >
           {isSending ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

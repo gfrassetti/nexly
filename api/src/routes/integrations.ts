@@ -26,7 +26,7 @@ import {
   processIncomingWhatsAppMessage,
   fetchWhatsAppUsageMetrics,
   verifyTwilioConfig,
-  verifyUserSubaccount
+  verifyUserWhatsAppIntegration
 } from "../services/twilioWhatsAppService";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
@@ -2310,9 +2310,7 @@ router.get("/whatsapp/usage-metrics", async (req: AuthRequest, res: Response) =>
     logIntegrationActivity('whatsapp_usage_metrics_fetched', userId, {
       messagesSent: result.metrics?.messagesSent || 0,
       messagesReceived: result.metrics?.messagesReceived || 0,
-      totalCost: result.metrics?.totalCost || 0,
-      twilioCost: result.metrics?.twilioCost || 0,
-      metaCost: result.metrics?.metaCost || 0
+      totalMessages: result.metrics?.totalMessages || 0
     });
 
     res.json({
@@ -2458,85 +2456,7 @@ router.post("/fix-subscription-status", async (req: AuthRequest, res: Response) 
 
 
 
-/**
- * POST /integrations/whatsapp/complete-subaccount-setup
- * Completar la configuración de subcuenta de Twilio
- */
-router.post("/whatsapp/complete-subaccount-setup", async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id || req.user?._id;
-    if (!userId) return res.status(401).json({ error: "no_user_in_token" });
-
-    const { subaccountSid, subaccountAuthToken } = req.body;
-
-    if (!subaccountSid || !subaccountAuthToken) {
-      return res.status(400).json({
-        success: false,
-        error: "Subaccount SID y Auth Token son requeridos"
-      });
-    }
-
-    // Usar servicio importado
-    const verification = await verifyUserSubaccount(userId);
-    
-    if (!verification.success) {
-      return res.status(400).json({
-        success: false,
-        error: "Credenciales de subcuenta inválidas"
-      });
-    }
-
-    // Actualizar la integración con los datos de la subcuenta
-    const integration = await Integration.findOneAndUpdate(
-      { userId, provider: "whatsapp" },
-      {
-        $set: {
-          'meta.subaccountSid': subaccountSid,
-          'meta.subaccountAuthToken': subaccountAuthToken,
-          'meta.setupComplete': true
-        }
-      },
-      { new: true }
-    );
-
-    if (!integration) {
-      return res.status(404).json({
-        success: false,
-        error: "Integración de WhatsApp no encontrada"
-      });
-    }
-
-    // Log successful setup completion
-    logIntegrationActivity('whatsapp_subaccount_setup_completed', userId, {
-      subaccountSid,
-      setupComplete: true
-    });
-
-    logger.info("Configuración de subcuenta completada exitosamente", {
-      userId,
-      integrationId: (integration as any)._id?.toString() || 'unknown'
-    });
-    res.json({
-      success: true,
-      message: "Configuración de subcuenta completada exitosamente",
-      integration: {
-        id: (integration._id as Types.ObjectId),
-        status: integration.status,
-        setupComplete: (integration.meta as any)?.setupComplete
-      }
-    });
-
-  } catch (error: any) {
-    logger.error("Error completing subaccount setup", {
-      error: error.message,
-      userId: req.user?.id || req.user?._id || 'unknown',
-      stack: error.stack
-    });
-    res.status(500).json({
-      success: false,
-      error: "Error interno del servidor"
-    });
-  }
-});
+// Endpoint eliminado: complete-subaccount-setup
+// En el modelo Master, no se necesita configurar subcuentas individuales
 
 export default router;

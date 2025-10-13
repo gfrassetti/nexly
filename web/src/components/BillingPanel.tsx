@@ -93,7 +93,7 @@ export default function BillingPanel() {
   return (
     <div className="bg-neutral-800 border border-neutral-700 rounded-lg">
       <div className="p-6 border-b border-neutral-700">
-        <h3 className="text-lg font-semibold text-white">Detalles de facturación</h3>
+        <h3 className="text-lg font-semibold text-accent-cream">Detalles de facturación</h3>
         <p className="text-sm text-neutral-400 mt-1">Información de suscripción</p>
       </div>
 
@@ -109,38 +109,38 @@ export default function BillingPanel() {
         
         <div className="flex justify-between">
           <span className="text-neutral-300">Plan</span>
-          <span className="text-white">{plan}</span>
+          <span className="text-accent-cream">{plan}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-neutral-300">Próxima Factura</span>
-          <span className="text-white">{nextBilling}</span>
+          <span className="text-accent-cream">{nextBilling}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-neutral-300">Renovación</span>
-          <span className="text-white">{renewal}</span>
+          <span className="text-accent-cream">{renewal}</span>
         </div>
         
         <div className="h-px bg-neutral-700"></div>
         
         <div className="flex justify-between">
           <span className="text-neutral-300">Método de pago</span>
-          <span className="text-white">
+          <span className="text-accent-cream">
             {sub.stripeSubscriptionId ? 'Tarjeta vinculada' : 'No disponible'}
           </span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-neutral-300">ID de Suscripción</span>
-          <span className="text-white font-mono text-xs">
+          <span className="text-accent-cream font-mono text-xs">
             {sub.stripeSubscriptionId ? `${sub.stripeSubscriptionId.slice(0, 8)}...` : 'No disponible'}
           </span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-neutral-300">Fecha de inicio</span>
-          <span className="text-white">
+          <span className="text-accent-cream">
             {(sub as any).startDate ? new Date((sub as any).startDate).toLocaleDateString("es-AR") : 'No disponible'}
           </span>
         </div>

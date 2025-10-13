@@ -68,17 +68,17 @@ export default function TelegramPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-900 p-6">
+      <div className="min-h-screen bg-accent-dark p-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <button
               onClick={() => router.back()}
-              className="flex items-center text-neutral-400 hover:text-white transition-colors duration-200 mb-6"
+              className="flex items-center text-neutral-400 hover:text-accent-cream transition-colors duration-200 mb-6"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               Volver
             </button>
-            <h1 className="text-3xl font-bold text-white mb-2">Gestionar Telegram</h1>
+            <h1 className="text-3xl font-bold text-accent-cream mb-2">Gestionar Telegram</h1>
           </div>
 
           <div className="flex items-center justify-center py-12">
@@ -94,17 +94,17 @@ export default function TelegramPage() {
 
   if (error || !integration) {
     return (
-      <div className="min-h-screen bg-neutral-900 p-6">
+      <div className="min-h-screen bg-accent-dark p-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <button
               onClick={() => router.back()}
-              className="flex items-center text-neutral-400 hover:text-white transition-colors duration-200 mb-6"
+              className="flex items-center text-neutral-400 hover:text-accent-cream transition-colors duration-200 mb-6"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               Volver
             </button>
-            <h1 className="text-3xl font-bold text-white mb-2">Gestionar Telegram</h1>
+            <h1 className="text-3xl font-bold text-accent-cream mb-2">Gestionar Telegram</h1>
           </div>
 
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-8">
@@ -123,13 +123,13 @@ export default function TelegramPage() {
             <div className="flex space-x-4">
               <button
                 onClick={() => router.push('/dashboard/integrations/connect/telegram')}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200"
+                className="bg-blue-500 hover:bg-blue-600 text-accent-cream font-medium py-2 px-6 rounded-lg transition-colors duration-200"
               >
                 Conectar Telegram
               </button>
               <button
                 onClick={() => router.push('/dashboard/integrations')}
-                className="bg-neutral-600 hover:bg-neutral-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200"
+                className="bg-neutral-600 hover:bg-neutral-700 text-accent-cream font-medium py-2 px-6 rounded-lg transition-colors duration-200"
               >
                 Ver todas las integraciones
               </button>
@@ -141,17 +141,17 @@ export default function TelegramPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 p-6">
+    <div className="min-h-screen bg-accent-dark p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-neutral-400 hover:text-white transition-colors duration-200 mb-6"
+            className="flex items-center text-neutral-400 hover:text-accent-cream transition-colors duration-200 mb-6"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Volver
           </button>
-          <h1 className="text-3xl font-bold text-white mb-2">Gestionar Telegram</h1>
+          <h1 className="text-3xl font-bold text-accent-cream mb-2">Gestionar Telegram</h1>
           <p className="text-neutral-400">
             Gestiona todos tus chats y mensajes de Telegram desde una sola plataforma.
           </p>

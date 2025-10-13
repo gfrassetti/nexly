@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <AuthGuard requireAuth={true}>
       <SubscriptionProvider>
         <ErrorBoundary>
-          <div className="min-h-screen grid grid-cols-[260px_1fr] bg-neutral-900 text-neutral-100">
+          <div className="min-h-screen grid grid-cols-[260px_1fr] bg-accent-dark text-neutral-100">
             <Sidebar />
 
             <div className="flex flex-col">

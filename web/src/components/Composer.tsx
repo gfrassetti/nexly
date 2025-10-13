@@ -283,7 +283,7 @@ export default function Composer({
               onChange={handleTextChange}
               onKeyPress={handleKeyPress}
               placeholder={placeholder || `Escribe un mensaje en ${getChannelName()}...`}
-              className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent max-h-32 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-3 pr-12 text-accent-cream placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent max-h-32 disabled:opacity-50 disabled:cursor-not-allowed"
               rows={1}
               disabled={isLoading || disabled}
               maxLength={maxLength}
@@ -314,7 +314,7 @@ export default function Composer({
             disabled={!text.trim() || isLoading || disabled || text.length > maxLength || !canSendMessage(channel)}
             className={`flex-shrink-0 p-3 rounded-lg transition-colors ${
               text.trim() && !isLoading && !disabled && text.length <= maxLength && canSendMessage(channel)
-                ? 'bg-green-600 text-white hover:bg-green-700'
+                ? 'bg-green-600 text-accent-cream hover:bg-green-700'
                 : 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
             }`}
             title={

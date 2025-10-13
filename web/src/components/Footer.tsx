@@ -19,7 +19,7 @@ export default function Footer({
 
   if (variant === 'minimal') {
     return (
-      <footer className={`border-t border-neutral-800 bg-neutral-900 py-8 ${className}`}>
+      <footer className={`border-t border-neutral-800 bg-accent-dark py-8 ${className}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-neutral-400 text-sm">
             © {currentYear} Nexly. Todos los derechos reservados.
@@ -30,7 +30,7 @@ export default function Footer({
   }
 
   return (
-    <footer className={`border-t border-neutral-800 bg-neutral-900 py-8 ${className}`}>
+    <footer className={`border-t border-neutral-800 bg-accent-dark py-8 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           {showLogo && (
@@ -43,11 +43,11 @@ export default function Footer({
           </p>
           {showLinks && (
             <div className="flex justify-center space-x-6 text-sm text-neutral-500">
-              <Link href="/privacy-policy" className="hover:text-white transition-colors duration-300">
+              <Link href="/privacy-policy" className="hover:text-accent-cream transition-colors duration-300">
                 Política de Privacidad
               </Link>
               <span>•</span>
-              <Link href="/terms-and-conditions" className="hover:text-white transition-colors duration-300">
+              <Link href="/terms-and-conditions" className="hover:text-accent-cream transition-colors duration-300">
                 Términos y Condiciones
               </Link>
               <span>•</span>

@@ -45,7 +45,7 @@ export default function AuthGuard({ children, requireAuth = true }: AuthGuardPro
   // Mostrar loading mientras verifica autenticación
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-900">
+      <div className="min-h-screen flex items-center justify-center bg-accent-dark">
         <Loader size="lg" text="Verificando autenticación..." />
       </div>
     );

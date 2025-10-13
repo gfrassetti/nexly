@@ -16,7 +16,7 @@ function AccordionItem({ title, children, isOpen, onClick }: AccordionItemProps)
         onClick={onClick}
         className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-neutral-700/50 transition-colors duration-200"
       >
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <h3 className="text-lg font-semibold text-accent-cream">{title}</h3>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}

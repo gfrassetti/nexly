@@ -56,31 +56,31 @@ export default function ContactList({
       case "whatsapp":
         return (
           <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold">WA</span>
+            <span className="text-accent-cream text-[10px] font-bold">WA</span>
           </div>
         );
       case "telegram":
         return (
           <div className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold">TG</span>
+            <span className="text-accent-cream text-[10px] font-bold">TG</span>
           </div>
         );
       case "instagram":
         return (
           <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold">IG</span>
+            <span className="text-accent-cream text-[10px] font-bold">IG</span>
           </div>
         );
       case "messenger":
         return (
           <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold">M</span>
+            <span className="text-accent-cream text-[10px] font-bold">M</span>
           </div>
         );
       default:
         return (
           <div className="w-6 h-6 bg-neutral-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold">?</span>
+            <span className="text-accent-cream text-[10px] font-bold">?</span>
           </div>
         );
     }
@@ -222,7 +222,7 @@ export default function ContactList({
                       />
                     ) : null}
                     <div
-                      className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                      className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center text-accent-cream font-semibold text-sm"
                       style={{
                         display:
                           contact.avatar || contact.profilePicture
@@ -241,7 +241,7 @@ export default function ContactList({
                   {/* Información del contacto */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <h4 className="font-medium text-white truncate">
+                      <h4 className="font-medium text-accent-cream truncate">
                         {contact.name || "Sin nombre"}
                       </h4>
                       {contact.lastInteraction && (

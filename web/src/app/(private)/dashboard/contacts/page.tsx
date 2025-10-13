@@ -150,12 +150,12 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-neutral-900 text-white">
+    <div className="h-full flex flex-col bg-accent-dark text-accent-cream">
       {/* Header */}
       <div className="border-b border-neutral-700 bg-neutral-800 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Contactos</h1>
+            <h1 className="text-2xl font-bold text-accent-cream">Contactos</h1>
             <p className="text-neutral-400 mt-1">
               Gestiona tus contactos de todas las plataformas
             </p>
@@ -168,8 +168,8 @@ export default function ContactsPage() {
                  onClick={() => setShowArchived(false)}
                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                    !showArchived 
-                     ? "bg-neutral-600 text-white" 
-                     : "text-neutral-300 hover:text-white"
+                     ? "bg-neutral-600 text-accent-cream" 
+                     : "text-neutral-300 hover:text-accent-cream"
                  }`}
                >
                  Activos ({counts?.active || 0})
@@ -178,8 +178,8 @@ export default function ContactsPage() {
                  onClick={() => setShowArchived(true)}
                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                    showArchived 
-                     ? "bg-neutral-600 text-white" 
-                     : "text-neutral-300 hover:text-white"
+                     ? "bg-neutral-600 text-accent-cream" 
+                     : "text-neutral-300 hover:text-accent-cream"
                  }`}
                >
                  📦 Archivados ({counts?.archived || 0})
@@ -189,7 +189,7 @@ export default function ContactsPage() {
             <button
               onClick={handleSyncContacts}
               disabled={isSyncing}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-accent-cream px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
             >
               {isSyncing ? (
                 <>
@@ -211,7 +211,7 @@ export default function ContactsPage() {
             
             <button
               onClick={() => window.location.href = '/dashboard/integrations'}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-accent-cream px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -231,7 +231,7 @@ export default function ContactsPage() {
                   onClick={() => setIntegrationId(integration.id)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize flex items-center gap-2 ${
                     integrationId === integration.id
-                      ? `${integration.color} text-white shadow-lg`
+                      ? `${integration.color} text-accent-cream shadow-lg`
                       : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
                   }`}
                 >
@@ -246,7 +246,7 @@ export default function ContactsPage() {
                     handleSyncIntegration(integration.id);
                   }}
                   disabled={isSyncing}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 hover:bg-blue-600 text-accent-cream rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                   title={`Sincronizar ${integration.label}`}
                 >
                   {isSyncing ? (
@@ -271,7 +271,7 @@ export default function ContactsPage() {
               placeholder="Buscar contactos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-2 pl-10 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-2 pl-10 text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
             <div className="absolute left-3 top-2.5 text-neutral-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,7 +307,7 @@ export default function ContactsPage() {
             <p className="text-red-300 mb-4">{error}</p>
             <button
               onClick={() => refetch()}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-accent-cream px-4 py-2 rounded-lg transition-colors"
             >
               Intentar de nuevo
             </button>

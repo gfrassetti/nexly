@@ -19,6 +19,17 @@ const messageSchema = new Schema(
     // Campos para mensajes no leídos
     isRead: { type: Boolean, default: false }, // Si el mensaje fue leído por el usuario
     readAt: { type: Date }, // Timestamp cuando se leyó el mensaje
+    
+    // Estado del mensaje (para mensajes salientes)
+    status: { 
+      type: String, 
+      enum: ['queued', 'sending', 'sent', 'delivered', 'read', 'failed'],
+      default: 'sent'
+    },
+    
+    // Campos de error (para mensajes fallidos)
+    errorCode: { type: String },
+    errorMessage: { type: String }
   },
   { timestamps: true }
 );

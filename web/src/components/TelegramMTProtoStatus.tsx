@@ -152,10 +152,10 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
-              <MessageSquare className="w-6 h-6 text-white" />
+              <MessageSquare className="w-6 h-6 text-accent-cream" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">{integration.name}</h3>
+              <h3 className="text-xl font-semibold text-accent-cream">{integration.name}</h3>
               <p className="text-neutral-400">
                 {integration.meta.telegramUsername ? `@${integration.meta.telegramUsername}` : integration.meta.telegramPhoneNumber}
               </p>
@@ -186,17 +186,17 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
             <span className="text-neutral-400">ID de Usuario:</span>
-            <p className="text-white font-mono">{integration.meta.telegramUserId}</p>
+            <p className="text-accent-cream font-mono">{integration.meta.telegramUserId}</p>
           </div>
           <div>
             <span className="text-neutral-400">Nombre:</span>
-            <p className="text-white">
+            <p className="text-accent-cream">
               {integration.meta.telegramFirstName} {integration.meta.telegramLastName}
             </p>
           </div>
           <div>
             <span className="text-neutral-400">Teléfono:</span>
-            <p className="text-white">{integration.meta.telegramPhoneNumber}</p>
+            <p className="text-accent-cream">{integration.meta.telegramPhoneNumber}</p>
           </div>
         </div>
       </div>
@@ -205,11 +205,11 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
       <div className="bg-neutral-800 rounded-lg border border-neutral-700">
         <div className="p-4 border-b border-neutral-700">
           <div className="flex items-center justify-between">
-            <h4 className="text-lg font-semibold text-white">Tus Chats</h4>
+            <h4 className="text-lg font-semibold text-accent-cream">Tus Chats</h4>
             <button
               onClick={loadChats}
               disabled={isLoadingChats}
-              className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded-lg transition-colors duration-200 disabled:opacity-50"
+              className="p-2 text-neutral-400 hover:text-accent-cream hover:bg-neutral-700 rounded-lg transition-colors duration-200 disabled:opacity-50"
             >
               {isLoadingChats ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -246,7 +246,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
                       {getChatIcon(chat.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">
+                      <p className="text-accent-cream font-medium truncate">
                         {chat.title || `Chat ${chat.id}`}
                       </p>
                       <div className="flex items-center space-x-2 text-sm text-neutral-400">
@@ -271,7 +271,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
       {selectedChat && (
         <div className="bg-neutral-800 rounded-lg border border-neutral-700">
           <div className="p-4 border-b border-neutral-700">
-            <h4 className="text-lg font-semibold text-white">
+            <h4 className="text-lg font-semibold text-accent-cream">
               {selectedChat.title || `Chat ${selectedChat.id}`}
             </h4>
             <p className="text-sm text-neutral-400">
@@ -310,7 +310,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
                         {new Date(message.date).toLocaleString()}
                       </span>
                     </div>
-                    <p className="text-white text-sm">
+                    <p className="text-accent-cream text-sm">
                       {message.text || '[Mensaje sin texto]'}
                     </p>
                   </div>

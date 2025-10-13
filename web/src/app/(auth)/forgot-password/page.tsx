@@ -77,7 +77,7 @@ function ForgotPasswordForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white rounded-md py-2 disabled:opacity-50"
+              className="w-full bg-black text-accent-cream rounded-md py-2 disabled:opacity-50"
             >
               {loading ? "Enviando..." : "Enviar enlace de recuperación"}
             </button>

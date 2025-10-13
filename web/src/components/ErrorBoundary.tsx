@@ -32,16 +32,16 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-900">
+        <div className="min-h-screen flex items-center justify-center bg-accent-dark">
           <div className="text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl text-red-600">⚠️</span>
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">Algo salió mal</h2>
+            <h2 className="text-xl font-semibold text-accent-cream mb-2">Algo salió mal</h2>
             <p className="text-gray-400 mb-4">Se ha producido un error inesperado</p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-nexly-teal hover:bg-nexly-green text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
+              className="bg-nexly-teal hover:bg-nexly-green text-accent-cream font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
             >
               Recargar página
             </button>

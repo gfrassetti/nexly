@@ -36,17 +36,17 @@ export default function ConnectTelegramPage() {
 
   if (isConnected) {
     return (
-      <div className="min-h-screen bg-neutral-900 p-6">
+      <div className="min-h-screen bg-accent-dark p-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <button
               onClick={() => router.back()}
-              className="flex items-center text-neutral-400 hover:text-white transition-colors duration-200 mb-6"
+              className="flex items-center text-neutral-400 hover:text-accent-cream transition-colors duration-200 mb-6"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               Volver
             </button>
-            <h1 className="text-3xl font-bold text-white mb-2">Telegram ya está conectado</h1>
+            <h1 className="text-3xl font-bold text-accent-cream mb-2">Telegram ya está conectado</h1>
             <p className="text-neutral-400">
               Tu cuenta de Telegram ya está conectada. Puedes gestionarla desde el panel de integraciones.
             </p>
@@ -71,17 +71,17 @@ export default function ConnectTelegramPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 p-6">
+    <div className="min-h-screen bg-accent-dark p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-neutral-400 hover:text-white transition-colors duration-200 mb-6"
+            className="flex items-center text-neutral-400 hover:text-accent-cream transition-colors duration-200 mb-6"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Volver
           </button>
-          <h1 className="text-3xl font-bold text-white mb-2">Conectar Telegram</h1>
+          <h1 className="text-3xl font-bold text-accent-cream mb-2">Conectar Telegram</h1>
           <p className="text-neutral-400">
             Conecta tu cuenta personal de Telegram para gestionar todos tus chats y mensajes desde una sola plataforma.
           </p>
@@ -99,7 +99,7 @@ export default function ConnectTelegramPage() {
           {/* Información y beneficios */}
           <div className="space-y-6">
             <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+              <h3 className="text-xl font-semibold text-accent-cream mb-4 flex items-center">
                 <MessageSquare className="w-6 h-6 mr-3 text-blue-400" />
                 ¿Qué puedes hacer?
               </h3>
@@ -149,24 +149,24 @@ export default function ConnectTelegramPage() {
             </div>
 
             <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-              <h3 className="text-lg font-semibold text-white mb-3">
+              <h3 className="text-lg font-semibold text-accent-cream mb-3">
                 ¿Cómo funciona?
               </h3>
               <div className="space-y-3 text-sm text-neutral-300">
                 <div className="flex items-start">
-                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span>
+                  <span className="bg-blue-500 text-accent-cream rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span>
                   <span>Ingresa tu número de teléfono de Telegram</span>
                 </div>
                 <div className="flex items-start">
-                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span>
+                  <span className="bg-blue-500 text-accent-cream rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span>
                   <span>Recibe un código de verificación en tu app de Telegram</span>
                 </div>
                 <div className="flex items-start">
-                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">3</span>
+                  <span className="bg-blue-500 text-accent-cream rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">3</span>
                   <span>Ingresa el código para completar la conexión</span>
                 </div>
                 <div className="flex items-start">
-                  <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">4</span>
+                  <span className="bg-blue-500 text-accent-cream rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">4</span>
                   <span>¡Listo! Ya puedes gestionar todos tus chats desde Nexly</span>
                 </div>
               </div>

@@ -57,7 +57,7 @@ export function TestMessagesButton() {
     <button
       onClick={createTestMessages}
       disabled={loading}
-      className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded text-sm transition-colors"
+      className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-accent-cream px-4 py-2 rounded text-sm transition-colors"
     >
       {loading ? 'Creando...' : success ? '¡Creados!' : 'Crear Mensajes de Prueba'}
     </button>

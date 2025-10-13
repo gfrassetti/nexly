@@ -80,7 +80,7 @@ export default function Loader({
       {/* Texto con colores Nexly */}
       {text && (
         <div className="text-center">
-          <p className="text-white font-medium text-sm tracking-wide mb-2">
+          <p className="text-accent-cream font-medium text-sm tracking-wide mb-2">
             {text}
           </p>
           <div className="flex items-center justify-center gap-1.5">

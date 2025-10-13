@@ -46,7 +46,7 @@ export const SUBSCRIPTION_PLANS = {
   },
   premium: {
     name: "Plan Premium", 
-    maxIntegrations: 999, // Ilimitado
+    maxIntegrations: 999, // Sin límite
     price: 59,
   },
 } as const;
