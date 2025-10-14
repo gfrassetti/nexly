@@ -39,7 +39,7 @@ export default function WhatsAppEmbeddedSignup({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          returnUrl: `${window.location.origin}/dashboard/integrations/connect/whatsapp/onboarding-complete`,
+          returnUrl: `${window.location.origin}/api/whatsapp/onboarding-callback`,
           failureUrl: `${window.location.origin}/dashboard/integrations/connect/whatsapp/onboarding-error`
         })
       });

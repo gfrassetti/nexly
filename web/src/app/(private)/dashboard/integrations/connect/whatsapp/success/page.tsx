@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle } from 'lucide-react';
 
-export default function OnboardingCompletePage() {
+export default function WhatsAppSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phone = searchParams.get('phone');

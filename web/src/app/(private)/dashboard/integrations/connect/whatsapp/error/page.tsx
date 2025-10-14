@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 
-export default function OnboardingErrorPage() {
+export default function WhatsAppErrorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const msg = searchParams.get('msg');
