@@ -10,6 +10,8 @@ export interface ISubscription extends Document {
   startDate: Date;
   endDate?: Date;
   trialEndDate: Date;
+  currentPeriodStart?: Date;
+  currentPeriodEnd?: Date;
   autoRenew: boolean;
   // Nuevos campos para manejar pausas y cancelaciones
   pausedAt?: Date;
@@ -21,6 +23,10 @@ export interface ISubscription extends Document {
   lastPaymentAttempt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  
+  // Métodos virtuales
+  isInGracePeriod(): boolean;
+  gracePeriodDaysRemaining(): number;
 }
 
 const SubscriptionSchema: Schema = new Schema({
@@ -60,6 +66,12 @@ const SubscriptionSchema: Schema = new Schema({
   trialEndDate: {
     type: Date,
     required: true,
+  },
+  currentPeriodStart: {
+    type: Date,
+  },
+  currentPeriodEnd: {
+    type: Date,
   },
   autoRenew: {
     type: Boolean,
@@ -243,6 +255,21 @@ SubscriptionSchema.methods.checkExpiration = function(): boolean {
   }
   
   return false;
+};
+
+// Método virtual para verificar si está en período de gracia
+SubscriptionSchema.methods.isInGracePeriod = function(): boolean {
+  const now = new Date();
+  return this.status === 'grace_period' && this.gracePeriodEndDate && now < this.gracePeriodEndDate;
+};
+
+// Método virtual para calcular días restantes del período de gracia
+SubscriptionSchema.methods.gracePeriodDaysRemaining = function(): number {
+  if (!this.isInGracePeriod()) return 0;
+  const now = new Date();
+  const diffTime = this.gracePeriodEndDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
 };
 
 export default mongoose.model<ISubscription>('Subscription', SubscriptionSchema);

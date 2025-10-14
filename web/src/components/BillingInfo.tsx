@@ -173,7 +173,7 @@ export default function BillingInfo() {
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Período actual</span>
               <span className="font-medium text-sm text-foreground">
-                {formatDate(subscription.subscription.trialEndDate)}
+                {formatDate(subscription.subscription.currentPeriodStart)}
               </span>
             </div>
             
@@ -182,6 +182,15 @@ export default function BillingInfo() {
                 <span className="text-xs text-muted-foreground">Fin de prueba</span>
                 <span className="font-medium text-sm text-foreground">
                   {formatDate(subscription.subscription.trialEndDate)}
+                </span>
+              </div>
+            )}
+            
+            {subscription.subscription.isInGracePeriod && (
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">Período de gracia</span>
+                <span className="font-medium text-sm text-orange-400">
+                  {subscription.subscription.gracePeriodDaysRemaining} días restantes
                 </span>
               </div>
             )}

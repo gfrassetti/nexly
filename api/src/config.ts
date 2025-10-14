@@ -28,6 +28,9 @@ export const config = {
   metaPhoneNumberId: process.env.META_PHONE_NUMBER_ID || "",
   metaWabaId: process.env.META_WABA_ID || "",
   
+  // Nexly Facebook Business Manager ID (para Embedded Signup)
+  nexlyFacebookBusinessId: process.env.NEXLY_FACEBOOK_BUSINESS_ID || "",
+  
   
   // Twilio Configuration
   twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || "AC8cee5d9e364a2931a091a96a645dee76",

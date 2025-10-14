@@ -76,6 +76,9 @@ export async function getMessageLimits(userId: string): Promise<MessageLimits> {
         case 'premium':
           planLimits = PLAN_LIMITS.premium;
           break;
+        case 'enterprise':
+          planLimits = PLAN_LIMITS.enterprise;
+          break;
         default:
           planLimits = PLAN_LIMITS.basic;
       }
@@ -91,12 +94,15 @@ export async function getMessageLimits(userId: string): Promise<MessageLimits> {
     planLimits = PLAN_LIMITS.no_plan;
   }
   
-  logger.debug('Message limits calculated', {
+  logger.info('Message limits calculated', {
     userId,
     limits: planLimits,
     hasSubscription: !!subscription,
     subscriptionStatus: subscription?.status,
-    planType: subscription?.planType
+    planType: subscription?.planType,
+    selectedPlanLimits: Object.keys(PLAN_LIMITS).find(key => 
+      JSON.stringify(PLAN_LIMITS[key as keyof typeof PLAN_LIMITS]) === JSON.stringify(planLimits)
+    )
   });
   
   return planLimits;

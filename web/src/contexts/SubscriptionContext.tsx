@@ -13,6 +13,8 @@ interface SubscriptionData {
     planType: 'basic' | 'premium' | 'enterprise';
     status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
     trialEndDate: string;
+    currentPeriodStart?: string;
+    currentPeriodEnd?: string;
     daysRemaining: number;
     gracePeriodDaysRemaining: number;
     isTrialActive: boolean;

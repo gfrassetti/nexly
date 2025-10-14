@@ -1,220 +1,216 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { connectWhatsApp } from "@/lib/api";
 
-// Declarar el SDK de Meta para TypeScript
-declare global {
-  interface Window {
-    FB: any;
-  }
-}
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle, AlertCircle, ExternalLink, Smartphone } from 'lucide-react';
+import WhatsAppEmbeddedSignup from '@/components/WhatsAppEmbeddedSignup';
 
 export default function ConnectWhatsAppPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [onboardingUrl, setOnboardingUrl] = useState("");
-  const [sdkLoaded, setSdkLoaded] = useState(false);
-  const { token, user } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const [showSignup, setShowSignup] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'success' | 'error'>('idle');
 
-  // Cargar SDK de Meta al montar el componente
-  useEffect(() => {
-    const loadMetaSDK = () => {
-      if (window.FB) {
-        setSdkLoaded(true);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://connect.facebook.net/en_US/sdk.js';
-      script.async = true;
-      script.defer = true;
-      script.crossOrigin = 'anonymous';
-      
-      script.onload = () => {
-        window.FB.init({
-          appId: process.env.NEXT_PUBLIC_META_APP_ID,
-          version: 'v19.0',
-          cookie: true,
-          xfbml: true
-        });
-        setSdkLoaded(true);
-      };
-
-      script.onerror = () => {
-        setError("Error al cargar el SDK de Meta. Por favor, recarga la página.");
-      };
-
-      document.body.appendChild(script);
-    };
-
-    loadMetaSDK();
-  }, []);
-
-  // Verificar parámetros de URL para mensajes de éxito/error
-  useEffect(() => {
-    const successParam = searchParams.get('success');
-    const errorParam = searchParams.get('error');
-    const providerParam = searchParams.get('provider');
-
-    if (successParam === 'whatsapp_connected') {
-      if (providerParam === 'meta') {
-        setSuccess("¡WhatsApp Business conectado exitosamente! 🎉");
-      } else {
-        setSuccess("¡WhatsApp conectado exitosamente! 🎉");
-      }
-    }
-
-    if (errorParam) {
-      switch (errorParam) {
-        case 'meta_whatsapp_signup_failed':
-          setError("Error en el proceso de configuración de WhatsApp Business con Meta. Por favor, inténtalo de nuevo.");
-          break;
-        case 'meta_missing_parameters':
-          setError("Faltan parámetros necesarios para completar la conexión.");
-          break;
-        case 'meta_signup_failed':
-          setError("El proceso de configuración de WhatsApp Business falló. Por favor, inténtalo de nuevo.");
-          break;
-        case 'whatsapp_already_connected':
-          setError("WhatsApp ya está conectado a tu cuenta.");
-          break;
-        case 'integration_limit_exceeded':
-          setError("Has alcanzado el límite de integraciones permitidas.");
-          break;
-        default:
-          setError("Error al conectar WhatsApp. Por favor, inténtalo de nuevo.");
-      }
-    }
-  }, [searchParams]);
-
-  const handleConnect = async () => {
-    if (!token || !user?.id) {
-      setError("No hay token de autenticación. Por favor, inicia sesión nuevamente.");
-      return;
-    }
-
-    if (!sdkLoaded) {
-      setError("El SDK de Meta aún se está cargando. Por favor, espera un momento.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
-    
-    try {
-      // Obtener el signup URL del backend
-      const data = await connectWhatsApp(token);
-
-      if (data.success && data.signupUrl) {
-        setSuccess("Abriendo ventana de configuración de WhatsApp Business...");
-        
-        // Usar el SDK de Meta para abrir la ventana emergente
-        window.FB.login(
-          (response: any) => {
-            if (response.authResponse) {
-              // El usuario se autenticó exitosamente
-              setSuccess("Autenticación exitosa. Procesando configuración...");
-              
-              // Redirigir a Meta Embedded Signup
-              window.open(data.signupUrl, 'meta_whatsapp_signup', 'width=800,height=600,scrollbars=yes,resizable=yes');
-            } else {
-              setError("No se pudo completar la autenticación con Meta.");
-              setLoading(false);
-            }
-          },
-          {
-            scope: 'whatsapp_business_management,business_management',
-            return_scopes: true
-          }
-        );
-      } else {
-        throw new Error(data.message || "Error al iniciar conexión con WhatsApp");
-      }
-    } catch (err: any) {
-      console.error("Error connecting WhatsApp:", err);
-      setError(err.message || "Error al conectar WhatsApp");
-      setLoading(false);
-    }
+  const handleConnectWhatsApp = () => {
+    setShowSignup(true);
+    setConnectionStatus('connecting');
   };
 
-  const handleManualRedirect = () => {
-    if (onboardingUrl) {
-      window.location.href = onboardingUrl;
+  const handleSignupSuccess = (data: any) => {
+    setConnectionStatus('success');
+    setShowSignup(false);
+    // Aquí podrías hacer una llamada adicional para actualizar el estado en la base de datos
+    console.log('WhatsApp signup successful:', data);
+  };
+
+  const handleSignupError = (error: string) => {
+    setConnectionStatus('error');
+    setShowSignup(false);
+    console.error('WhatsApp signup error:', error);
+  };
+
+  const handleSignupClose = () => {
+    setShowSignup(false);
+    if (connectionStatus === 'connecting') {
+      setConnectionStatus('idle');
     }
   };
 
   return (
-    <div className="p-6" style={{ background: 'var(--background-gradient)' }}>
-      <h1 className="text-2xl font-bold mb-6 text-foreground">Conectar WhatsApp Business</h1>
-      
-      {error && (
-        <div className="bg-accent-red/10 border border-accent-red/20 text-accent-red px-4 py-3 rounded mb-4">
-          {error}
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mx-auto">
+          <Smartphone className="w-8 h-8 text-green-600" />
         </div>
-      )}
-
-      {success && (
-        <div className="bg-accent-green/10 border border-accent-green/20 text-accent-green px-4 py-3 rounded mb-4">
-          {success}
-        </div>
-      )}
-
-      <div className="bg-muted border border-border rounded-lg p-6 max-w-2xl">
-        <div className="flex items-center mb-6">
-          <div className="w-12 h-12 bg-accent-green/20 border border-accent-green/30 rounded-full flex items-center justify-center mr-4">
-            <span className="text-accent-green text-xl font-bold">W</span>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">WhatsApp Business</h2>
-            <p className="text-sm text-muted-foreground">Conecta tu WhatsApp Business de forma segura</p>
-          </div>
-        </div>
-        
-        <div className="bg-accent-blue/10 border border-accent-blue/20 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-accent-blue mb-2">¿Cómo funciona?</h3>
-          <div className="space-y-2 text-sm text-accent-blue/80">
-            <p><strong>1.</strong> Se abrirá una ventana emergente de Meta para configurar WhatsApp Business</p>
-            <p><strong>2.</strong> Inicia sesión en tu cuenta de Meta Business Manager</p>
-            <p><strong>3.</strong> Crea o selecciona una cuenta de WhatsApp Business (WABA)</p>
-            <p><strong>4.</strong> Registra y verifica tu número de teléfono con código OTP</p>
-            <p><strong>5.</strong> Acepta los términos y condiciones</p>
-            <p><strong>6.</strong> Serás redirigido de vuelta a NEXLY automáticamente</p>
-          </div>
-        </div>
-
-        <div className="bg-accent-yellow/10 border border-accent-yellow/20 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-accent-yellow mb-2">⚠️ Requisitos previos</h3>
-          <div className="space-y-2 text-sm text-accent-yellow/80">
-            <p>• Debes tener una cuenta de Meta Business Manager</p>
-            <p>• Tu número de teléfono debe estar verificado en Meta</p>
-            <p>• El proceso puede tomar 5-10 minutos</p>
-          </div>
-        </div>
-        
-        <button 
-          onClick={handleConnect}
-          disabled={loading || !sdkLoaded}
-          className="w-full bg-accent-green/20 hover:bg-accent-green/30 text-accent-green border border-accent-green/30 px-4 py-3 rounded-lg disabled:opacity-50 font-medium transition-colors"
-        >
-          {loading ? "Iniciando conexión..." : !sdkLoaded ? "Cargando SDK..." : "Conectar WhatsApp Business"}
-        </button>
-        
-        {!sdkLoaded && (
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            Cargando SDK de Meta...
-          </p>
-        )}
-        
-        <p className="text-xs text-muted-foreground mt-4 text-center">
-          Tu información está segura. Solo necesitamos acceso para enviar y recibir mensajes de WhatsApp Business.
+        <h1 className="text-3xl font-bold text-gray-900">Conectar WhatsApp Business</h1>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Conecta tu número de WhatsApp Business para empezar a gestionar conversaciones con tus clientes desde Nexly.
         </p>
       </div>
+
+      {/* Connection Status */}
+      {connectionStatus === 'connecting' && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              <div>
+                <h3 className="font-semibold text-blue-900">Conectando tu WhatsApp...</h3>
+                <p className="text-sm text-blue-700">Sigue los pasos en la ventana emergente</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {connectionStatus === 'success' && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              <div>
+                <h3 className="font-semibold text-green-900">¡WhatsApp conectado exitosamente!</h3>
+                <p className="text-sm text-green-700">Tu número está listo para recibir y enviar mensajes</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {connectionStatus === 'error' && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+              <div>
+                <h3 className="font-semibold text-red-900">Error en la conexión</h3>
+                <p className="text-sm text-red-700">Hubo un problema al conectar tu WhatsApp. Inténtalo de nuevo.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Content */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Benefits Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <span>¿Qué obtienes?</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium">Gestión unificada</h4>
+                  <p className="text-sm text-gray-600">Centraliza todas tus conversaciones de WhatsApp en un solo lugar</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium">Respuestas automáticas</h4>
+                  <p className="text-sm text-gray-600">Configura respuestas automáticas y chatbots</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium">Analytics detallados</h4>
+                  <p className="text-sm text-gray-600">Métricas y reportes de tus conversaciones</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium">Integración con otros canales</h4>
+                  <p className="text-sm text-gray-600">Conecta Instagram y Telegram en la misma plataforma</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Requirements Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5 text-orange-600" />
+              <span>Requisitos</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <div className="w-4 h-4 bg-orange-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
+                  <span className="text-xs font-medium text-orange-600">1</span>
+                </div>
+                <div>
+                  <h4 className="font-medium">Cuenta de Facebook Business</h4>
+                  <p className="text-sm text-gray-600">Necesitas una cuenta de Facebook Business Manager</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-4 h-4 bg-orange-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
+                  <span className="text-xs font-medium text-orange-600">2</span>
+                </div>
+                <div>
+                  <h4 className="font-medium">Número de teléfono</h4>
+                  <p className="text-sm text-gray-600">Un número que no esté asociado a WhatsApp personal</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-4 h-4 bg-orange-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
+                  <span className="text-xs font-medium text-orange-600">3</span>
+                </div>
+                <div>
+                  <h4 className="font-medium">Verificación por SMS</h4>
+                  <p className="text-sm text-gray-600">Meta enviará un código de verificación</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Connection Button */}
+      <div className="text-center">
+        <Button
+          onClick={handleConnectWhatsApp}
+          disabled={connectionStatus === 'connecting'}
+          size="lg"
+          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
+        >
+          {connectionStatus === 'connecting' ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              Conectando...
+            </>
+          ) : (
+            <>
+              <ExternalLink className="w-5 h-5 mr-2" />
+              Conectar WhatsApp Business
+            </>
+          )}
+        </Button>
+        
+        <p className="text-sm text-gray-500 mt-4 max-w-2xl mx-auto">
+          Al hacer clic en "Conectar", se abrirá una ventana segura de Meta para completar el proceso de registro. 
+          Tu información se maneja de forma segura y nunca almacenamos tus credenciales de Facebook.
+        </p>
+      </div>
+
+      {/* Embedded Signup Modal */}
+      <WhatsAppEmbeddedSignup
+        isOpen={showSignup}
+        onClose={handleSignupClose}
+        onSuccess={handleSignupSuccess}
+        onError={handleSignupError}
+      />
     </div>
   );
 }

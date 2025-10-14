@@ -507,7 +507,6 @@ export default function SubscriptionStatus() {
           )}
         </div>
       </div>
-
       {/* Progress bar for grace period */}
       {sub.isInGracePeriod && (
         <div className="mt-4">

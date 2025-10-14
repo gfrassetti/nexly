@@ -23,6 +23,7 @@ import loggerTestRouter from "./routes/loggerTest";
 import twilioWebhookRouter from "./routes/twilioWebhook";
 import addOnsRouter from "./routes/addOns";
 import usageRouter from "./routes/usage";
+import whatsappRouter from "./routes/whatsapp";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -131,6 +132,7 @@ app.use("/loggerTest", loggerTestRouter);
 app.use("/twilio-webhook", twilioWebhookRouter);
 app.use("/addons", paymentRateLimit, sanitizePaymentData, addOnsRouter);
 app.use("/usage", requireAuth, usageRouter);
+app.use("/whatsapp", requireAuth, whatsappRouter);
 
 // Endpoint raíz
 app.get("/", (req, res) => {
