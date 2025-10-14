@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCookieToken } from '@/lib/api';
 
 export async function POST(request: NextRequest) {
   try {
-    // Obtener el token de autenticación
-    const token = getCookieToken();
+    // Obtener el token de autenticación desde las cookies
+    const token = request.cookies.get('token')?.value;
+    
+    console.log('WhatsApp signup request received');
+    console.log('Token found:', !!token);
     
     if (!token) {
+      console.log('No token found in cookies');
       return NextResponse.json(
-        { error: 'No autorizado' },
+        { error: 'No autorizado - token no encontrado' },
         { status: 401 }
       );
     }
@@ -26,7 +29,12 @@ export async function POST(request: NextRequest) {
 
     // Hacer la petición al backend
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    const response = await fetch(`${backendUrl}/whatsapp/create-signup-session`, {
+    const backendEndpoint = `${backendUrl}/whatsapp/create-signup-session`;
+    
+    console.log('Making request to backend:', backendEndpoint);
+    console.log('Request payload:', { returnUrl, failureUrl });
+    
+    const response = await fetch(backendEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,8 +46,11 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    console.log('Backend response status:', response.status);
+
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ error: 'Error del servidor' }));
+      console.log('Backend error:', errorData);
       return NextResponse.json(
         { error: errorData.error || 'Error del servidor' },
         { status: response.status }
