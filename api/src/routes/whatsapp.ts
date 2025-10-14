@@ -25,39 +25,56 @@ router.post('/create-signup-session', authenticateToken, async (req: Request, re
       failureUrl
     });
 
-    // Configurar parámetros para Embedded Signup
+    // Verificar que tenemos las configuraciones necesarias
+    if (!config.nexlyFacebookBusinessId) {
+      logger.error('NEXLY_FACEBOOK_BUSINESS_ID not configured');
+      return res.status(500).json({
+        success: false,
+        error: 'Configuración de Facebook Business Manager faltante'
+      });
+    }
+
+    // Configurar parámetros para Embedded Signup según documentación de Twilio
     const signupParams = new URLSearchParams({
-      // Clave de la Cuenta Maestra (Master Account SID)
+      // Account SID de la cuenta maestra de Twilio
       accountSid: config.twilioAccountSid || '',
       
-      // ID del Business Manager de Nexly (CRUCIAL para Twilio Embedded)
-      facebookBusinessId: config.nexlyFacebookBusinessId || '',
+      // Facebook Business Manager ID de Nexly (requerido para el Embedded Signup)
+      facebookBusinessId: config.nexlyFacebookBusinessId,
       
-      // URLs de retorno
-      returnUrl,
-      failureUrl,
+      // URLs de retorno (importante: deben ser HTTPS en producción)
+      returnUrl: returnUrl,
+      failureUrl: failureUrl,
       
-      // Token único para identificar al usuario
+      // Payload con información del usuario (se devuelve en la URL de retorno)
       payload: JSON.stringify({ 
-        userId, 
-        sessionId: `signup_${userId}_${Date.now()}` 
+        userId: userId, 
+        sessionId: `signup_${userId}_${Date.now()}`,
+        timestamp: new Date().toISOString()
       }),
       
       // Configuración de la aplicación
       appName: 'Nexly',
-      appDescription: 'Plataforma de mensajería unificada para WhatsApp Business',
       
-      // Configuración de branding
-      brandingColor: '#10B981', // Verde de Nexly
-      brandingLogo: `${req.protocol}://${req.get('host')}/logo_nexly.png`
+      // Configuración de branding (opcional)
+      brandingColor: '#10B981',
+      
+      // Configuración específica para WhatsApp Business
+      solutionId: 'whatsapp_business_api'
     });
 
-    // URL oficial de Twilio Embedded Signup
+    // URL oficial de Twilio para Embedded Signup de WhatsApp Business
     const twilioSignupUrl = `https://www.twilio.com/console/whatsapp/embedded-signup?${signupParams.toString()}`;
 
     logger.info('Generated Twilio Embedded Signup URL', {
       userId,
-      signupUrl: twilioSignupUrl
+      signupUrl: twilioSignupUrl,
+      params: Object.fromEntries(signupParams),
+      config: {
+        hasAccountSid: !!config.twilioAccountSid,
+        hasFacebookBusinessId: !!config.nexlyFacebookBusinessId,
+        facebookBusinessId: config.nexlyFacebookBusinessId
+      }
     });
 
     res.json({

@@ -29,7 +29,8 @@ export const config = {
   metaWabaId: process.env.META_WABA_ID || "",
   
   // Nexly Facebook Business Manager ID (para Embedded Signup)
-  nexlyFacebookBusinessId: process.env.NEXLY_FACEBOOK_BUSINESS_ID || "",
+  // TEMPORAL: Reemplaza con tu Facebook Business Manager ID real
+  nexlyFacebookBusinessId: process.env.NEXLY_FACEBOOK_BUSINESS_ID || "123456789012345",
   
   
   // Twilio Configuration
