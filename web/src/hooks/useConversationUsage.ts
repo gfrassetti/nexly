@@ -4,21 +4,22 @@ import { apiFetch } from '@/lib/api';
 
 interface ConversationUsage {
   monthly: {
-    used: number;
-    limit: number;
-    baseLimit: number;
-    addOnLimit: number;
+    used: number; // Conversaciones iniciadas en WhatsApp
+    limit: number; // Límite total (plan + add-ons)
+    baseLimit: number; // Límite del plan
+    addOnLimit: number; // Conversaciones adicionales de add-ons
     percentage: number;
     remaining: number;
   };
   daily: {
-    used: number;
-    limit: number;
+    used: number; // Conversaciones iniciadas hoy en WhatsApp
+    limit: number; // Límite diario
     percentage: number;
     remaining: number;
   };
   status: 'healthy' | 'warning' | 'critical';
   canSend: boolean;
+  note: string; // Nota explicativa sobre los límites
 }
 
 interface UseConversationUsageReturn {

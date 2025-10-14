@@ -87,19 +87,22 @@ export default function UsageMeter() {
     <div className="bg-accent-dark border border-neutral-700 rounded-lg p-6 shadow-lg">
       <div className="flex items-center justify-center gap-2 mb-4">
         {getStatusIcon()}
-        <h3 className="text-xl font-bold text-accent-cream">Uso de Conversaciones Iniciadas</h3>
+        <h3 className="text-xl font-bold text-accent-cream">Uso de WhatsApp Business</h3>
       </div>
       
       <div className="mb-4 text-center">
         <p className={cn("text-3xl font-bold", getTextColor())}>
           {currentUsage} / {monthlyLimit}
         </p>
-        <p className="text-sm text-neutral-400">Conversaciones Iniciadas este mes</p>
+        <p className="text-sm text-neutral-400">Conversaciones iniciadas en WhatsApp este mes</p>
         {usage.monthly.addOnLimit > 0 && (
           <p className="text-xs text-neutral-500 mt-1">
             ({usage.monthly.baseLimit} del plan + {usage.monthly.addOnLimit} adicionales)
           </p>
         )}
+        <p className="text-xs text-neutral-600 mt-2">
+          Instagram, Messenger y Telegram son gratuitos
+        </p>
       </div>
 
       <div className="w-full bg-neutral-700 rounded-full h-3 mb-4">
@@ -116,7 +119,7 @@ export default function UsageMeter() {
       </div>
 
       <p className="text-sm text-neutral-300 mb-6 text-center">
-        Te quedan <strong className={getTextColor()}>{usage.monthly.remaining}</strong> conversaciones iniciadas.
+        Te quedan <strong className={getTextColor()}>{usage.monthly.remaining}</strong> conversaciones iniciadas en WhatsApp.
       </p>
 
       {(usage.status === 'warning' || usage.status === 'critical') && (
@@ -126,7 +129,7 @@ export default function UsageMeter() {
             className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
             disabled={buyLoading}
           >
-            {buyLoading ? 'Procesando...' : 'Comprar Paquete de Conversaciones Adicionales'}
+            {buyLoading ? 'Procesando...' : 'Comprar Paquete de WhatsApp Adicional'}
           </Button>
         </div>
       )}

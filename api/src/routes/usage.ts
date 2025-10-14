@@ -34,14 +34,16 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
     
+    // IMPORTANTE: Solo WhatsApp Business (Twilio) cuenta para límites de conversaciones
+    // Instagram, Messenger y Telegram son gratuitos
     const monthlyUsage = await Message.countDocuments({
       userId,
-      provider: 'whatsapp', // Por ahora solo WhatsApp
-      direction: 'out', // Solo mensajes salientes cuentan
+      provider: 'whatsapp', // Solo WhatsApp Business via Twilio
+      direction: 'out', // Solo mensajes salientes (conversaciones iniciadas)
       timestamp: { $gte: startOfMonth }
     });
     
-    logger.info('Monthly usage calculated', { userId, monthlyUsage, startOfMonth });
+    logger.info('WhatsApp monthly usage calculated', { userId, monthlyUsage, startOfMonth });
     
     // Obtener uso actual del día
     const startOfDay = new Date();
@@ -49,12 +51,12 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
     
     const dailyUsage = await Message.countDocuments({
       userId,
-      provider: 'whatsapp',
-      direction: 'out',
+      provider: 'whatsapp', // Solo WhatsApp Business via Twilio
+      direction: 'out', // Solo mensajes salientes (conversaciones iniciadas)
       timestamp: { $gte: startOfDay }
     });
     
-    logger.info('Daily usage calculated', { userId, dailyUsage, startOfDay });
+    logger.info('WhatsApp daily usage calculated', { userId, dailyUsage, startOfDay });
     
     // Calcular porcentajes
     const monthlyPercentage = totalMonthlyLimit > 0 ? (monthlyUsage / totalMonthlyLimit) * 100 : 0;
@@ -68,26 +70,33 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
       status = 'warning';
     }
     
+    const responseData = {
+      // Solo WhatsApp Business (Twilio) cuenta para límites
+      monthly: {
+        used: monthlyUsage, // Conversaciones iniciadas en WhatsApp
+        limit: totalMonthlyLimit, // Límite total (plan + add-ons)
+        baseLimit: limits.maxMessagesPerMonth, // Límite del plan
+        addOnLimit: addOnConversations, // Conversaciones adicionales de add-ons
+        percentage: Math.round(monthlyPercentage),
+        remaining: Math.max(0, totalMonthlyLimit - monthlyUsage)
+      },
+      daily: {
+        used: dailyUsage, // Conversaciones iniciadas hoy en WhatsApp
+        limit: limits.maxMessagesPerDay, // Límite diario
+        percentage: Math.round(dailyPercentage),
+        remaining: Math.max(0, limits.maxMessagesPerDay - dailyUsage)
+      },
+      status,
+      canSend: monthlyUsage < totalMonthlyLimit && dailyUsage < limits.maxMessagesPerDay,
+      // Información adicional para claridad
+      note: "Los límites solo aplican para WhatsApp Business (Twilio). Instagram, Messenger y Telegram son gratuitos."
+    };
+
+    logger.info('Conversation usage response', { userId, responseData });
+
     res.json({
       success: true,
-      data: {
-        monthly: {
-          used: monthlyUsage,
-          limit: totalMonthlyLimit,
-          baseLimit: limits.maxMessagesPerMonth,
-          addOnLimit: addOnConversations,
-          percentage: Math.round(monthlyPercentage),
-          remaining: Math.max(0, totalMonthlyLimit - monthlyUsage)
-        },
-        daily: {
-          used: dailyUsage,
-          limit: limits.maxMessagesPerDay,
-          percentage: Math.round(dailyPercentage),
-          remaining: Math.max(0, limits.maxMessagesPerDay - dailyUsage)
-        },
-        status,
-        canSend: monthlyUsage < totalMonthlyLimit && dailyUsage < limits.maxMessagesPerDay
-      }
+      data: responseData
     });
     
   } catch (error: any) {
