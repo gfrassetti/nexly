@@ -16,11 +16,15 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    logger.info('Getting conversation usage', { userId });
+
     // Obtener límites del plan
     const limits = await getMessageLimits(userId);
+    logger.info('Message limits retrieved', { userId, limits });
     
     // Obtener add-ons activos
     const addOnConversations = await getTotalAddOnConversations(userId);
+    logger.info('Add-on conversations retrieved', { userId, addOnConversations });
     
     // Calcular límite total (plan + add-ons)
     const totalMonthlyLimit = limits.maxMessagesPerMonth + addOnConversations;
@@ -37,6 +41,8 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
       timestamp: { $gte: startOfMonth }
     });
     
+    logger.info('Monthly usage calculated', { userId, monthlyUsage, startOfMonth });
+    
     // Obtener uso actual del día
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
@@ -47,6 +53,8 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
       direction: 'out',
       timestamp: { $gte: startOfDay }
     });
+    
+    logger.info('Daily usage calculated', { userId, dailyUsage, startOfDay });
     
     // Calcular porcentajes
     const monthlyPercentage = totalMonthlyLimit > 0 ? (monthlyUsage / totalMonthlyLimit) * 100 : 0;

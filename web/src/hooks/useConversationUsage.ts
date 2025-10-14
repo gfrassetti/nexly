@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { apiFetch } from '@/lib/api';
 
 interface ConversationUsage {
   monthly: {
@@ -43,18 +44,13 @@ export function useConversationUsage(): UseConversationUsageReturn {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/usage/conversations', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al obtener métricas de uso');
-      }
-
-      const result = await response.json();
+      const result = await apiFetch<{
+        success: boolean;
+        data: ConversationUsage;
+        error?: string;
+      }>('/usage/conversations', {
+        method: 'GET',
+      }, token);
       
       if (result.success) {
         setUsage(result.data);
