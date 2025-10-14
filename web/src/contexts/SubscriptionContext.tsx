@@ -10,7 +10,7 @@ interface SubscriptionData {
   userSubscriptionStatus?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
   subscription?: {
     id: string;
-    planType: 'basic' | 'premium';
+    planType: 'basic' | 'premium' | 'enterprise';
     status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
     trialEndDate: string;
     daysRemaining: number;
@@ -169,8 +169,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     // Durante suscripción activa, verificar límites del plan
     if (status.active) {
       const planFeatures = {
-        basic: ['whatsapp', 'instagram'],
-        premium: ['whatsapp', 'instagram', 'messenger', 'tiktok', 'telegram', 'twitter']
+        basic: ['whatsapp', 'instagram', 'telegram'],
+        premium: ['whatsapp', 'instagram', 'messenger', 'telegram'],
+        enterprise: ['whatsapp', 'instagram', 'messenger', 'telegram', 'tiktok', 'twitter']
       };
       
       return planFeatures[sub.planType]?.includes(feature) || false;
@@ -181,7 +182,17 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   const getMaxIntegrations = useCallback((): number => {
     if (status.pendingPaymentMethod || !subscription?.subscription) return 0;
-    return subscription.subscription.planType === 'basic' ? 2 : 999;
+    
+    switch (subscription.subscription.planType) {
+      case 'basic':
+        return 3; // WhatsApp, Instagram, Telegram
+      case 'premium':
+        return 10; // Más integraciones disponibles
+      case 'enterprise':
+        return 999; // Sin límite
+      default:
+        return 0;
+    }
   }, [status, subscription]);
 
 

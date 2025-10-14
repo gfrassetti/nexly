@@ -15,7 +15,7 @@ export function usePaymentLink() {
     subscription = undefined;
   }
 
-  const createPaymentLink = async (planType?: 'basic' | 'premium'): Promise<boolean> => {
+  const createPaymentLink = async (planType?: 'basic' | 'premium' | 'enterprise'): Promise<boolean> => {
     setLoading(true);
 
     try {

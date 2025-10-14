@@ -44,6 +44,20 @@ export const config = {
   stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || "",
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
   
+  // Product IDs para planes de suscripción
+  stripeBasicProductId: process.env.STRIPE_BASIC_PRODUCT_ID || "",
+  stripeBasicPriceId: process.env.STRIPE_BASIC_PRICE_ID || "",
+  
+  stripePremiumProductId: process.env.STRIPE_PREMIUM_PRODUCT_ID || "",
+  stripePremiumPriceId: process.env.STRIPE_PREMIUM_PRICE_ID || "",
+  
+  stripeEnterpriseProductId: process.env.STRIPE_ENTERPRISE_PRODUCT_ID || "",
+  stripeEnterprisePriceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || "",
+  
+  // Add-on Product ID (ya configurado)
+  stripeAddOnProductId: process.env.STRIPE_ADDON_PRODUCT_ID || "prod_TEO3LGlL9aLx2F",
+  stripeAddOnPriceId: process.env.STRIPE_ADDON_PRICE_ID || "",
+  
   // Google AI Configuration
   googleAIApiKey: process.env.GOOGLE_AI_API_KEY || "",
   

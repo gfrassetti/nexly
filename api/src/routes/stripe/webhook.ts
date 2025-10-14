@@ -7,6 +7,8 @@ import { Router, Request, Response } from "express";
 import Stripe from "stripe";
 import { User } from "../../models/User";
 import { default as Subscription, ISubscription } from "../../models/Subscription";
+import { handleAddOnPaymentSuccess } from "../../services/addOnService";
+import logger from "../../utils/logger";
 const router = Router();
 
 // Inicializar Stripe
@@ -189,6 +191,19 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   console.log('Checkout session completed:', session.id);
   
   try {
+    // Verificar si es un add-on o una suscripción
+    if (session.metadata?.addOnPurchaseId) {
+      // Es un pago de add-on
+      await handleAddOnPaymentSuccess(session.id);
+      logger.info('Add-on payment processed successfully', {
+        sessionId: session.id,
+        addOnPurchaseId: session.metadata.addOnPurchaseId,
+        userId: session.metadata.userId
+      });
+      return;
+    }
+
+    // Es una suscripción normal - lógica existente
     // Obtener el customer email de la sesión
     const customerEmail = session.customer_details?.email;
     if (!customerEmail) {

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 // import { usePaymentLink } from "@/hooks/usePaymentLink";
 // import { useStripePayment } from "@/hooks/useStripePayment";
 import FAQSection from "@/components/FAQSection";
-import Header from "@/components/Header";
+import ScrollHeader from "@/components/ScrollHeader";
 import Footer from "@/components/Footer";
 import HowItWorksTimeline from "@/components/HowItWorksTimeline";
 import ConversationsExplainer from "@/components/ConversationsExplainer";
@@ -16,6 +16,7 @@ function PricingContent() {
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium' | 'enterprise'>('basic');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe'>('stripe');
+  const [isAnnual, setIsAnnual] = useState(true);
   // const { createPaymentLink, loading } = usePaymentLink();
   // const { createPaymentLink: createStripePaymentLink, loading: stripeLoading } = useStripePayment();
 
@@ -30,67 +31,65 @@ function PricingContent() {
   const plans = [
     {
       id: 'basic',
-      name: 'Plan Básico',
+      name: 'Crecimiento',
       price: '$30',
       priceUSD: true,
       period: '/mes',
-      description: 'Perfecto para emprendedores y pequeñas empresas',
-      features: [
-        '450 conversaciones/mes incluidas',
-        'Hasta 20 conversaciones/día',
-        'WhatsApp Business',
-        'Instagram',
-        'Telegram',
-        'Hasta 3 integraciones',
-        'Respuestas dentro de 24h sin límite*',
-        '7 días gratis, tarjeta requerida',
-      ],
+      description: 'Para negocios enfocados en soporte y atención al cliente',
+        features: [
+          '450 conversaciones iniciadas/mes',
+          'Conversaciones de respuesta ilimitadas',
+          'WhatsApp Business',
+          'Instagram',
+          'Telegram',
+          'Reportes y analytics',
+          '7 días gratis, tarjeta requerida',
+        ],
       popular: false,
-      note: '* Las respuestas a mensajes de clientes dentro de 24h no cuentan para el límite'
+      note: '* Las conversaciones de respuesta no consumen tu cuota de conversaciones iniciadas'
     },
     {
       id: 'premium',
-      name: 'Plan Premium',
-      price: '$60',
+      name: 'Pro',
+      price: '$59',
       priceUSD: true,
       period: '/mes',
-      description: 'Para empresas en crecimiento',
-      features: [
-        '900 conversaciones/mes incluidas',
-        'Hasta 45 conversaciones/día',
-        'WhatsApp Business',
-        'Instagram',
-        'Facebook Messenger',
-        'Telegram',
-        'Hasta 10 integraciones',
-        'Respuestas dentro de 24h sin límite*',
-        'Soporte prioritario',
-        '7 días gratis, tarjeta requerida',
-      ],
+      description: 'Para negocios que hacen campañas de outbound regulares',
+        features: [
+          '1,500 conversaciones iniciadas/mes',
+          'Conversaciones de respuesta ilimitadas',
+          'WhatsApp Business',
+          'Instagram',
+          'Facebook Messenger',
+          'Telegram',
+          'Reportes y analytics',
+          'Automatizaciones avanzadas',
+          '7 días gratis, tarjeta requerida',
+        ],
       popular: true,
-      note: '* Las respuestas a mensajes de clientes dentro de 24h no cuentan para el límite'
+      note: '* Las conversaciones de respuesta no consumen tu cuota de conversaciones iniciadas'
     },
     {
       id: 'enterprise',
-      name: 'Plan Enterprise',
+      name: 'Business',
       price: '$150',
       priceUSD: true,
       period: '/mes',
       description: 'Para empresas con alto volumen de conversaciones',
-      features: [
-        '2,250 conversaciones/mes incluidas',
-        'Hasta 110 conversaciones/día',
-        'WhatsApp Business',
-        'Instagram',
-        'Facebook Messenger',
-        'Telegram',
-        'Integraciones sin límite',
-        'Respuestas dentro de 24h sin límite*',
-        'Soporte prioritario 24/7',
-        '7 días gratis, tarjeta requerida',
-      ],
+        features: [
+          '2,250 conversaciones iniciadas/mes',
+          'Conversaciones de respuesta ilimitadas',
+          'WhatsApp Business',
+          'Instagram',
+          'Facebook Messenger',
+          'Telegram',
+          'Reportes y analytics',
+          'Automatizaciones avanzadas',
+          'Integraciones sin límite',
+          '7 días gratis, tarjeta requerida',
+        ],
       popular: false,
-      note: '* Las respuestas a mensajes de clientes dentro de 24h no cuentan para el límite'
+      note: '* Las conversaciones de respuesta no consumen tu cuota de conversaciones iniciadas'
     },
   ];
 
@@ -112,10 +111,10 @@ function PricingContent() {
   return (
     <div className="min-h-screen bg-accent-dark text-accent-cream">
       {/* Header */}
-      <Header variant="simple" />
+      <ScrollHeader />
 
       {/* Hero Section */}
-      <div className="py-20">
+      <div className="pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6">
             Elige tu plan perfecto
@@ -137,6 +136,7 @@ function PricingContent() {
               Acceso completo a todas las funciones durante tu período de prueba
             </p>
           </div>
+
         </div>
       </div>
 
@@ -207,6 +207,7 @@ function PricingContent() {
                 ))}
               </ul>
 
+
               {plan.note && (
                 <div className="mb-6 p-3 bg-nexly-teal/10 border border-nexly-teal/20 rounded-lg">
                   <p className="text-xs text-neutral-400">{plan.note}</p>
@@ -238,115 +239,198 @@ function PricingContent() {
         </div>
 
 
-        {/* Explicación de Conversaciones */}
-        <div className="mt-16 bg-gradient-to-br from-nexly-azul/10 to-nexly-teal/10 border border-nexly-teal/20 rounded-2xl p-8 max-w-4xl mx-auto">
+        {/* Tabla de Capacidades */}
+        <div className="mt-16 bg-gradient-to-br from-nexly-azul/10 to-nexly-teal/10 border border-nexly-teal/20 rounded-2xl p-8 max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-4">¿Qué es una conversación?</h2>
-            <p className="text-neutral-300 text-lg">Entender esto te ayudará a aprovechar tu plan al máximo</p>
+            <h2 className="text-2xl font-bold mb-4">Capacidades Incluidas en tu Plan</h2>
+            <p className="text-neutral-300 text-lg">Todo lo que necesitas para gestionar tus conversaciones profesionalmente</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-green-400">Respuestas Sin Límite</h3>
-              </div>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5">•</span>
-                  <span><strong>Responder a clientes</strong> dentro de 24h</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5">•</span>
-                  <span><strong>Recibir mensajes</strong> de cualquier cliente</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-0.5">•</span>
-                  <span><strong>Conversaciones iniciadas</strong> por el cliente</span>
-                </li>
-              </ul>
-              <div className="mt-4 p-3 bg-green-500/5 rounded-lg">
-                <p className="text-xs text-green-300 font-medium">
-                  Tip: Responde rápido y tendrás respuestas sin límite
-                </p>
-              </div>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-700">
+                  <th className="text-left py-4 px-4 font-semibold text-nexly-teal">Funcionalidad</th>
+                  <th className="text-center py-4 px-4 font-semibold text-nexly-teal">Crecimiento</th>
+                  <th className="text-center py-4 px-4 font-semibold text-nexly-teal">Pro</th>
+                  <th className="text-center py-4 px-4 font-semibold text-nexly-teal">Business</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-700">
+                {/* Soporte Ilimitado */}
+                <tr className="hover:bg-neutral-800/30">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-accent-cream">Conversaciones de Respuesta</div>
+                        <div className="text-xs text-neutral-400">Respuestas a clientes sin límite</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-green-400 font-semibold">✓ Ilimitado</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-green-400 font-semibold">✓ Ilimitado</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-green-400 font-semibold">✓ Ilimitado</span>
+                  </td>
+                </tr>
 
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-orange-400">Con Límite por Plan</h3>
-              </div>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-400 mt-0.5">•</span>
-                  <span><strong>Iniciar conversaciones</strong> con clientes</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-400 mt-0.5">•</span>
-                  <span><strong>Mensajes después de 24h</strong> sin actividad</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-400 mt-0.5">•</span>
-                  <span><strong>Campañas de marketing</strong> con plantillas</span>
-                </li>
-              </ul>
-              <div className="mt-4 p-3 bg-orange-500/5 rounded-lg">
-                <p className="text-xs text-orange-300 font-medium">
-                  Básico: 450/mes - Premium: 900/mes
-                </p>
-              </div>
-            </div>
+                {/* Contactos Salientes */}
+                <tr className="hover:bg-neutral-800/30">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-accent-cream">Conversaciones Iniciadas</div>
+                        <div className="text-xs text-neutral-400">Iniciar conversaciones y campañas</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-orange-400 font-semibold">450/mes</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-orange-400 font-semibold">1,500/mes</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-orange-400 font-semibold">2,250/mes</span>
+                  </td>
+                </tr>
+
+                {/* Límite Diario */}
+                <tr className="hover:bg-neutral-800/30">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-accent-cream">Límite Diario</div>
+                        <div className="text-xs text-neutral-400">Protección anti-spam</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-blue-400 font-semibold">20/día</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-blue-400 font-semibold">50/día</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-blue-400 font-semibold">110/día</span>
+                  </td>
+                </tr>
+
+                {/* Integraciones */}
+                <tr className="hover:bg-neutral-800/30">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-accent-cream">Integraciones</div>
+                        <div className="text-xs text-neutral-400">Canales de comunicación</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-purple-400 font-semibold">3</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-purple-400 font-semibold">3</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-purple-400 font-semibold">Sin límite</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div className="mt-6 p-4 bg-nexly-teal/10 border border-nexly-teal/30 rounded-lg">
-            <h4 className="font-semibold mb-2 text-nexly-teal text-center">¿Por qué esta diferencia?</h4>
+          <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <h4 className="font-semibold mb-2 text-green-400 text-center">Diseñado para tu Éxito</h4>
             <p className="text-sm text-neutral-300 text-center">
-              Los costos de WhatsApp varían según quién inicia la conversación. 
-              Las respuestas a clientes son mucho más económicas (~$0.005) que iniciar conversaciones (~$0.043). 
-              Nexly incluye ambos costos en tu tarifa plana.
+              Nexly optimiza tu comunicación para maximizar resultados. 
+              <strong className="text-green-400">Conversaciones de respuesta ilimitadas</strong> para atención al cliente de primera. 
+              <strong className="text-orange-400">Conversaciones iniciadas</strong> para crecimiento controlado y profesional.
             </p>
+          </div>
+
+          {/* Estrategia de Monetización */}
+          <div className="mt-6 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+            <h4 className="font-semibold mb-2 text-orange-400 text-center">¿Necesitas Más Capacidad?</h4>
+            <p className="text-sm text-neutral-300 text-center mb-4">
+              Cuando alcances tu límite de conversaciones iniciadas, Nexly te ofrece dos opciones claras:
+            </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-orange-500/5 rounded-lg">
+                <div className="text-lg font-bold text-orange-400 mb-1">Paquete de Conversaciones Adicionales</div>
+                <div className="text-sm text-neutral-400 mb-2">500 conversaciones iniciadas extra</div>
+                <div className="text-lg font-bold text-accent-cream">$30 USD</div>
+                <div className="text-xs text-neutral-500">Pago único</div>
+              </div>
+              <div className="text-center p-3 bg-nexly-teal/10 rounded-lg">
+                <div className="text-lg font-bold text-nexly-teal mb-1">Subir de Plan</div>
+                <div className="text-sm text-neutral-400 mb-2">Más conversaciones iniciadas/mes</div>
+                <div className="text-lg font-bold text-accent-cream">Consulta precios</div>
+                <div className="text-xs text-neutral-500">Según plan elegido</div>
+              </div>
+            </div>
+            <div className="mt-3 p-2 bg-green-500/10 rounded-lg">
+              <p className="text-xs text-green-400 text-center">
+                <strong>Flexibilidad total:</strong> Elige la opción que mejor se adapte a tu crecimiento
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Información adicional para usuarios no autenticados */}
         {!token && (
           <div className="mt-16 bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-4">¿Cómo funciona?</h2>
-              <p className="text-neutral-400 text-lg">Proceso simple y seguro en 3 pasos</p>
-            </div>
+        <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-4">Comienza en 3 Pasos Simples</h2>
+            <p className="text-neutral-400 text-lg">Acceso inmediato a todas las funciones premium - sin configuración compleja</p>
+        </div>
             
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-accent-cream font-bold text-lg">1</span>
                 </div>
-                <h3 className="font-semibold mb-2">Regístrate gratis</h3>
-                <p className="text-neutral-400 text-sm">Crea tu cuenta en menos de 2 minutos</p>
+                <h3 className="font-semibold mb-2">Regístrate Gratis</h3>
+                <p className="text-neutral-400 text-sm">Acceso inmediato a todas las funciones premium</p>
               </div>
               
               <div className="text-center">
                 <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-accent-cream font-bold text-lg">2</span>
                 </div>
-                <h3 className="font-semibold mb-2">Elige tu plan</h3>
-                <p className="text-neutral-400 text-sm">Selecciona el plan que mejor se adapte a tu negocio</p>
+                <h3 className="font-semibold mb-2">Elige tu Capacidad</h3>
+                <p className="text-neutral-400 text-sm">Plan Crecimiento para atención al cliente o Plan Pro para conversaciones iniciadas</p>
               </div>
               
               <div className="text-center">
                 <div className="w-12 h-12 bg-nexly-teal rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-accent-cream font-bold text-lg">3</span>
                 </div>
-                <h3 className="font-semibold mb-2">Paga con seguridad</h3>
+                <h3 className="font-semibold mb-2">Comienza a Crecer</h3>
                 <p className="text-neutral-400 text-sm mb-2">Procesamiento seguro con</p>
                 <div className="flex justify-center items-center gap-4">
                   <img src="/strapi_logo.png" alt="Stripe" className="h-8 w-auto" />

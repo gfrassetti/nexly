@@ -10,14 +10,11 @@ export default function ClientNavigation() {
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center space-x-8">
         <a href="#features" className="text-neutral-300 hover:text-accent-cream transition-colors">
-          Características
+          Producto
         </a>
         <Link href="/pricing" className="text-neutral-300 hover:text-accent-cream transition-colors">
           Precios
         </Link>
-        <a href="#contact" className="text-neutral-300 hover:text-accent-cream transition-colors">
-          Contacto
-        </a>
       </div>
 
       {/* Auth Buttons */}
@@ -53,14 +50,11 @@ export default function ClientNavigation() {
         <div className="md:hidden border-t border-neutral-800 bg-accent-dark">
           <div className="px-2 pt-2 pb-3 space-y-1">
             <a href="#features" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
-              Características
+              Producto
             </a>
             <Link href="/pricing" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
               Precios
             </Link>
-            <a href="#contact" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
-              Contacto
-            </a>
             <div className="border-t border-neutral-800 pt-2 mt-2">
               <Link href="/login" className="block px-3 py-2 text-neutral-300 hover:text-accent-cream">
                 Iniciar sesión

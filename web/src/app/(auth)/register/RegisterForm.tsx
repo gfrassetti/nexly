@@ -39,7 +39,7 @@ export default function RegisterForm() {
       // localStorage.removeItem('selectedPaymentMethod');
       
       // Si hay un plan, hacer auto-login y redirigir directo al checkout
-      if (plan && (plan === 'basic' || plan === 'premium') && response.token && response.user) {
+      if (plan && (plan === 'basic' || plan === 'premium' || plan === 'enterprise') && response.token && response.user) {
         // Guardar el plan en localStorage para mantener el contexto
         localStorage.setItem('selectedPlan', plan);
         localStorage.setItem('selectedPaymentMethod', paymentMethod);

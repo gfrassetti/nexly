@@ -145,7 +145,7 @@ export default function SubscriptionStatus() {
               onClick={() => {
                 const selectedPlan =
                   localStorage.getItem("selectedPlan") || "basic";
-                createStripePaymentLink(selectedPlan as "basic" | "premium");
+                createStripePaymentLink(selectedPlan as "basic" | "premium" | "enterprise");
               }}
               disabled={stripeLoading}
               className="bg-accent-cream/20 hover:bg-accent-cream/30 disabled:bg-accent-cream/10 disabled:opacity-50 text-accent-cream border border-accent-cream/30 px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
@@ -255,7 +255,7 @@ export default function SubscriptionStatus() {
                 // Obtener el plan del usuario desde localStorage o usar 'basic' por defecto
                 const selectedPlan =
                   localStorage.getItem("selectedPlan") || "basic";
-                createStripePaymentLink(selectedPlan as "basic" | "premium");
+                createStripePaymentLink(selectedPlan as "basic" | "premium" | "enterprise");
               }}
               disabled={stripeLoading}
               className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-accent-cream px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
@@ -384,7 +384,10 @@ export default function SubscriptionStatus() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-lg font-semibold text-accent-cream">
-              {sub.planType === "basic" ? "Plan Básico" : "Plan Premium"}
+              {sub.planType === "basic" ? "Plan Crecimiento" : 
+               sub.planType === "premium" ? "Plan Pro" : 
+               sub.planType === "enterprise" ? "Plan Business" : 
+               "Plan Básico"}
             </h3>
             <span
               className={`px-2 py-1 rounded-md text-xs font-medium bg-transparent ${subscriptionConfig.className}`}
@@ -455,7 +458,7 @@ export default function SubscriptionStatus() {
                   subscriptionData: sub
                 });
                 
-                createStripePaymentLink(selectedPlan as "basic" | "premium");
+                createStripePaymentLink(selectedPlan as "basic" | "premium" | "enterprise");
               }}
               className="bg-warning/20 hover:bg-warning/30 text-warning border border-warning/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
@@ -495,12 +498,12 @@ export default function SubscriptionStatus() {
 
           {/* Botón para cambiar plan */}
           {status.active && (
-            <a
-              href="/pricing"
+            <button
+              onClick={() => window.location.href = '/pricing'}
               className="bg-neutral-600 hover:bg-neutral-700 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cambiar plan
-            </a>
+            </button>
           )}
         </div>
       </div>

@@ -7,7 +7,7 @@ interface StripeSubscription {
   id: string;
   stripeSubscriptionId?: string;
   status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
-  planType: 'basic' | 'premium';
+  planType: 'basic' | 'premium' | 'enterprise';
   trialEndDate?: string;
   currentPeriodEnd?: string;
   currentPeriodStart?: string;

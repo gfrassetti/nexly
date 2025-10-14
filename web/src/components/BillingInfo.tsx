@@ -13,7 +13,12 @@ export default function BillingInfo() {
   // Función para obtener el nombre del plan
   const getPlanName = useMemo(() => {
     if (!subscription?.subscription) return "Plan desconocido";
-    return subscription.subscription.planType === 'basic' ? 'Plan Básico' : 'Plan Premium';
+    switch (subscription.subscription.planType) {
+      case 'basic': return 'Plan Crecimiento';
+      case 'premium': return 'Plan Pro';
+      case 'enterprise': return 'Plan Business';
+      default: return 'Plan Básico';
+    }
   }, [subscription?.subscription?.planType]);
 
   // Función para formatear el estado

@@ -11,6 +11,10 @@ import StatCard from "@/components/StatCard";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import { MessagesChart } from "@/components/MessagesChart";
 import { MessagesByIntegrationChart } from "@/components/MessagesByIntegrationChart";
+import UsageMeter from "@/components/UsageMeter";
+import LimitReachedModal from "@/components/LimitReachedModal";
+import Toast from "@/components/Toast";
+import { useConversationUsage } from "@/hooks/useConversationUsage";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -18,6 +22,7 @@ export default function DashboardPage() {
   const [showTrialNotification, setShowTrialNotification] = useState(false);
   const [showPaymentError, setShowPaymentError] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   // Obtener estadísticas reales desde el backend
   const { stats, loading: statsLoading, error: statsError } = useStats();
@@ -27,6 +32,9 @@ export default function DashboardPage() {
   
   // Obtener mensajes por integración
   const { data: messagesByIntegrationData, loading: byIntegrationLoading } = useMessagesByIntegration();
+  
+  // Obtener métricas de uso de conversaciones
+  const { usage, loading: usageLoading } = useConversationUsage();
 
   // Show trial notification only if trial is active
   useEffect(() => {
@@ -38,6 +46,13 @@ export default function DashboardPage() {
       setShowTrialNotification(false);
     }
   }, [searchParams]);
+
+  // Show limit modal when usage is critical
+  useEffect(() => {
+    if (usage && !usage.canSend && usage.status === 'critical') {
+      setShowLimitModal(true);
+    }
+  }, [usage]);
 
   // Show payment error notification
   useEffect(() => {
@@ -151,6 +166,9 @@ export default function DashboardPage() {
         {/* Subscription Status */}
         <SubscriptionStatus />
 
+        {/* Usage Meter */}
+        <UsageMeter />
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {statsLoading ? (
@@ -258,6 +276,19 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {/* Limit Reached Modal */}
+        <LimitReachedModal
+          isOpen={showLimitModal}
+          onClose={() => setShowLimitModal(false)}
+          onUpgradePlan={() => {
+            setShowLimitModal(false);
+            window.location.href = '/pricing';
+          }}
+        />
+
+        {/* Toast Notifications */}
+        <Toast />
 
       </div>
     </div>

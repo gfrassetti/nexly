@@ -7,7 +7,7 @@ export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const { token } = useAuth();
 
-  const createPaymentLink = async (planType: 'basic' | 'premium') => {
+  const createPaymentLink = async (planType: 'basic' | 'premium' | 'enterprise') => {
     if (!token) {
       throw new Error('Usuario no autenticado');
     }

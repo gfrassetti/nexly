@@ -164,7 +164,7 @@ SubscriptionSchema.methods.getMaxIntegrations = function(): number {
   }
   
   
-  return this.planType === 'basic' ? 3 : this.planType === 'premium' ? 10 : 999; // Básico: 3, Premium: 10, Enterprise: ilimitadas
+    return this.planType === 'basic' ? 3 : this.planType === 'premium' ? 10 : 999; // Básico: 3, Premium: 10, Enterprise: sin límite
 };
 
 // Método estático para obtener límite de integraciones considerando período de prueba gratuito

@@ -188,8 +188,12 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     
     if (finalPlanType === 'basic') {
       stripeSession = await stripeService.createBasicPlan(user.email, successUrl, cancelUrl);
-    } else {
+    } else if (finalPlanType === 'premium') {
       stripeSession = await stripeService.createPremiumPlan(user.email, successUrl, cancelUrl);
+    } else if (finalPlanType === 'enterprise') {
+      stripeSession = await stripeService.createEnterprisePlan(user.email, successUrl, cancelUrl);
+    } else {
+      throw new CustomError('Tipo de plan no válido', 400);
     }
 
     // Verificar que Stripe creó la sesión exitosamente
@@ -379,6 +383,77 @@ router.post('/pause', authenticateToken, asyncHandler(async (req: AuthenticatedR
   } catch (error) {
     console.error('Error pausing Stripe subscription:', error);
     throw error;
+  }
+}));
+
+// Cambiar plan de suscripción
+router.post('/change-plan', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { newPlanType } = req.body;
+
+    if (!userId) {
+      throw new CustomError('Usuario no autenticado', 401);
+    }
+
+    if (!newPlanType || !['basic', 'premium', 'enterprise'].includes(newPlanType)) {
+      throw new CustomError('Tipo de plan inválido', 400);
+    }
+
+    // Buscar suscripción actual
+    const currentSubscription = await Subscription.findOne({
+      userId,
+      status: 'active'
+    });
+
+    if (!currentSubscription) {
+      throw new CustomError('No tienes una suscripción activa para cambiar', 404);
+    }
+
+    // Verificar que no esté cambiando al mismo plan
+    if (currentSubscription.planType === newPlanType) {
+      throw new CustomError('Ya tienes el plan seleccionado', 400);
+    }
+
+    // Crear nueva sesión de checkout para el nuevo plan
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new CustomError('Usuario no encontrado', 404);
+    }
+
+    const successUrl = `${process.env.FRONTEND_URL}/dashboard?plan_change_success=true&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${process.env.FRONTEND_URL}/dashboard?plan_change_cancelled=true`;
+    
+    let stripeSession;
+    if (newPlanType === 'basic') {
+      stripeSession = await stripeService.createBasicPlan(user.email, successUrl, cancelUrl);
+    } else if (newPlanType === 'premium') {
+      stripeSession = await stripeService.createPremiumPlan(user.email, successUrl, cancelUrl);
+    } else if (newPlanType === 'enterprise') {
+      stripeSession = await stripeService.createEnterprisePlan(user.email, successUrl, cancelUrl);
+    }
+
+    if (!stripeSession || !stripeSession.id) {
+      throw new CustomError('Error al crear la sesión de pago para el nuevo plan', 500);
+    }
+
+    // Marcar la suscripción actual como pendiente de cambio
+    currentSubscription.status = 'incomplete';
+    await currentSubscription.save();
+
+    res.json({
+      success: true,
+      paymentUrl: stripeSession.url,
+      sessionId: stripeSession.id,
+      message: `Redirigiendo para cambiar a Plan ${newPlanType.charAt(0).toUpperCase() + newPlanType.slice(1)}`
+    });
+
+  } catch (error: any) {
+    console.error('Error changing subscription plan:', error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      error: error.message || 'Error interno del servidor'
+    });
   }
 }));
 

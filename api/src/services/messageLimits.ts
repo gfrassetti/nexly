@@ -30,19 +30,19 @@ const PLAN_LIMITS = {
     maxMessagesPerMonth: 50,     // ~50 conversaciones en trial ($2.15 costo)
     maxMessagesPerIntegration: 50
   },
-  basic: {  // Plan Básico: $30 USD/mes
+  basic: {  // Plan Crecimiento: $30 USD/mes
     maxMessagesPerDay: 20,       // ~20 conversaciones/día
     maxMessagesPerMonth: 450,    // 450 conversaciones = $19.35 costo, $10.65 ganancia (35%)
     maxMessagesPerIntegration: 450
   },
-  premium: {  // Plan Premium: $60 USD/mes
+  premium: {  // Plan Pro: $59 USD/mes
     maxMessagesPerDay: 45,       // ~45 conversaciones/día
-    maxMessagesPerMonth: 900,    // 900 conversaciones = $38.70 costo, $21.30 ganancia (35%)
-    maxMessagesPerIntegration: 900
+    maxMessagesPerMonth: 1500,   // 1,500 conversaciones = $64.50 costo, $-5.50 ganancia (ajustar)
+    maxMessagesPerIntegration: 1500
   },
-  enterprise: {  // Plan Enterprise: $150 USD/mes
+  enterprise: {  // Plan Business: $129 USD/mes
     maxMessagesPerDay: 110,
-    maxMessagesPerMonth: 2250,   // 2,250 conversaciones = $96.75 costo, $53.25 ganancia (35%)
+    maxMessagesPerMonth: 2250,   // 2,250 conversaciones = $96.75 costo, $32.25 ganancia (25%)
     maxMessagesPerIntegration: 2250
   },
   // Para usuarios sin plan ni trial - mínimo absoluto
@@ -141,8 +141,15 @@ export async function checkAndIncrementUsage(
   try {
     // 1. OBTENER LÍMITES del plan del usuario
     const limits = await getMessageLimits(userId);
-    const monthLimit = limits.maxMessagesPerMonth;
+    const baseMonthLimit = limits.maxMessagesPerMonth;
     const dayLimit = limits.maxMessagesPerDay;
+    
+    // 2. OBTENER CONVERSACIONES ADICIONALES DE ADD-ONS
+    const { getTotalAddOnConversations } = await import('./addOnService');
+    const addOnConversations = await getTotalAddOnConversations(userId);
+    
+    // 3. CALCULAR LÍMITE TOTAL (plan base + add-ons)
+    const monthLimit = baseMonthLimit + addOnConversations;
     
     // 2. OBTENER USO ACTUAL (mes actual)
     const Message = (await import('../models/Message')).Message;
@@ -175,12 +182,18 @@ export async function checkAndIncrementUsage(
         userId,
         provider,
         monthUsage,
-        monthLimit
+        monthLimit,
+        baseLimit: baseMonthLimit,
+        addOnConversations
       });
+      
+      const reason = addOnConversations > 0 
+        ? `Has alcanzado tu límite mensual de ${monthLimit} conversaciones (${baseMonthLimit} del plan + ${addOnConversations} adicionales). Compra más paquetes o actualiza tu plan.`
+        : `Has alcanzado tu límite mensual de ${monthLimit} conversaciones. Compra un paquete adicional o actualiza tu plan.`;
       
       return {
         allowed: false,
-        reason: `Has alcanzado tu límite mensual de ${monthLimit} conversaciones. Actualiza tu plan para enviar más mensajes.`,
+        reason,
         used: monthUsage,
         limit: monthLimit,
         remaining: 0

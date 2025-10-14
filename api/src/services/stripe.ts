@@ -17,16 +17,21 @@ interface StripeConfig {
 
 // Constantes para planes y configuración
 const STRIPE_CONSTANTS = {
-  PLAN_BASIC_NAME: 'Nexly - Plan Básico',
-  PLAN_BASIC_DESCRIPTION: 'Plan básico de Nexly para emprendedores y pequeñas empresas',
-  PLAN_BASIC_AMOUNT: 100000, // $1000 ARS
+  // Planes nuevos (2024)
+  PLAN_BASIC_NAME: 'Nexly - Plan Crecimiento',
+  PLAN_BASIC_DESCRIPTION: 'Plan Crecimiento de Nexly para negocios enfocados en soporte y atención al cliente',
+  PLAN_BASIC_AMOUNT: 3000, // $30.00 USD
   
-  PLAN_PREMIUM_NAME: 'Nexly - Plan Premium',
-  PLAN_PREMIUM_DESCRIPTION: 'Plan premium de Nexly para empresas que necesitan más integraciones',
-  PLAN_PREMIUM_AMOUNT: 150000, // $1500 ARS
+  PLAN_PREMIUM_NAME: 'Nexly - Plan Pro',
+  PLAN_PREMIUM_DESCRIPTION: 'Plan Pro de Nexly para negocios que hacen campañas de outbound regulares',
+  PLAN_PREMIUM_AMOUNT: 5900, // $59.00 USD
+  
+  PLAN_ENTERPRISE_NAME: 'Nexly - Plan Business',
+  PLAN_ENTERPRISE_DESCRIPTION: 'Plan Business de Nexly para empresas con alto volumen de conversaciones',
+  PLAN_ENTERPRISE_AMOUNT: 12900, // $129.00 USD
   
   DEFAULT_TRIAL_DAYS: 7,
-  DEFAULT_CURRENCY: 'ars',
+  DEFAULT_CURRENCY: 'usd', // Cambiado de ARS a USD
   API_VERSION: '2025-08-27.basil',
   
   // Límites optimizados para pocos productos
@@ -212,10 +217,25 @@ class StripeService {
   }
 
   /**
-   * Crear un plan de suscripción básico
+   * Crear un plan de suscripción básico usando Product ID específico
    */
   async createBasicPlan(userEmail: string, successUrl: string, cancelUrl: string) {
     try {
+      // Usar Product ID específico si está configurado
+      if (config.stripeBasicPriceId) {
+        console.log('Using specific Basic Price ID:', config.stripeBasicPriceId);
+        return await this.createCheckoutSession({
+          priceId: config.stripeBasicPriceId,
+          customerEmail: userEmail,
+          successUrl,
+          cancelUrl,
+          trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
+          planType: 'basic',
+        });
+      }
+
+      // Fallback al método anterior si no hay Product ID específico
+      console.log('Using dynamic product creation for Basic plan');
       const { product, price } = await this.getOrCreateProductAndPrice(
         STRIPE_CONSTANTS.PLAN_BASIC_NAME,
         STRIPE_CONSTANTS.PLAN_BASIC_DESCRIPTION,
@@ -241,10 +261,25 @@ class StripeService {
   }
 
   /**
-   * Crear un plan de suscripción premium
+   * Crear un plan de suscripción premium usando Product ID específico
    */
   async createPremiumPlan(userEmail: string, successUrl: string, cancelUrl: string) {
     try {
+      // Usar Product ID específico si está configurado
+      if (config.stripePremiumPriceId) {
+        console.log('Using specific Premium Price ID:', config.stripePremiumPriceId);
+        return await this.createCheckoutSession({
+          priceId: config.stripePremiumPriceId,
+          customerEmail: userEmail,
+          successUrl,
+          cancelUrl,
+          trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
+          planType: 'premium',
+        });
+      }
+
+      // Fallback al método anterior si no hay Product ID específico
+      console.log('Using dynamic product creation for Premium plan');
       const { product, price } = await this.getOrCreateProductAndPrice(
         STRIPE_CONSTANTS.PLAN_PREMIUM_NAME,
         STRIPE_CONSTANTS.PLAN_PREMIUM_DESCRIPTION,
@@ -266,6 +301,50 @@ class StripeService {
         raw: error.raw
       });
       throw new CustomError(`Error al crear el plan premium: ${error.message}`, 500);
+    }
+  }
+
+  /**
+   * Crear un plan de suscripción enterprise usando Product ID específico
+   */
+  async createEnterprisePlan(userEmail: string, successUrl: string, cancelUrl: string) {
+    try {
+      // Usar Product ID específico si está configurado
+      if (config.stripeEnterprisePriceId) {
+        console.log('Using specific Enterprise Price ID:', config.stripeEnterprisePriceId);
+        return await this.createCheckoutSession({
+          priceId: config.stripeEnterprisePriceId,
+          customerEmail: userEmail,
+          successUrl,
+          cancelUrl,
+          trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
+          planType: 'enterprise',
+        });
+      }
+
+      // Fallback al método anterior si no hay Product ID específico
+      console.log('Using dynamic product creation for Enterprise plan');
+      const { product, price } = await this.getOrCreateProductAndPrice(
+        STRIPE_CONSTANTS.PLAN_ENTERPRISE_NAME,
+        STRIPE_CONSTANTS.PLAN_ENTERPRISE_DESCRIPTION,
+        STRIPE_CONSTANTS.PLAN_ENTERPRISE_AMOUNT
+      );
+
+      return await this.createCheckoutSession({
+        priceId: price.id,
+        customerEmail: userEmail,
+        successUrl,
+        cancelUrl,
+        trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
+        planType: 'enterprise',
+      });
+    } catch (error: any) {
+      console.error('Error creating enterprise plan:', {
+        message: error.message,
+        userEmail,
+        raw: error.raw
+      });
+      throw new CustomError(`Error al crear el plan enterprise: ${error.message}`, 500);
     }
   }
 

@@ -157,7 +157,7 @@ export default function HowItWorksTimeline() {
           className="w-full max-w-md mx-auto"
           orientation="vertical"
         >
-          <CarouselContent className="-mt-1 h-[350px]">
+          <CarouselContent className="-mt-1 h-[415px]">
             {steps.map((step, index) => {
               const colors = getColorClasses(step.color, step.featured);
               return (
