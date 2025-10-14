@@ -1,9 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { getTotalAddOnConversations } from '../services/addOnService';
 import { getMessageLimits } from '../services/messageLimits';
-import Message from '../models/Message';
-import { CustomRequest } from '../types/express';
+import { Message } from '../models/Message';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -12,7 +11,7 @@ const router = Router();
 // Obtiene el uso actual de conversaciones del usuario
 router.get('/conversations', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = (req as CustomRequest).user?.id;
+    const userId = (req as AuthRequest).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -85,7 +84,7 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
     
   } catch (error: any) {
     logger.error('Error getting conversation usage', {
-      userId: (req as CustomRequest).user?.id,
+      userId: (req as AuthRequest).user?.id,
       error: error.message,
       stack: error.stack
     });
@@ -97,7 +96,7 @@ router.get('/conversations', authenticateToken, async (req: Request, res: Respon
 // Obtiene los add-ons activos del usuario
 router.get('/add-ons', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = (req as CustomRequest).user?.id;
+    const userId = (req as AuthRequest).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -112,7 +111,7 @@ router.get('/add-ons', authenticateToken, async (req: Request, res: Response) =>
     
   } catch (error: any) {
     logger.error('Error getting add-ons', {
-      userId: (req as CustomRequest).user?.id,
+      userId: (req as AuthRequest).user?.id,
       error: error.message,
       stack: error.stack
     });

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import ContactForm from "./ContactForm";
-import Header from "./Header";
+import ScrollHeader from "./ScrollHeader";
 import Footer from "./Footer";
 import FAQSection from "./FAQSection";
 import HowItWorksTimeline from "./HowItWorksTimeline";
@@ -25,10 +25,10 @@ export default function a() {
   return (
     <div className="min-h-screen bg-accent-dark text-accent-cream">
       {/* Header */}
-      <Header />
+      <ScrollHeader />
 
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative pt-20 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(37,150,190,0.25),transparent_50%)]" />

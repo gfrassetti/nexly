@@ -6,9 +6,9 @@ import logger from '../utils/logger';
 const router = Router();
 
 // Crear sesión de checkout para paquete de add-on
-router.post('/create-checkout-session', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/create-checkout-session', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
@@ -64,9 +64,9 @@ router.post('/create-checkout-session', authenticateToken, async (req: AuthReque
 });
 
 // Obtener add-ons activos del usuario
-router.get('/active', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/active', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
@@ -90,9 +90,9 @@ router.get('/active', authenticateToken, async (req: AuthRequest, res: Response)
 });
 
 // Verificar límites de conversaciones (para el frontend)
-router.get('/usage-limits', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/usage-limits', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }

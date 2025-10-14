@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
+import { AuthRequest } from "../types/auth";
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
@@ -34,4 +35,5 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+export { requireAuth as authenticateToken, AuthRequest };
 export default requireAuth;
