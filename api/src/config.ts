@@ -30,7 +30,7 @@ export const config = {
   
   // Nexly Facebook Business Manager ID (para Embedded Signup)
   // TEMPORAL: Reemplaza con tu Facebook Business Manager ID real
-  nexlyFacebookBusinessId: process.env.NEXLY_FACEBOOK_BUSINESS_ID || "123456789012345",
+  nexlyFacebookBusinessId: process.env.NEXLY_FACEBOOK_BUSINESS_ID,
   
   
   // Twilio Configuration
