@@ -37,7 +37,7 @@ export default function a() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-nexly-teal/15 rounded-full blur-3xl" />
         </div>
         
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative max-w-7xl mx-auto mt-18">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Unifica WhatsApp Business, Instagram y Messenger
