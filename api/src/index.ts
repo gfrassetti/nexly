@@ -54,31 +54,45 @@ app.use(generalRateLimit);
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
+  "http://localhost:3001", // Puerto alternativo para desarrollo
   "https://www.nexly.com.ar",
   "https://nexly.com.ar",
-  "https://nexly-production.up.railway.app" 
+  "https://nexly-production.up.railway.app",
+  "https://nexly-staging.up.railway.app" // Si tienes un entorno de staging
 ];
 
-// Middleware principal de CORS
+// Middleware principal de CORS - Configuración simplificada y robusta
 app.use(cors({
-  origin(origin, cb) {
+  origin: function (origin, callback) {
+    // Log para debug
+    console.log(`CORS Request from origin: ${origin || 'No origin'}`);
     
-    // Permitir solicitudes sin origen (como las de Postman o CURL)
+    // Permitir solicitudes sin origen (como las de Postman, CURL, o aplicaciones móviles)
     if (!origin) {
-      return cb(null, true);
+      console.log('CORS: Allowing request without origin');
+      return callback(null, true);
     }
     
-    // Permitir orígenes de la lista
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      return cb(null, true);
+    // Verificar si el origen está en la lista de permitidos
+    if (ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+      console.log(`CORS: Allowing origin: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // Para desarrollo, permitir localhost con cualquier puerto
+    if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
+      console.log(`CORS: Allowing localhost in development: ${origin}`);
+      return callback(null, true);
     }
     
     // Bloquear otros orígenes
-    return cb(new Error(`Not allowed by CORS: ${origin}`));
+    console.log(`CORS: Blocking origin: ${origin}`);
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
-  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"]
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  optionsSuccessStatus: 200 // Para compatibilidad con navegadores legacy
 }));
 
 /* // 🛑 BLOQUE REMOVIDO: Este middleware manual era redundante e interfería con la lógica del middleware 'cors'.
