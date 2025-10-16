@@ -6,7 +6,6 @@ import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useNotificationHelpers } from "@/hooks/useNotification";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
-import FreeTrialBanner from "@/components/FreeTrialBanner";
 import { useAuth } from "@/hooks/useAuth";
 import useSWR from "swr";
 
@@ -154,8 +153,6 @@ function IntegrationsContent() {
         </div>
       </div>
       
-      {/* Banner del período de prueba gratuito */}
-      <FreeTrialBanner />
 
       {/* Trial period info */}
       {subscription?.freeTrial?.isActive && (

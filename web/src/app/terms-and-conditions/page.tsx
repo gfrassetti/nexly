@@ -48,9 +48,9 @@ export default function TermsAndConditionsPage() {
               <div className="text-neutral-300 leading-relaxed mb-4">
                 <p className="mb-4">Nexly ofrece los siguientes planes de suscripción:</p>
                 <ul className="list-disc list-inside space-y-2">
-                  <li><strong>Plan Básico:</strong> $30 USD/mes (~$30,000 ARS) - 450 conversaciones/mes, hasta 3 integraciones</li>
-                  <li><strong>Plan Premium:</strong> $60 USD/mes (~$60,000 ARS) - 900 conversaciones/mes, hasta 10 integraciones</li>
-                    <li><strong>Plan Enterprise:</strong> $150 USD/mes (~$150,000 ARS) - 2,250 conversaciones/mes, integraciones sin límite</li>
+                  <li><strong>Plan Crecimiento:</strong> $30 USD/mes (~$30,000 ARS) - 450 conversaciones/mes, hasta 3 integraciones</li>
+                  <li><strong>Plan Pro:</strong> $59 USD/mes (~$59,000 ARS) - 1,500 conversaciones/mes, hasta 4 integraciones</li>
+                    <li><strong>Plan Business:</strong> $150 USD/mes (~$150,000 ARS) - 2,250 conversaciones/mes, integraciones sin límite</li>
                 </ul>
                 <p className="mt-4">
                   <strong>Período de prueba:</strong> Todos los planes incluyen un período de prueba gratuito de 7 días 
@@ -99,9 +99,9 @@ export default function TermsAndConditionsPage() {
                   <h3 className="font-semibold mb-3 text-nexly-light-blue">Límites de Conversaciones por Plan</h3>
                   <ul className="list-disc list-inside space-y-2">
                     <li><strong>Free Trial:</strong> 50 conversaciones totales, máximo 5 por día</li>
-                    <li><strong>Plan Básico:</strong> 450 conversaciones/mes, máximo 20 por día</li>
-                    <li><strong>Plan Premium:</strong> 900 conversaciones/mes, máximo 45 por día</li>
-                    <li><strong>Plan Enterprise:</strong> 2,250 conversaciones/mes, máximo 110 por día</li>
+                    <li><strong>Plan Crecimiento:</strong> 450 conversaciones/mes, máximo 20 por día</li>
+                    <li><strong>Plan Pro:</strong> 1,500 conversaciones/mes, máximo 75 por día</li>
+                    <li><strong>Plan Business:</strong> 2,250 conversaciones/mes, máximo 110 por día</li>
                   </ul>
                 </div>
 
@@ -127,9 +127,9 @@ export default function TermsAndConditionsPage() {
                 <h3 className="font-semibold mb-3 text-nexly-teal mt-6">Límites de Integraciones</h3>
                 <ul className="list-disc list-inside space-y-2">
                   <li><strong>Free Trial:</strong> Hasta 5 integraciones activas</li>
-                  <li><strong>Plan Básico:</strong> Hasta 3 integraciones activas</li>
-                  <li><strong>Plan Premium:</strong> Hasta 10 integraciones activas</li>
-                  <li><strong>Plan Enterprise:</strong> Integraciones sin límite</li>
+                  <li><strong>Plan Crecimiento:</strong> Hasta 3 integraciones activas</li>
+                  <li><strong>Plan Pro:</strong> Hasta 4 integraciones activas</li>
+                  <li><strong>Plan Business:</strong> Integraciones sin límite</li>
                 </ul>
 
                 <h3 className="font-semibold mb-3 text-nexly-teal mt-6">Renovación de Límites</h3>

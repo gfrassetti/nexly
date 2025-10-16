@@ -27,16 +27,22 @@ export default function SubscriptionActions({
   
   const { showSuccess, showError } = useNotificationHelpers();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
 
-  const handleCancel = async () => {
-    if (!confirm("¿Estás seguro de que quieres cancelar tu suscripción? Esta acción no se puede deshacer.")) {
-      return;
-    }
+  const handleCancelClick = () => {
+    setShowCancelModal(true);
+  };
 
+  const handleCancelConfirm = async () => {
+    setShowCancelModal(false);
     setActionLoading("cancel");
     try {
       await cancelSubscription(subscriptionId);
-      showSuccess("Éxito", "Suscripción cancelada exitosamente");
+      const message = status === "trialing" 
+        ? "Período de prueba cancelado exitosamente" 
+        : "Suscripción cancelada exitosamente";
+      showSuccess("Éxito", message);
       onStatusChange?.();
     } catch (err) {
       showError("Error", "Error al cancelar la suscripción");
@@ -45,11 +51,12 @@ export default function SubscriptionActions({
     }
   };
 
-  const handlePause = async () => {
-    if (!confirm("¿Estás seguro de que quieres pausar tu suscripción? Podrás reanudarla más tarde.")) {
-      return;
-    }
+  const handlePauseClick = () => {
+    setShowPauseModal(true);
+  };
 
+  const handlePauseConfirm = async () => {
+    setShowPauseModal(false);
     setActionLoading("pause");
     try {
       await pauseSubscription(subscriptionId);
@@ -88,7 +95,7 @@ export default function SubscriptionActions({
       {status === "active" && !isPaused && (
         <>
           <button
-            onClick={handlePause}
+            onClick={handlePauseClick}
             disabled={loading || actionLoading === "pause"}
             className="w-full px-4 py-2 text-sm font-medium text-accent-cream bg-accent-cream/10 hover:bg-accent-cream/20 disabled:bg-muted rounded-lg transition-colors border border-accent-cream/20"
           >
@@ -96,7 +103,7 @@ export default function SubscriptionActions({
           </button>
           
           <button
-            onClick={handleCancel}
+            onClick={handleCancelClick}
             disabled={loading || actionLoading === "cancel"}
             className="w-full px-4 py-2 text-sm font-medium text-accent-red bg-accent-red/10 hover:bg-accent-red/20 disabled:bg-muted disabled:text-muted-foreground rounded-lg transition-colors"
           >
@@ -116,9 +123,77 @@ export default function SubscriptionActions({
       )}
 
       {status === "trialing" && (
-        <div className="text-sm text-muted-foreground text-center">
-          <p>Tu período de prueba está activo</p>
-          <p className="text-xs mt-1">Las opciones de pausa/cancelación estarán disponibles después del período de prueba</p>
+        <>
+          <div className="text-sm text-muted-foreground text-center mb-3">
+            <p>Tu período de prueba está activo</p>
+            <p className="text-xs mt-1">Puedes cancelar en cualquier momento sin costo</p>
+          </div>
+          <button
+            onClick={handleCancelClick}
+            disabled={loading || actionLoading === "cancel"}
+            className="w-full px-4 py-2 text-sm font-medium text-accent-red bg-accent-red/10 hover:bg-accent-red/20 disabled:bg-muted disabled:text-muted-foreground rounded-lg transition-colors"
+          >
+            {actionLoading === "cancel" ? "Cancelando..." : "Cancelar Período de Prueba"}
+          </button>
+        </>
+      )}
+
+      {/* Modal de confirmación para cancelar */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">
+              {status === "trialing" ? "Cancelar Período de Prueba" : "Cancelar Suscripción"}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {status === "trialing" 
+                ? "¿Estás seguro de que quieres cancelar tu período de prueba? No se te cobrará nada y perderás el acceso inmediatamente."
+                : "¿Estás seguro de que quieres cancelar tu suscripción? Esta acción no se puede deshacer."
+              }
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCancelConfirm}
+                disabled={actionLoading === "cancel"}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-lg"
+              >
+                {actionLoading === "cancel" ? "Cancelando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para pausar */}
+      {showPauseModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Pausar Suscripción</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              ¿Estás seguro de que quieres pausar tu suscripción? Podrás reanudarla más tarde.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowPauseModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handlePauseConfirm}
+                disabled={actionLoading === "pause"}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 rounded-lg"
+              >
+                {actionLoading === "pause" ? "Pausando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

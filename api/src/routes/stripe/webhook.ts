@@ -55,6 +55,8 @@ router.post('/', async (req: Request, res: Response) => {
         break;
       
       case 'customer.subscription.trial_will_end':
+        // Este evento solo notifica; no es necesario cambiar el estado a 'active' aquí,
+        // ya que el siguiente evento 'invoice.paid' o 'invoice.payment_failed' lo hará.
         await handleTrialWillEnd(event.data.object as Stripe.Subscription);
         break;
       
@@ -76,16 +78,26 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   if ((invoice as any).subscription && typeof (invoice as any).subscription === 'string') {
     const subscriptionId = (invoice as any).subscription as string;
     
-    // Actualizar el estado de la suscripción en la base de datos
-    await Subscription.findOneAndUpdate(
+    // 1. Actualizar el estado de la suscripción a 'active'
+    const subscription = await Subscription.findOneAndUpdate(
       { stripeSubscriptionId: subscriptionId },
       { 
         status: 'active',
-        // Estados se calculan dinámicamente con métodos
-        lastPaymentDate: new Date()
+        lastPaymentDate: new Date(),
+        trialEndDate: undefined // Ya no hay trial
       },
       { new: true }
     );
+    
+    // 2. Actualizar el estado del usuario
+    if (subscription) {
+      const user = await User.findById(subscription.userId);
+      if (user) {
+        user.subscription_status = 'active_paid'; // CLAVE: Cambia de 'active_trial' a 'active_paid'
+        await user.save();
+        console.log(`User ${user._id} status updated to active_paid.`);
+      }
+    }
     
     console.log(`Subscription ${subscriptionId} activated after payment`);
   }
@@ -94,41 +106,26 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 // Manejar pago fallido de factura
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   console.log('Invoice payment failed:', invoice.id);
-  console.log('Invoice details:', {
-    id: invoice.id,
-    subscription: (invoice as any).subscription,
-    status: invoice.status,
-    payment_intent: (invoice as any).payment_intent,
-    last_payment_attempt: (invoice as any).last_payment_attempt,
-    next_payment_attempt: invoice.next_payment_attempt
-  });
   
   if ((invoice as any).subscription && typeof (invoice as any).subscription === 'string') {
     const subscriptionId = (invoice as any).subscription as string;
     
-    // Buscar la suscripción en la base de datos
-    const subscription = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
+    // Actualizar el estado de la suscripción
+    await Subscription.findOneAndUpdate(
+      { stripeSubscriptionId: subscriptionId },
+      { 
+        status: 'past_due',
+        lastPaymentAttempt: new Date(),
+        // No se debe tocar trialEndDate aquí, Stripe ya lo maneja
+      },
+      { new: true }
+    );
     
-    if (subscription) {
-      // Actualizar el estado de la suscripción
-      await Subscription.findOneAndUpdate(
-        { stripeSubscriptionId: subscriptionId },
-        { 
-          status: 'past_due',
-          lastPaymentAttempt: new Date(),
-          // Si es el primer intento de pago después del trial, marcar como expired
-          ...(subscription.status === 'trialing' && {
-            status: 'past_due',
-            trialEndDate: new Date().toISOString() // Marcar trial como terminado
-          })
-        },
-        { new: true }
-      );
-      
-      console.log(`Subscription ${subscriptionId} marked as past_due after payment failure`);
-    } else {
-      console.log(`Subscription ${subscriptionId} not found in database`);
-    }
+    // El estado del usuario puede seguir siendo 'active_paid' o 'active_trial'
+    // hasta que el grace period termine, pero la suscripción está 'past_due'.
+    // Esto lo debería manejar el evento 'customer.subscription.updated' o 'deleted' de Stripe.
+    
+    console.log(`Subscription ${subscriptionId} marked as past_due after payment failure`);
   }
 }
 
@@ -141,6 +138,17 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   });
   
   if (subscriptionData) {
+    // Determine the user's status based on the Stripe status
+    let newSubscriptionStatus: 'active_paid' | 'active_trial' | 'cancelled' = 'active_paid'; // Default
+    
+    if (subscription.status === 'trialing') {
+        newSubscriptionStatus = 'active_trial';
+    } else if (subscription.status === 'active') {
+        newSubscriptionStatus = 'active_paid';
+    } else if (subscription.status === 'canceled') {
+        newSubscriptionStatus = 'cancelled';
+    }
+    
     // Actualizar solo el status y fechas - los estados se calculan dinámicamente
     await Subscription.findOneAndUpdate(
       { stripeSubscriptionId: subscription.id },
@@ -155,6 +163,13 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       { new: true }
     );
     
+    // Actualizar el estado del usuario si el estado de Stripe lo requiere
+    const user = await User.findById(subscriptionData.userId);
+    if (user) {
+        user.subscription_status = newSubscriptionStatus;
+        await user.save();
+    }
+    
     console.log(`Subscription ${subscription.id} updated to ${subscription.status}`);
   }
 }
@@ -163,27 +178,34 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log('Subscription deleted:', subscription.id);
   
-  await Subscription.findOneAndUpdate(
+  const sub = await Subscription.findOneAndUpdate(
     { stripeSubscriptionId: subscription.id },
     { 
       status: 'canceled',
-      // Estados se calculan dinámicamente con métodos
       cancelledAt: new Date()
     },
     { new: true }
   );
   
-  console.log(`Subscription ${subscription.id} canceled`);
+  if (sub) {
+    const user = await User.findById(sub.userId);
+    if (user) {
+        user.subscription_status = 'cancelled'; // Usuario en estado de cancelación
+        await user.save();
+    }
+  }
+  
+  console.log(`Subscription ${subscription.id} canceled and user status updated.`);
 }
 
 // Manejar fin de trial próximo
 async function handleTrialWillEnd(subscription: Stripe.Subscription) {
   console.log('Trial will end soon:', subscription.id);
   
-  // Aquí podrías enviar una notificación al usuario
-  // Por ejemplo, un email recordando que el trial está por terminar
+  // No hacemos nada, ya que el estado se manejará con 'invoice.paid' o 'invoice.payment_failed'
+  // El estado de 'trialing' ya permite acceso.
   
-  console.log(`Trial for subscription ${subscription.id} will end soon`);
+  console.log(`Trial will end soon notification received for ${subscription.id}. No DB change needed.`);
 }
 
 // Manejar checkout completado exitosamente
@@ -203,45 +225,49 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
-    // Es una suscripción normal - lógica existente
-    // Obtener el customer email de la sesión
+    // Es una suscripción normal - lógica de trial
+    
+    // 1. Obtener el customer email de la sesión
     const customerEmail = session.customer_details?.email;
-    if (!customerEmail) {
-      console.error('No customer email found in session:', session.id);
+    if (!customerEmail || !session.subscription) {
+      console.error('No customer email or subscription ID found in session:', session.id);
       return;
     }
 
-    // Buscar el usuario por email
+    // 2. Buscar el usuario por email
     const user = await User.findOne({ email: customerEmail });
     if (!user) {
       console.error('User not found for email:', customerEmail);
       return;
     }
-
-    // Determinar el tipo de plan desde los metadatos o desde la suscripción :)
+    
+    // 3. OBTENER ESTADO Y DATOS REALES DE STRIPE (CRÍTICO)
+    const stripeSubscription = await stripe.subscriptions.retrieve(session.subscription as string);
+    
+    // 4. Determinar el estado inicial y el estado del usuario
+    const isTrial = !!stripeSubscription.trial_end;
+    // El status de Stripe para un trial es 'trialing'. Si no hay trial_end, será 'active' (cobro inmediato).
+    const initialStatus = isTrial ? 'trialing' : 'active'; 
+    const initialUserStatus = isTrial ? 'active_trial' : 'active_paid'; // Estado CLAVE para el frontend
+    
+    // 5. Determinar el tipo de plan
     let planType = 'basic';
-    if (session.metadata?.planType) {
-      planType = session.metadata.planType;
-    } else if (session.subscription) {
-      // Obtener la suscripción de Stripe para determinar el plan
-      const stripeSubscription = await stripe.subscriptions.retrieve(session.subscription as string);
-      const priceId = stripeSubscription.items.data[0]?.price?.id;
-      // Aquí podrías mapear priceId a planType según tu configuración
-      // Por ahora usamos 'premium' si no es el plan básico
-      planType = priceId?.includes('premium') ? 'premium' : 'basic';
-    }
+    const priceId = stripeSubscription.items.data[0]?.price?.id;
+    planType = priceId?.includes('premium') ? 'premium' : 'basic';
+    
+    // 6. Obtener fechas reales de Stripe
+    const startDate = new Date(stripeSubscription.created * 1000); 
+    const trialEndDate = isTrial 
+      ? new Date(stripeSubscription.trial_end! * 1000) 
+      : undefined; 
 
-    // Crear la suscripción en la base de datos SOLO cuando el pago se complete
-    const startDate = new Date();
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 días de prueba
-
+    // Crear la suscripción en la base de datos
     const subscription = new Subscription({
       userId: user._id.toString(),
       planType: planType as 'basic' | 'premium' | 'enterprise',
-      status: 'active', // Cuando el pago se completa, la suscripción debe estar activa
+      status: initialStatus as 'trialing' | 'active', // Estado real de Stripe
       startDate,
-      trialEndDate,
+      trialEndDate, // Fecha de trial real o undefined (CORRECCIÓN CRÍTICA)
       autoRenew: false,
       stripeSubscriptionId: session.subscription as string,
       stripeSessionId: session.id,
@@ -250,10 +276,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     await subscription.save();
 
     // Actualizar el estado del usuario
-    user.subscription_status = 'active_paid';
+    user.subscription_status = initialUserStatus; // CORRECCIÓN CRÍTICA
     await user.save();
 
-    console.log(`✅ Subscription created for user ${user._id} after successful payment`);
+    console.log(`✅ Subscription created for user ${user._id}. Initial Status: ${initialStatus} (User Status: ${user.subscription_status})`);
     console.log(`Subscription ID: ${subscription._id}, Stripe Subscription: ${session.subscription}`);
 
   } catch (error) {

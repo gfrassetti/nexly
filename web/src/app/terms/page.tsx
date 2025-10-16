@@ -78,8 +78,9 @@ export default function TermsPage() {
 
                 <h3 className="text-xl font-medium mb-2 text-nexly-light-blue">4.2 Planes de Suscripción</h3>
                 <ul className="list-disc list-inside space-y-2 text-neutral-300">
-                  <li><strong>Plan Básico:</strong> Hasta 2 integraciones (WhatsApp Business, Instagram)</li>
-                  <li><strong>Plan Premium:</strong> Todas las integraciones disponibles</li>
+                  <li><strong>Plan Crecimiento:</strong> Hasta 3 integraciones (WhatsApp Business, Instagram, Telegram)</li>
+                  <li><strong>Plan Pro:</strong> Hasta 4 integraciones (WhatsApp Business, Instagram, Facebook Messenger, Telegram)</li>
+                  <li><strong>Plan Business:</strong> Todas las integraciones disponibles</li>
                 </ul>
                 
                 <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4 mt-4">

@@ -189,9 +189,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       case 'basic':
         return 3; // WhatsApp, Instagram, Telegram
       case 'premium':
-        return 10; // Más integraciones disponibles
+        return 4; // WhatsApp, Instagram, Facebook Messenger, Telegram
       case 'enterprise':
-        return 999; // Sin límite
+        return 999; // Sin límite - todas las integraciones disponibles
       default:
         return 0;
     }

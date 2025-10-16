@@ -160,9 +160,9 @@ export default function FAQSection() {
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
               <h4 className="font-semibold mb-2 text-green-400">Capacidad de tu plan:</h4>
               <ul className="space-y-2 text-sm">
-                <li>• <strong>Plan Básico ($30/mes):</strong> 450 contactos proactivos/mes</li>
-                <li>• <strong>Plan Premium ($60/mes):</strong> 900 contactos proactivos/mes</li>
-                <li>• <strong>Plan Enterprise ($150/mes):</strong> 2,250 contactos proactivos/mes</li>
+                <li>• <strong>Plan Crecimiento ($30/mes):</strong> 450 contactos proactivos/mes</li>
+                <li>• <strong>Plan Pro ($59/mes):</strong> 1,500 contactos proactivos/mes</li>
+                <li>• <strong>Plan Business ($150/mes):</strong> 2,250 contactos proactivos/mes</li>
               </ul>
             </div>
           </div>

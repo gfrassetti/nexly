@@ -273,6 +273,60 @@ router.put('/cancel-subscription', authenticateToken, asyncHandler(async (req: A
   }
 }));
 
+// Endpoint para corregir estado de suscripciones existentes
+router.post('/fix-trial-status', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    const subscription = await Subscription.findOne({ userId });
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'No se encontró suscripción' });
+    }
+
+    // Si la suscripción está activa pero aún está dentro del período de prueba, corregir el estado
+    if (subscription.status === 'active' && subscription.trialEndDate && new Date() < subscription.trialEndDate) {
+      subscription.status = 'trialing';
+      await subscription.save();
+
+      // Actualizar estado del usuario
+      const user = await User.findById(userId);
+      if (user) {
+        user.subscription_status = 'active_trial';
+        await user.save();
+      }
+
+      return res.json({
+        success: true,
+        message: 'Estado de suscripción corregido a período de prueba',
+        subscription: {
+          id: subscription._id,
+          status: subscription.status,
+          trialEndDate: subscription.trialEndDate
+        }
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'La suscripción ya está en el estado correcto',
+      subscription: {
+        id: subscription._id,
+        status: subscription.status,
+        trialEndDate: subscription.trialEndDate
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fixing trial status:', error);
+    throw error;
+  }
+}));
+
 // Cancelar suscripción de Stripe (endpoint legacy)
 router.post('/cancel', authenticateToken, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
