@@ -39,76 +39,76 @@ export default function a() {
         
         <div className="relative max-w-7xl mx-auto mt-18">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Unifica WhatsApp Business, Instagram y Messenger
             </h1>
-                <p className="text-xl text-neutral-300 mb-8 max-w-3xl mx-auto">
+                <p className="text-lg sm:text-xl text-neutral-300 mb-8 max-w-3xl mx-auto px-4">
                   Conecta WhatsApp Business, Instagram y Messenger. Gestiona todas tus conversaciones, 
                   automatiza respuestas y convierte más clientes.
                 </p>
                 
-                <div className="bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+                <div className="bg-nexly-azul/10 border border-nexly-azul/20 rounded-lg p-3 sm:p-4 mb-6 sm:mb-8 max-w-2xl mx-auto">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-nexly-light-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-nexly-light-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="font-semibold text-nexly-light-blue">WhatsApp Business Platform</span>
+                    <span className="font-semibold text-nexly-light-blue text-sm sm:text-base">WhatsApp Business Platform</span>
                   </div>
-                  <p className="text-neutral-300 text-sm">
+                  <p className="text-neutral-300 text-xs sm:text-sm">
                     Nexly se integra con <strong>WhatsApp Business Platform (Cloud API)</strong>, 
                     no con WhatsApp personal. Necesitas un número asignado a una WABA (WhatsApp Business Account).
                   </p>
                 </div>
 
-                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 sm:p-4 mb-6 sm:mb-8 max-w-2xl mx-auto">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="font-semibold text-green-400">Tarifa Plana Sin Sorpresas</span>
+                    <span className="font-semibold text-green-400 text-sm sm:text-base">Tarifa Plana Sin Sorpresas</span>
                   </div>
-                  <p className="text-neutral-300 text-sm">
+                  <p className="text-neutral-300 text-xs sm:text-sm">
                     Desde <strong>$30 USD/mes</strong> con 450 conversaciones incluidas. 
                     Responde a tus clientes sin límite dentro de 24h.
                   </p>
                 </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
               <Link
                 href="/pricing"
-                className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-300 flex items-center justify-center space-x-2 border border-accent-green/30 hover:border-accent-green/50"
+                className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green px-4 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-colors duration-300 flex items-center justify-center space-x-2 border border-accent-green/30 hover:border-accent-green/50"
               >
                 <span>Registrarse y Probar Gratis</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
               <Link
                 href="/pricing"
-                className="bg-accent-blue/20 hover:bg-accent-blue/30 text-accent-blue px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-300 flex items-center justify-center space-x-2 border border-accent-blue/30 hover:border-accent-blue/50"
+                className="bg-accent-blue/20 hover:bg-accent-blue/30 text-accent-blue px-4 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-colors duration-300 flex items-center justify-center space-x-2 border border-accent-blue/30 hover:border-accent-blue/50"
               >
                 <span>Ver Planes y Precios</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </Link>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-8 justify-center text-sm text-neutral-400">
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center text-xs sm:text-sm text-neutral-400 px-4">
+              <div className="flex items-center justify-center space-x-2">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="text-accent-green font-medium">7 días gratis</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center space-x-2">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
                 <span className="text-accent-blue font-medium">Tarjeta requerida</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center space-x-2">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <span className="text-accent-cream font-medium">Configuración en minutos</span>
@@ -121,48 +121,48 @@ export default function a() {
       {/* Features Preview */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-neutral-800/50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 px-4">
               Todo lo que necesitas para gestionar tus mensajerías
             </h2>
-            <p className="text-xl text-neutral-300 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-neutral-300 max-w-2xl mx-auto px-4">
               Una plataforma unificada para conectar, gestionar y automatizar todas tus conversaciones.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-accent-green/20 border border-accent-green/30 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-accent-green/20 border border-accent-green/30 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Mensajería Unificada</h3>
-              <p className="text-neutral-300">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Mensajería Unificada</h3>
+              <p className="text-neutral-300 text-sm sm:text-base">
                 Conecta WhatsApp Business, Instagram y Messenger en una sola interfaz.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-accent-blue/20 border border-accent-blue/30 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-accent-blue/20 border border-accent-blue/30 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Automatización Inteligente</h3>
-              <p className="text-neutral-300">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Automatización Inteligente</h3>
+              <p className="text-neutral-300 text-sm sm:text-base">
                 Automatiza respuestas y gestiona conversaciones de forma eficiente.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-accent-cream/20 border border-accent-cream/30 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-accent-cream/20 border border-accent-cream/30 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Analytics Avanzados</h3>
-              <p className="text-neutral-300">
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Analytics Avanzados</h3>
+              <p className="text-neutral-300 text-sm sm:text-base">
                 Obtén insights detallados sobre tus conversaciones y rendimiento.
               </p>
             </div>

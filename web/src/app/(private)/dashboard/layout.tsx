@@ -12,12 +12,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <AuthGuard requireAuth={true}>
       <SubscriptionProvider>
         <ErrorBoundary>
-          <div className="min-h-screen grid grid-cols-[260px_1fr] bg-accent-dark text-neutral-100">
-            <Sidebar />
+          <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-[260px_1fr] bg-accent-dark text-neutral-100">
+            {/* Sidebar - Hidden on mobile, shown on lg+ */}
+            <div className="hidden lg:block">
+              <Sidebar />
+            </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1 lg:col-start-2">
               <Topbar />
-              <main className="flex-1 overflow-auto p-4">{children}</main>
+              <main className="flex-1 overflow-auto p-2 sm:p-4">{children}</main>
             </div>
           </div>
         </ErrorBoundary>

@@ -30,13 +30,13 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="h-full grid grid-rows-[auto_1fr_auto]">
-      <div className="flex gap-2 p-3 border-b">
+    <div className="h-full flex flex-col">
+      <div className="flex gap-1 sm:gap-2 p-2 sm:p-3 border-b overflow-x-auto">
         {CHANNELS.map((c) => (
           <button
             key={c}
             onClick={() => setChannel(c)}
-            className={`px-3 py-1 rounded-md border ${
+            className={`px-2 sm:px-3 py-1 rounded-md border text-xs sm:text-sm whitespace-nowrap ${
               channel === c ? "bg-black text-accent-cream" : "bg-white text-black"
             }`}
           >
@@ -44,19 +44,41 @@ export default function InboxPage() {
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-[360px_1fr] min-h-0">
-        <InboxList
-          items={threads?.items || []}
-          activeId={activeId}
-          onSelect={setActiveId}
-        />
-        <div className="min-w-0 grid grid-rows-[1fr_auto]">
-          <MessageThread threadId={activeId} token={token || ""} />
-          <Composer
-            threadId={activeId}
-            token={token || ""}
-            onSend={handleSend}
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar con lista de conversaciones - Hidden on mobile when conversation is active */}
+        <div className={`${activeId ? 'hidden lg:flex' : 'flex'} w-full lg:w-[360px] border-r flex-col h-full overflow-hidden`}>
+          <InboxList
+            items={threads?.items || []}
+            activeId={activeId}
+            onSelect={setActiveId}
           />
+        </div>
+        
+        {/* Área de conversación */}
+        <div className={`${activeId ? 'flex' : 'hidden lg:flex'} flex-1 flex-col h-full overflow-hidden`}>
+          {/* Back button for mobile */}
+          {activeId && (
+            <div className="lg:hidden border-b p-2">
+              <button
+                onClick={() => setActiveId(null)}
+                className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-800 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Volver a conversaciones
+              </button>
+            </div>
+          )}
+          
+          <div className="flex-1 overflow-hidden grid grid-rows-[1fr_auto]">
+            <MessageThread threadId={activeId} token={token || ""} />
+            <Composer
+              threadId={activeId}
+              token={token || ""}
+              onSend={handleSend}
+            />
+          </div>
         </div>
       </div>
     </div>

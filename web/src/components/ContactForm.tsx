@@ -7,19 +7,19 @@ export default function ContactForm() {
   // Si el formulario se envió exitosamente
   if (state.succeeded) {
     return (
-      <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-2xl mx-auto text-center">
-        <div className="w-16 h-16 bg-nexly-green rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto text-center">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-nexly-green rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+          <svg className="w-6 h-6 sm:w-8 sm:h-8 text-accent-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-3xl font-bold mb-4 text-nexly-green">¡Mensaje enviado!</h2>
-        <p className="text-neutral-300 text-lg mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-nexly-green">¡Mensaje enviado!</h2>
+        <p className="text-neutral-300 text-base sm:text-lg mb-4 sm:mb-6">
           Gracias por contactarnos. Te responderemos pronto.
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="bg-nexly-teal hover:bg-nexly-green text-accent-cream font-semibold px-6 py-3 rounded-lg transition-colors duration-300"
+          className="bg-nexly-teal hover:bg-nexly-green text-accent-cream font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-colors duration-300 text-sm sm:text-base"
         >
           Enviar otro mensaje
         </button>
@@ -28,16 +28,16 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-8 max-w-2xl mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-4">Contáctanos</h2>
-        <p className="text-neutral-300 text-lg">
+    <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Contáctanos</h2>
+        <p className="text-neutral-300 text-base sm:text-lg">
           ¿Tienes alguna pregunta? Estamos aquí para ayudarte.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-neutral-300 mb-2">
               Nombre completo *
@@ -47,7 +47,7 @@ export default function ContactForm() {
               id="name"
               name="name"
               required
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent text-sm sm:text-base"
               placeholder="Tu nombre completo"
             />
             <ValidationError 
@@ -67,7 +67,7 @@ export default function ContactForm() {
               id="email"
               name="email"
               required
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent text-sm sm:text-base"
               placeholder="tu@email.com"
             />
             <ValidationError 
@@ -87,7 +87,7 @@ export default function ContactForm() {
             type="text"
             id="company"
             name="company"
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent text-sm sm:text-base"
             placeholder="Nombre de tu empresa (opcional)"
           />
           <ValidationError 
@@ -106,8 +106,8 @@ export default function ContactForm() {
             id="message"
             name="message"
             required
-            rows={5}
-            className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent resize-none"
+            rows={4}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-neutral-700 border border-neutral-600 rounded-lg text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-nexly-teal focus:border-transparent resize-none text-sm sm:text-base"
             placeholder="Cuéntanos cómo podemos ayudarte..."
           />
           <ValidationError 
@@ -121,7 +121,7 @@ export default function ContactForm() {
         <button
           type="submit"
           disabled={state.submitting}
-          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-accent-cream font-semibold py-4 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2"
+          className="w-full bg-nexly-teal hover:bg-nexly-green disabled:bg-neutral-600 text-accent-cream font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-lg transition-colors duration-300 flex items-center justify-center space-x-2 text-sm sm:text-base"
         >
           {state.submitting ? (
             <>
@@ -142,8 +142,8 @@ export default function ContactForm() {
         </button>
       </form>
 
-      <div className="mt-8 text-center">
-        <p className="text-neutral-400 text-sm">
+      <div className="mt-6 sm:mt-8 text-center">
+        <p className="text-neutral-400 text-xs sm:text-sm">
           También puedes escribirnos a{" "}
           <a href="mailto:hola@nexly.com.ar" className="text-nexly-teal hover:text-nexly-green">
             hola@nexly.com.ar

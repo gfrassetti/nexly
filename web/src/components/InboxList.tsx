@@ -78,7 +78,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
     const bgColor = platformColors[platform as keyof typeof platformColors] || 'bg-neutral-500';
 
     return (
-      <div className={`w-12 h-12 rounded-full ${bgColor} flex items-center justify-center text-accent-cream font-semibold text-sm`}>
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${bgColor} flex items-center justify-center text-accent-cream font-semibold text-xs sm:text-sm`}>
         {initials}
       </div>
     );
@@ -116,15 +116,17 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
                 activeId === item.id ? "bg-neutral-700 border-r-2 border-green-500" : ""
               }`}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 {/* Avatar */}
-                {getUserAvatar(item.title, item.platform)}
+                <div className="flex-shrink-0">
+                  {getUserAvatar(item.title, item.platform)}
+                </div>
                 
                 {/* Contenido */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-accent-cream truncate">{item.title}</h3>
-                    <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-accent-cream truncate text-sm sm:text-base">{item.title}</h3>
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                       {item.unread && (
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       )}
@@ -133,7 +135,7 @@ export default function InboxList({ items, activeId, onSelect, searchQuery = "" 
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm text-neutral-300 truncate">
+                  <p className="text-xs sm:text-sm text-neutral-300 truncate">
                     {item.last}
                   </p>
                   {/* Mostrar información adicional para Telegram */}

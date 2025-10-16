@@ -33,10 +33,10 @@ export default function FAQSection() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <h4 className="font-semibold mb-3 text-green-400">NO cuenta para tu límite</h4>
-              <ul className="space-y-2 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="p-3 sm:p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <h4 className="font-semibold mb-3 text-green-400 text-sm sm:text-base">NO cuenta para tu límite</h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>• Responder a un cliente dentro de 24 horas</li>
                 <li>• Mensajes entrantes que recibes</li>
                 <li>• Conversaciones iniciadas por el cliente</li>
@@ -44,9 +44,9 @@ export default function FAQSection() {
               </ul>
             </div>
             
-            <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-              <h4 className="font-semibold mb-3 text-orange-400">SÍ cuenta para tu límite</h4>
-              <ul className="space-y-2 text-sm">
+            <div className="p-3 sm:p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+              <h4 className="font-semibold mb-3 text-orange-400 text-sm sm:text-base">SÍ cuenta para tu límite</h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>• Mensaje a cliente después de 24h sin actividad</li>
                 <li>• Iniciar conversación nueva con cliente</li>
                 <li>• Mensajes de marketing/promociones</li>
@@ -243,17 +243,17 @@ export default function FAQSection() {
               </ul>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <h4 className="font-semibold mb-2 text-green-400 text-sm">Marketing</h4>
+                <h4 className="font-semibold mb-2 text-green-400 text-xs sm:text-sm">Marketing</h4>
                 <p className="text-xs text-neutral-400">Promociones, ofertas especiales, nuevos productos</p>
               </div>
               <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <h4 className="font-semibold mb-2 text-blue-400 text-sm">Utilidad</h4>
+                <h4 className="font-semibold mb-2 text-blue-400 text-xs sm:text-sm">Utilidad</h4>
                 <p className="text-xs text-neutral-400">Confirmaciones, recordatorios, actualizaciones</p>
               </div>
               <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                <h4 className="font-semibold mb-2 text-purple-400 text-sm">Autenticación</h4>
+                <h4 className="font-semibold mb-2 text-purple-400 text-xs sm:text-sm">Autenticación</h4>
                 <p className="text-xs text-neutral-400">Códigos de verificación, OTP, seguridad</p>
               </div>
             </div>
@@ -279,10 +279,10 @@ export default function FAQSection() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <h4 className="font-semibold mb-3 text-nexly-teal">¿Qué necesitas?</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-semibold mb-3 text-nexly-teal text-sm sm:text-base">¿Qué necesitas?</h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>• Meta Business Manager configurado</li>
                 <li>• Cuenta de WhatsApp Business (WABA)</li>
                 <li>• Número de teléfono asignado a la WABA</li>
@@ -291,8 +291,8 @@ export default function FAQSection() {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-3 text-red-400">¿Qué NO funciona?</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-semibold mb-3 text-red-400 text-sm sm:text-base">¿Qué NO funciona?</h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>• WhatsApp personal (número personal)</li>
                 <li>• App móvil WhatsApp Business</li>
                 <li>• Números sin WABA asignada</li>
@@ -328,10 +328,10 @@ export default function FAQSection() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <h4 className="font-semibold mb-3 text-nexly-teal">¿Cómo se crean contactos?</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-semibold mb-3 text-nexly-teal text-sm sm:text-base">¿Cómo se crean contactos?</h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>• Automáticamente cuando recibes un mensaje nuevo</li>
                 <li>• Automáticamente cuando envías un mensaje a un número nuevo</li>
                 <li>• Se guarda: nombre, teléfono, email, plataforma de origen</li>
@@ -340,8 +340,8 @@ export default function FAQSection() {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-3 text-red-400">¿Qué NO hace?</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-semibold mb-3 text-red-400 text-sm sm:text-base">¿Qué NO hace?</h4>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>• No importa listas de contactos de WhatsApp</li>
                 <li>• No sincroniza contactos de Facebook/Instagram</li>
                 <li>• No permite crear contactos manualmente</li>
@@ -488,8 +488,8 @@ export default function FAQSection() {
   ];
 
   return (
-    <div className="mt-20 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-12">Preguntas frecuentes</h2>
+    <div className="mt-12 sm:mt-20 max-w-4xl mx-auto px-4">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12">Preguntas frecuentes</h2>
       <Accordion items={faqItems} />
     </div>
   );
