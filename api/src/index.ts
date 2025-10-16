@@ -54,47 +54,38 @@ app.use(generalRateLimit);
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
-  "https://www.nexly.com.ar", // nuevo dominio agregado
-  "https://nexly.com.ar", // sin www también
-  "https://nexly-production.up.railway.app" // permitir el mismo dominio del backend
+  "https://www.nexly.com.ar",
+  "https://nexly.com.ar",
+  "https://nexly-production.up.railway.app" 
 ];
 
+// Middleware principal de CORS
 app.use(cors({
   origin(origin, cb) {
     
+    // Permitir solicitudes sin origen (como las de Postman o CURL)
     if (!origin) {
       return cb(null, true);
     }
     
+    // Permitir orígenes de la lista
     if (ALLOWED_ORIGINS.includes(origin)) {
       return cb(null, true);
     }
     
-    return cb(new Error("Not allowed by CORS"));
+    // Bloquear otros orígenes
+    return cb(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"]
 }));
 
-// CORS is already configured above, no need for additional options handling
-
-// Middleware adicional para manejar CORS de manera más permisiva temporalmente
+/* // 🛑 BLOQUE REMOVIDO: Este middleware manual era redundante e interfería con la lógica del middleware 'cors'.
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Permitir CORS para requests de preflight
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-});
+  // ... código manual de CORS ...
+}); 
+*/
 
 // Middleware para parsear JSON (excepto webhooks de Stripe)
 // IMPORTANTE: Este middleware debe ir ANTES de cualquier otro middleware de parsing
@@ -181,7 +172,7 @@ connectDB()
       logger.info("Server started", {
         port: PORT,
         environment: process.env.NODE_ENV,
-        redisConnected: false, // Se actualizará en cacheService
+        redisConnected: false, 
         timestamp: new Date().toISOString()
       });
     });
