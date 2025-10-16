@@ -296,24 +296,8 @@ export default function SubscriptionStatus() {
   const sub = subscription.subscription!;
   const isExpired = sub.isCancelled && !sub.isInGracePeriod;
   
-  // Debug: Verificar valores de trial
-  console.log('SubscriptionStatus Debug:', {
-    status: sub.status,
-    isTrialActive: sub.isTrialActive,
-    daysRemaining: sub.daysRemaining,
-    trialEndDate: sub.trialEndDate,
-    subscription: sub
-  });
-  
   // Cálculo robusto de trial basado en trialEndDate (no en isTrialActive del backend)
   const isTrialActiveNow = sub.trialEndDate && new Date(sub.trialEndDate) > new Date();
-  
-  console.log('Trial Logic Debug:', {
-    trialEndDate: sub.trialEndDate,
-    trialEndDateFuture: sub.trialEndDate ? new Date(sub.trialEndDate) > new Date() : false,
-    isTrialActiveNow,
-    backendIsTrialActive: sub.isTrialActive
-  });
 
   // Mapeo de estados de suscripción
   const SUBSCRIPTION_STATUS = {
@@ -468,14 +452,6 @@ export default function SubscriptionStatus() {
                 const planFromSubscription = sub.planType;
                 const planFromStorage = localStorage.getItem("selectedPlan");
                 const selectedPlan = planFromSubscription || planFromStorage || "basic";
-                
-                // Debug Completar Pago:
-                console.log({
-                  planFromSubscription,
-                  planFromStorage,
-                  selectedPlan,
-                  subscriptionData: sub
-                });
                 
                 createStripePaymentLink(selectedPlan as "basic" | "premium" | "enterprise");
               }}
