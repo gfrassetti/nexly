@@ -102,17 +102,21 @@ export default function Topbar() {
     if (!subscription?.subscription) return null;
     
     const sub = subscription.subscription;
-    const rawStatus = sub.status;
     
-    // Solo mostrar progress bar si está en trial
-    if (rawStatus !== 'trialing') return null;
+    // Solo mostrar progress bar si está en trial (usando la misma lógica que SubscriptionStatus)
+    const isTrialActiveNow = sub.trialEndDate && new Date(sub.trialEndDate) > new Date();
+    if (!isTrialActiveNow) return null;
     
     const trialEndDate = new Date(sub.trialEndDate);
     const now = new Date();
-    const totalTrialDays = 14; // 14 días de trial
     const daysRemaining = Math.max(0, Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-    const daysUsed = totalTrialDays - daysRemaining;
-    const progressPercentage = (daysUsed / totalTrialDays) * 100;
+    
+    // Calcular el progreso basado en la fecha real de inicio del trial
+    // Asumimos que el trial comenzó cuando se creó la suscripción o hace 7 días
+    const trialStartDate = new Date(trialEndDate.getTime() - (7 * 24 * 60 * 60 * 1000)); // 7 días antes del trialEndDate
+    const totalTrialDays = 7; // 7 días de trial
+    const daysUsed = Math.max(0, Math.ceil((now.getTime() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24)));
+    const progressPercentage = Math.min((daysUsed / totalTrialDays) * 100, 100);
     
     return (
       <div className="flex items-center gap-2">

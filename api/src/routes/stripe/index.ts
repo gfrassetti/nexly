@@ -355,8 +355,9 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: Authenticated
       }
     }
 
-    // Cancelar con período de gracia (7 días por defecto)
-    (subscription as any).cancelSubscription(7);
+    // Cancelar con período de gracia (0 días para trials, 7 días para otros)
+    const gracePeriodDays = subscription.status === 'trialing' ? 0 : 7;
+    (subscription as any).cancelSubscription(gracePeriodDays);
     await subscription.save();
 
     // Actualizar el estado del usuario

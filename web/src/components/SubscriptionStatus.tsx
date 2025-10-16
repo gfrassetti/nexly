@@ -504,7 +504,15 @@ export default function SubscriptionStatus() {
           {/* Botón para cancelar período de prueba - Solo para usuarios en trial */}
           {isTrialActiveNow && (
             <button
-              onClick={cancelSubscription}
+              onClick={async () => {
+                try {
+                  await cancelSubscription();
+                  // Refrescar el estado después de cancelar
+                  await refetch();
+                } catch (error) {
+                  console.error('Error cancelando período de prueba:', error);
+                }
+              }}
               className="bg-accent-red/20 hover:bg-accent-red/30 text-accent-red border border-accent-red/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cancelar Período de Prueba

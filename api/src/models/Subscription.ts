@@ -235,6 +235,13 @@ SubscriptionSchema.methods.cancelSubscription = function(gracePeriodDays: number
       graceEndDate.setDate(graceEndDate.getDate() + gracePeriodDays);
       this.gracePeriodEndDate = graceEndDate;
     }
+  } else if (this.status === 'trialing') {
+    // Para trials, cancelación inmediata sin período de gracia
+    this.status = 'canceled';
+    this.cancelledAt = new Date();
+    this.autoRenew = false;
+    // Limpiar trialEndDate para que no se considere activo
+    this.trialEndDate = undefined;
   }
 };
 
