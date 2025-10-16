@@ -295,6 +295,25 @@ export default function SubscriptionStatus() {
 
   const sub = subscription.subscription!;
   const isExpired = sub.isCancelled && !sub.isInGracePeriod;
+  
+  // Debug: Verificar valores de trial
+  console.log('SubscriptionStatus Debug:', {
+    status: sub.status,
+    isTrialActive: sub.isTrialActive,
+    daysRemaining: sub.daysRemaining,
+    trialEndDate: sub.trialEndDate,
+    subscription: sub
+  });
+  
+  // Cálculo robusto de trial basado en trialEndDate (no en isTrialActive del backend)
+  const isTrialActiveNow = sub.trialEndDate && new Date(sub.trialEndDate) > new Date();
+  
+  console.log('Trial Logic Debug:', {
+    trialEndDate: sub.trialEndDate,
+    trialEndDateFuture: sub.trialEndDate ? new Date(sub.trialEndDate) > new Date() : false,
+    isTrialActiveNow,
+    backendIsTrialActive: sub.isTrialActive
+  });
 
   // Mapeo de estados de suscripción
   const SUBSCRIPTION_STATUS = {
@@ -466,8 +485,8 @@ export default function SubscriptionStatus() {
             </button>
           )}
 
-          {/* Botón para reactivar suscripción pausada */}
-          {status.paused && (
+          {/* Botón para reactivar suscripción pausada - Solo para usuarios pagos (no trial) */}
+          {status.paused && !isTrialActiveNow && (
             <button
               onClick={reactivateSubscription}
               className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green border border-accent-green/30 px-4 py-2 rounded-lg transition-colors text-sm"
@@ -476,8 +495,8 @@ export default function SubscriptionStatus() {
             </button>
           )}
 
-          {/* Botón para pausar suscripción activa */}
-          {status.active && (
+          {/* Botón para pausar suscripción activa - Solo para usuarios pagos (no trial) */}
+          {status.active && !isTrialActiveNow && (
             <button
               onClick={pauseSubscription}
               className="bg-accent-cream/20 hover:bg-accent-cream/30 text-accent-cream border border-accent-cream/30 px-4 py-2 rounded-lg transition-colors text-sm"
@@ -486,8 +505,8 @@ export default function SubscriptionStatus() {
             </button>
           )}
 
-          {/* Botón para cancelar */}
-          {(status.active || status.paused) && (
+          {/* Botón para cancelar - Solo para usuarios pagos (no trial) */}
+          {(status.active || status.paused) && !isTrialActiveNow && (
             <button
               onClick={cancelSubscription}
               className="bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
@@ -496,13 +515,23 @@ export default function SubscriptionStatus() {
             </button>
           )}
 
-          {/* Botón para cambiar plan */}
-          {status.active && (
+          {/* Botón para cambiar plan - Solo para usuarios pagos (no trial) */}
+          {status.active && !isTrialActiveNow && (
             <button
               onClick={() => window.location.href = '/pricing'}
               className="bg-neutral-600 hover:bg-neutral-700 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cambiar plan
+            </button>
+          )}
+
+          {/* Botón para cancelar período de prueba - Solo para usuarios en trial */}
+          {isTrialActiveNow && (
+            <button
+              onClick={cancelSubscription}
+              className="bg-accent-red/20 hover:bg-accent-red/30 text-accent-red border border-accent-red/30 px-4 py-2 rounded-lg transition-colors text-sm"
+            >
+              Cancelar Período de Prueba
             </button>
           )}
         </div>
