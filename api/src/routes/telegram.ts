@@ -811,6 +811,99 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * POST /telegram/reset
+ * Resetear completamente el sistema de Telegram para un usuario
+ */
+router.post('/reset', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Iniciando reset completo de Telegram', { userId });
+
+    // 1. Desconectar cliente si existe
+    try {
+      await telegramMTProtoService.disconnect(userId);
+      logger.info('Cliente de Telegram desconectado', { userId });
+    } catch (disconnectError) {
+      logger.warn('Error desconectando cliente (puede no existir)', { 
+        userId, 
+        error: disconnectError instanceof Error ? disconnectError.message : 'Error desconocido' 
+      });
+    }
+
+    // 2. Marcar todas las sesiones como inactivas y error
+    const sessionsUpdated = await TelegramSession.updateMany(
+      { userId: new Types.ObjectId(userId) },
+      { 
+        isActive: false,
+        authState: 'error',
+        phoneCodeHash: undefined,
+        sessionString: undefined,
+        lastActivity: new Date()
+      }
+    );
+
+    logger.info('Sesiones de Telegram marcadas como inactivas', { 
+      userId, 
+      sessionsUpdated: sessionsUpdated.modifiedCount 
+    });
+
+    // 3. Actualizar integraciones de Telegram a estado error
+    const integrationsUpdated = await Integration.updateMany(
+      { 
+        userId: new Types.ObjectId(userId), 
+        provider: 'telegram'
+      },
+      { 
+        status: 'error',
+        'meta.isActive': false,
+        'meta.sessionString': undefined
+      }
+    );
+
+    logger.info('Integraciones de Telegram actualizadas', { 
+      userId, 
+      integrationsUpdated: integrationsUpdated.modifiedCount 
+    });
+
+    // 4. Limpiar caché del servicio
+    telegramMTProtoService['clients'].delete(userId);
+    telegramMTProtoService['sessions'].delete(userId);
+
+    logger.info('Reset completo de Telegram finalizado', { userId });
+
+    res.status(200).json({
+      success: true,
+      message: 'Sistema de Telegram reseteado completamente',
+      details: {
+        sessionsReset: sessionsUpdated.modifiedCount,
+        integrationsReset: integrationsUpdated.modifiedCount
+      }
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/reset', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor durante el reset'
+    });
+  }
+});
+
+/**
  * DELETE /telegram/disconnect
  * Desconectar sesión de Telegram
  */

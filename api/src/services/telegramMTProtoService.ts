@@ -193,6 +193,24 @@ export class TelegramMTProtoService {
         };
       }
 
+      // Verificar si el cliente está conectado
+      if (!client.connected) {
+        logger.warn('Cliente desconectado, reconectando...', { userId });
+        try {
+          await client.connect();
+          logger.info('Cliente reconectado exitosamente', { userId });
+        } catch (reconnectError) {
+          logger.error('Error reconectando cliente', { 
+            userId, 
+            error: reconnectError instanceof Error ? reconnectError.message : 'Error desconocido' 
+          });
+          return {
+            success: false,
+            error: 'Error reconectando con Telegram. Intenta nuevamente.',
+          };
+        }
+      }
+
       logger.info('Iniciando sendCode', { userId, phoneNumber });
 
       // Usar el método de alto nivel de GramJS
@@ -234,9 +252,14 @@ export class TelegramMTProtoService {
       
       // Verificar si es un error de flood
       if (errorMessage.includes('FLOOD') || errorMessage.includes('flood')) {
+        // Extraer tiempo de espera si está disponible
+        const floodMatch = errorMessage.match(/FLOOD_WAIT_(\d+)/);
+        const waitTime = floodMatch ? parseInt(floodMatch[1]) : 60;
+        
+        logger.warn('Error FLOOD_WAIT detectado', { userId, waitTime });
         return {
           success: false,
-          error: 'FLOOD_WAIT: Demasiados intentos. Intenta más tarde.',
+          error: `FLOOD_WAIT: Demasiados intentos. Espera ${waitTime} segundos antes de intentar nuevamente.`,
         };
       }
 
@@ -244,7 +267,20 @@ export class TelegramMTProtoService {
       if (errorMessage.includes('PHONE_NUMBER_INVALID')) {
         return {
           success: false,
-          error: 'Número de teléfono inválido. Asegúrate de incluir el código de país.',
+          error: 'Número de teléfono inválido. Asegúrate de incluir el código de país (ej: +5491123456789).',
+        };
+      }
+
+      // Verificar si es un error de sesión
+      if (errorMessage.includes('SESSION_PASSWORD_NEEDED') || errorMessage.includes('SESSION_REVOKED')) {
+        logger.warn('Sesión de Telegram inválida, limpiando caché', { userId });
+        // Limpiar caché para este usuario
+        this.clients.delete(userId);
+        this.sessions.delete(userId);
+        
+        return {
+          success: false,
+          error: 'Sesión de Telegram inválida. Inicia el proceso de conexión nuevamente.',
         };
       }
       

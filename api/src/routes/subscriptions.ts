@@ -289,11 +289,17 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
     let gracePeriodDaysRemaining = 0;
     
     if (subscription.trialEndDate) {
-      daysRemaining = Math.ceil((subscription.trialEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const now = new Date();
+      const trialEnd = new Date(subscription.trialEndDate);
+      const diffTime = trialEnd.getTime() - now.getTime();
+      daysRemaining = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
     }
     
     if (subscription.gracePeriodEndDate) {
-      gracePeriodDaysRemaining = Math.ceil((subscription.gracePeriodEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const now = new Date();
+      const graceEnd = new Date(subscription.gracePeriodEndDate);
+      const diffTime = graceEnd.getTime() - now.getTime();
+      gracePeriodDaysRemaining = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
     }
 
     res.json({
