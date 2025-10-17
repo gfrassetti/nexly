@@ -68,7 +68,7 @@ export function useIntegrations(): UseIntegrationsReturn {
   ): string => {
     // 1. Determinar si YA está conectada
     const isConnected = connectedIntegrations?.some(
-      (int) => int.provider === integrationName && int.status === 'linked'
+      (int) => int.provider === integrationName && (int.status === 'linked' || int.status === 'active')
     );
 
     if (isConnected) {

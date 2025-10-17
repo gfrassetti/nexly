@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
 import { showToast } from '@/hooks/use-toast';
+import { useDataRefresh } from '@/hooks/useDataRefresh';
 import TelegramMTProtoConnect from '@/components/TelegramMTProtoConnect';
 
 export default function ConnectTelegramPage() {
   const router = useRouter();
+  const { refreshAll } = useDataRefresh();
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
@@ -27,7 +29,12 @@ export default function ConnectTelegramPage() {
 
   const handleConnect = () => {
     showToast.success('Telegram conectado exitosamente');
-    router.push('/dashboard/integrations');
+    // ✅ REFRESCAR DATOS ANTES DE REDIRIGIR
+    refreshAll();
+    // Pequeño delay para asegurar que el refresh se complete
+    setTimeout(() => {
+      router.push('/dashboard/integrations');
+    }, 500);
   };
 
   const handleError = (error: string) => {

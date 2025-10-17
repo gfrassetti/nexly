@@ -341,7 +341,7 @@ function IntegrationsContent() {
             {(() => {
               // 1. Encontrar si esta integración está conectada
               const connectedIntegration = connectedIntegrations?.find(
-                (int: any) => int.provider === integration.id && int.status === 'linked'
+                (int: any) => int.provider === integration.id && (int.status === 'linked' || int.status === 'active')
               );
 
               // 2. Obtener el texto del botón basado en el estado
