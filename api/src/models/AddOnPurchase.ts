@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface IAddOnPurchase extends Document {
   userId: Types.ObjectId;
-  planType: 'basic' | 'premium' | 'enterprise';
+  planType: 'crecimiento' | 'pro' | 'business';
   conversationsAdded: number;
   amountPaid: number;
   currency: string;
@@ -31,7 +31,7 @@ const AddOnPurchaseSchema = new Schema(
     },
     planType: {
       type: String,
-      enum: ['basic', 'premium', 'enterprise'],
+      enum: ['crecimiento', 'pro', 'business'],
       required: true
     },
     conversationsAdded: {

@@ -196,7 +196,7 @@ class StripeService {
           trial_period_days: data.trialPeriodDays || STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
         },
         metadata: {
-          planType: data.planType || 'basic',
+          planType: data.planType || 'crecimiento',
         },
       };
 
@@ -230,7 +230,7 @@ class StripeService {
           successUrl,
           cancelUrl,
           trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
-          planType: 'basic',
+          planType: 'crecimiento',
         });
       }
 
@@ -274,7 +274,7 @@ class StripeService {
           successUrl,
           cancelUrl,
           trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
-          planType: 'premium',
+          planType: 'pro',
         });
       }
 
@@ -318,7 +318,7 @@ class StripeService {
           successUrl,
           cancelUrl,
           trialPeriodDays: STRIPE_CONSTANTS.DEFAULT_TRIAL_DAYS,
-          planType: 'enterprise',
+          planType: 'business',
         });
       }
 

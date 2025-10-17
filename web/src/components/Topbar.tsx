@@ -40,53 +40,53 @@ export default function Topbar() {
     
     // Si tiene Stripe subscription ID, significa que ya pagó, independientemente del status
     if (hasStripeSubscription) {
-      planText = sub.planType === 'basic' ? 'Basic' : sub.planType === 'premium' ? 'Premium' : 'Enterprise';
-      badgeColor = sub.planType === 'premium' 
+      planText = sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business';
+      badgeColor = sub.planType === 'pro' 
         ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
-        : sub.planType === 'enterprise'
+        : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-green border border-accent-green/30';
     } else if (rawStatus === 'trialing') {
-      planText = `${sub.planType === 'basic' ? 'Basic' : sub.planType === 'premium' ? 'Premium' : 'Enterprise'} Trial`;
-      badgeColor = sub.planType === 'premium' 
+      planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} Trial`;
+      badgeColor = sub.planType === 'pro' 
         ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
-        : sub.planType === 'enterprise'
+        : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-blue border border-accent-blue/30';
     } else if (rawStatus === 'active') {
-      planText = sub.planType === 'basic' ? 'Basic' : sub.planType === 'premium' ? 'Premium' : 'Enterprise';
-      badgeColor = sub.planType === 'premium' 
+      planText = sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business';
+      badgeColor = sub.planType === 'pro' 
         ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
-        : sub.planType === 'enterprise'
+        : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-green border border-accent-green/30';
     } else if (rawStatus === 'paused') {
-      planText = `${sub.planType === 'basic' ? 'Basic' : sub.planType === 'premium' ? 'Premium' : 'Enterprise'} (Pausado)`;
-      badgeColor = sub.planType === 'premium' 
+      planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} (Pausado)`;
+      badgeColor = sub.planType === 'pro' 
         ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
-        : sub.planType === 'enterprise'
+        : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-cream border border-accent-cream/30';
     } else if (rawStatus === 'past_due' || rawStatus === 'unpaid') {
-      planText = `${sub.planType === 'basic' ? 'Basic' : sub.planType === 'premium' ? 'Premium' : 'Enterprise'} (Gracia)`;
-      badgeColor = sub.planType === 'premium' 
+      planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} (Gracia)`;
+      badgeColor = sub.planType === 'pro' 
         ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
-        : sub.planType === 'enterprise'
+        : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-warning border border-warning/30';
     } else if (rawStatus === 'canceled') {
-      planText = `${sub.planType === 'basic' ? 'Basic' : sub.planType === 'premium' ? 'Premium' : 'Enterprise'} (Cancelado)`;
-      badgeColor = sub.planType === 'premium' 
+      planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} (Cancelado)`;
+      badgeColor = sub.planType === 'pro' 
         ? 'bg-accent-dark text-accent-cream border border-accent-dark/30'
-        : sub.planType === 'enterprise'
+        : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-muted-foreground border border-border';
     } else {
       // Estado por defecto - mostrar el plan
-      planText = sub.planType === 'basic' ? 'Basic' : sub.planType === 'premium' ? 'Premium' : 'Enterprise';
-      badgeColor = sub.planType === 'premium' 
+      planText = sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business';
+      badgeColor = sub.planType === 'pro' 
         ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
-        : sub.planType === 'enterprise'
+        : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-muted-foreground border border-border';
     }

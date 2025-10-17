@@ -62,7 +62,7 @@ router.get('/', (req: Request, res: Response) => {
   testResults.push({ level: 'fatal', status: 'logged' });
 
   // 4. Probar funciones específicas de logging
-  logAuthActivity('user_registered', 'user-abc', { plan: 'premium' });
+  logAuthActivity('user_registered', 'user-abc', { plan: 'pro' });
   testResults.push({ level: 'info', status: 'logged', message: 'Auth Activity' });
   
   logAuthError(new Error('Invalid credentials'), 'login_failed', undefined, { identifier: 'test@example.com' });
@@ -120,7 +120,7 @@ router.get('/complex', (req: Request, res: Response) => {
     user: { 
       id: 'user-123', 
       email: 'test@example.com', 
-      subscription: 'premium',
+      subscription: 'pro',
       settings: { theme: 'dark', notifications: true }
     },
     integration: { 

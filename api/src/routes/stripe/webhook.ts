@@ -78,28 +78,34 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   if ((invoice as any).subscription && typeof (invoice as any).subscription === 'string') {
     const subscriptionId = (invoice as any).subscription as string;
     
-    // 1. Actualizar el estado de la suscripción a 'active'
+    // 1. Obtener la suscripción de Stripe para determinar el plan correcto
+    const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const priceId = stripeSubscription.items.data[0]?.price?.id || '';
+    const planType = mapPriceIdToPlanType(priceId);
+    
+    // 2. Actualizar el estado de la suscripción a 'active'
     const subscription = await Subscription.findOneAndUpdate(
       { stripeSubscriptionId: subscriptionId },
       { 
         status: 'active',
+        planType: planType, // ← CORRECCIÓN: Actualizar planType
         lastPaymentDate: new Date(),
         trialEndDate: undefined // Ya no hay trial
       },
       { new: true }
     );
     
-    // 2. Actualizar el estado del usuario
+    // 3. Actualizar el estado del usuario ATÓMICAMENTE
     if (subscription) {
-      const user = await User.findById(subscription.userId);
-      if (user) {
-        user.subscription_status = 'active_paid'; // CLAVE: Cambia de 'active_trial' a 'active_paid'
-        await user.save();
-        console.log(`User ${user._id} status updated to active_paid.`);
-      }
+      await User.findByIdAndUpdate(subscription.userId, {
+        subscription_status: 'active_paid', // CLAVE: Cambia de 'active_trial' a 'active_paid'
+        selectedPlan: planType, // ← CORRECCIÓN CRÍTICA: Actualizar selectedPlan
+        freeTrialUsed: true, // Si pagó, el trial está superado
+      });
+      console.log(`User ${subscription.userId} status updated to active_paid with plan ${planType}.`);
     }
     
-    console.log(`Subscription ${subscriptionId} activated after payment`);
+    console.log(`Subscription ${subscriptionId} activated after payment. Plan: ${planType}`);
   }
 }
 
@@ -149,12 +155,16 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         newSubscriptionStatus = 'cancelled';
     }
     
+    // Determinar el plan correcto usando mapeo robusto
+    const priceId = subscription.items.data[0]?.price?.id || '';
+    const planType = mapPriceIdToPlanType(priceId);
+    
     // Actualizar solo el status y fechas - los estados se calculan dinámicamente
     await Subscription.findOneAndUpdate(
       { stripeSubscriptionId: subscription.id },
       {
         status: subscription.status,
-        planType: subscription.items.data[0]?.price?.lookup_key === 'premium_plan' ? 'premium' : 'basic',
+        planType: planType, // ← CORRECCIÓN: Usar mapeo robusto
         trialEndDate: subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
         pausedAt: subscription.pause_collection?.behavior ? new Date() : undefined,
         cancelledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : undefined,
@@ -163,14 +173,13 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       { new: true }
     );
     
-    // Actualizar el estado del usuario si el estado de Stripe lo requiere
-    const user = await User.findById(subscriptionData.userId);
-    if (user) {
-        user.subscription_status = newSubscriptionStatus;
-        await user.save();
-    }
+    // Actualizar el estado del usuario ATÓMICAMENTE
+    await User.findByIdAndUpdate(subscriptionData.userId, {
+      subscription_status: newSubscriptionStatus,
+      selectedPlan: planType, // ← CORRECCIÓN CRÍTICA: Actualizar selectedPlan
+    });
     
-    console.log(`Subscription ${subscription.id} updated to ${subscription.status}`);
+    console.log(`Subscription ${subscription.id} updated to ${subscription.status} with plan ${planType}`);
   }
 }
 
@@ -206,6 +215,27 @@ async function handleTrialWillEnd(subscription: Stripe.Subscription) {
   // El estado de 'trialing' ya permite acceso.
   
   console.log(`Trial will end soon notification received for ${subscription.id}. No DB change needed.`);
+}
+
+// Función para mapear priceId de Stripe a planType interno
+function mapPriceIdToPlanType(priceId: string): 'crecimiento' | 'pro' | 'business' {
+  // Mapeo robusto de priceId a planType usando las variables de entorno de Railway
+  if (priceId === process.env.STRIPE_BASIC_PRICE_ID) {
+    return 'crecimiento';
+  } else if (priceId === process.env.STRIPE_PREMIUM_PRICE_ID) {
+    return 'pro';
+  } else if (priceId === process.env.STRIPE_ENTERPRISE_PRICE_ID) {
+    return 'business';
+  }
+  
+  // Fallback: mapeo por palabras clave si las variables de entorno no están definidas
+  if (priceId.includes('premium') || priceId.includes('pro')) {
+    return 'pro';
+  } else if (priceId.includes('enterprise') || priceId.includes('business')) {
+    return 'business';
+  } else {
+    return 'crecimiento'; // Plan base por defecto
+  }
 }
 
 // Manejar checkout completado exitosamente
@@ -250,10 +280,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const initialStatus = isTrial ? 'trialing' : 'active'; 
     const initialUserStatus = isTrial ? 'active_trial' : 'active_paid'; // Estado CLAVE para el frontend
     
-    // 5. Determinar el tipo de plan
-    let planType = 'basic';
-    const priceId = stripeSubscription.items.data[0]?.price?.id;
-    planType = priceId?.includes('premium') ? 'premium' : 'basic';
+    // 5. Determinar el tipo de plan usando mapeo robusto
+    const priceId = stripeSubscription.items.data[0]?.price?.id || '';
+    const planType = mapPriceIdToPlanType(priceId);
     
     // 6. Obtener fechas reales de Stripe
     const startDate = new Date(stripeSubscription.created * 1000); 
@@ -261,26 +290,31 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       ? new Date(stripeSubscription.trial_end! * 1000) 
       : undefined; 
 
-    // Crear la suscripción en la base de datos
+    // 7. ACTUALIZACIÓN ATÓMICA DEL USUARIO (CRÍTICO)
+    // Si el usuario pagó, debe actualizarse su selectedPlan y estado
+    await User.findByIdAndUpdate(user._id, {
+      subscription_status: initialUserStatus,
+      selectedPlan: planType, // ← CORRECCIÓN CRÍTICA: Actualizar selectedPlan
+      freeTrialUsed: true, // Si compró, el trial está superado
+    });
+
+    // 8. Crear la suscripción en la base de datos
     const subscription = new Subscription({
       userId: user._id.toString(),
-      planType: planType as 'basic' | 'premium' | 'enterprise',
+      planType: planType,
       status: initialStatus as 'trialing' | 'active', // Estado real de Stripe
       startDate,
-      trialEndDate, // Fecha de trial real o undefined (CORRECCIÓN CRÍTICA)
-      autoRenew: false,
+      trialEndDate, // Fecha de trial real o undefined
+      autoRenew: true, // Si es de pago, se renueva automáticamente
       stripeSubscriptionId: session.subscription as string,
       stripeSessionId: session.id,
     });
 
     await subscription.save();
 
-    // Actualizar el estado del usuario
-    user.subscription_status = initialUserStatus; // CORRECCIÓN CRÍTICA
-    await user.save();
-
-    console.log(`✅ Subscription created for user ${user._id}. Initial Status: ${initialStatus} (User Status: ${user.subscription_status})`);
+    console.log(`✅ Subscription created for user ${user._id}. Plan: ${planType}, Status: ${initialStatus} (User Status: ${initialUserStatus})`);
     console.log(`Subscription ID: ${subscription._id}, Stripe Subscription: ${session.subscription}`);
+    console.log(`Price ID: ${priceId} → Plan Type: ${planType}`);
 
   } catch (error) {
     console.error('Error creating subscription after checkout completion:', error);

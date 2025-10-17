@@ -38,11 +38,11 @@ export default function BillingPanel() {
   // Obtener información del plan actualizada
   const getPlanName = () => {
     switch (sub.planType) {
-      case 'basic':
+      case 'crecimiento':
         return 'Plan Crecimiento';
-      case 'premium':
+      case 'pro':
         return 'Plan Pro';
-      case 'enterprise':
+      case 'business':
         return 'Plan Business';
       default:
         return 'Plan Básico';
@@ -51,11 +51,11 @@ export default function BillingPanel() {
 
   const getPlanLimits = () => {
     switch (sub.planType) {
-      case 'basic':
+      case 'crecimiento':
         return '450 conversaciones/mes';
-      case 'premium':
+      case 'pro':
         return '1,500 conversaciones/mes';
-      case 'enterprise':
+      case 'business':
         return '2,250 conversaciones/mes';
       default:
         return '450 conversaciones/mes';
@@ -64,11 +64,11 @@ export default function BillingPanel() {
 
   const getPlanPrice = () => {
     switch (sub.planType) {
-      case 'basic':
+      case 'crecimiento':
         return '$30 USD/mes';
-      case 'premium':
+      case 'pro':
         return '$59 USD/mes';
-      case 'enterprise':
+      case 'business':
         return '$150 USD/mes';
       default:
         return '$30 USD/mes';

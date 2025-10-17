@@ -44,7 +44,7 @@ router.post("/register", async (req, res) => {
       password: hashedPassword,
       role: "user",
       tenantId: email.toLowerCase(),
-      selectedPlan: plan && (plan === 'basic' || plan === 'premium' || plan === 'enterprise') ? plan : 'basic',
+      selectedPlan: plan && (plan === 'crecimiento' || plan === 'pro' || plan === 'business') ? plan : 'crecimiento',
     });
 
     await user.save();
@@ -53,11 +53,11 @@ router.post("/register", async (req, res) => {
     logAuthActivity('user_registered', user._id.toString(), {
       username: user.username,
       email: user.email,
-      plan: plan || 'basic'
+      plan: plan || 'crecimiento'
     });
 
     // Si hay un plan válido, establecer estado pendiente de pago y crear el token para auto-login
-    if (plan && (plan === 'basic' || plan === 'premium' || plan === 'enterprise')) {
+    if (plan && (plan === 'crecimiento' || plan === 'pro' || plan === 'business')) {
       // Establecer estado pendiente de método de pago
       user.subscription_status = 'trial_pending_payment_method';
       await user.save();

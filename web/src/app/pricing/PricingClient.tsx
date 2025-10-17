@@ -14,7 +14,7 @@ import ConversationsExplainer from "@/components/ConversationsExplainer";
 function PricingContent() {
   const { token } = useAuth();
   const searchParams = useSearchParams();
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium' | 'enterprise'>('basic');
+  const [selectedPlan, setSelectedPlan] = useState<'crecimiento' | 'pro' | 'business'>('crecimiento');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe'>('stripe');
   const [isAnnual, setIsAnnual] = useState(true);
   // const { createPaymentLink, loading } = usePaymentLink();
@@ -23,14 +23,14 @@ function PricingContent() {
   // Detectar plan desde query parameters
   useEffect(() => {
     const plan = searchParams.get('plan');
-    if (plan === 'basic' || plan === 'premium' || plan === 'enterprise') {
-      setSelectedPlan(plan as 'basic' | 'premium' | 'enterprise');
+    if (plan === 'crecimiento' || plan === 'pro' || plan === 'business') {
+      setSelectedPlan(plan as 'crecimiento' | 'pro' | 'business');
     }
   }, [searchParams]);
 
   const plans = [
     {
-      id: 'basic',
+      id: 'crecimiento',
       name: 'Crecimiento',
       price: '$30',
       priceUSD: true,
@@ -49,7 +49,7 @@ function PricingContent() {
       note: '* Las conversaciones de respuesta no consumen tu cuota de conversaciones iniciadas'
     },
     {
-      id: 'premium',
+      id: 'pro',
       name: 'Pro',
       price: '$59',
       priceUSD: true,
@@ -70,7 +70,7 @@ function PricingContent() {
       note: '* Las conversaciones de respuesta no consumen tu cuota de conversaciones iniciadas'
     },
     {
-      id: 'enterprise',
+      id: 'business',
       name: 'Business',
       price: '$150',
       priceUSD: true,
@@ -93,7 +93,7 @@ function PricingContent() {
     },
   ];
 
-  const handleStartTrial = async (planType: 'basic' | 'premium' | 'enterprise') => {
+  const handleStartTrial = async (planType: 'crecimiento' | 'pro' | 'business') => {
     // Guardar el plan seleccionado en localStorage para mantener el contexto
     localStorage.setItem('selectedPlan', planType);
     localStorage.setItem('selectedPaymentMethod', selectedPaymentMethod);
@@ -217,7 +217,7 @@ function PricingContent() {
               {/* Botón que redirige según el estado de autenticación */}
               <div className="space-y-3 mt-auto">
                 <button
-                  onClick={() => handleStartTrial(plan.id as 'basic' | 'premium' | 'enterprise')}
+                  onClick={() => handleStartTrial(plan.id as 'crecimiento' | 'pro' | 'business')}
                   className="w-full py-4 rounded-[2rem] font-semibold transition-all duration-300 bg-accent-cream hover:bg-accent-cream/90 text-[#14120b] border border-accent-cream/20 hover:border-accent-cream/40"
                 >
                   {token ? 'Continuar al Pago' : 'Comenzar Prueba Gratis'}

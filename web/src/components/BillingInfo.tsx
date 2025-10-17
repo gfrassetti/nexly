@@ -14,9 +14,9 @@ export default function BillingInfo() {
   const getPlanName = useMemo(() => {
     if (!subscription?.subscription) return "Plan desconocido";
     switch (subscription.subscription.planType) {
-      case 'basic': return 'Plan Crecimiento';
-      case 'premium': return 'Plan Pro';
-      case 'enterprise': return 'Plan Business';
+      case 'crecimiento': return 'Plan Crecimiento';
+      case 'pro': return 'Plan Pro';
+      case 'business': return 'Plan Business';
       default: return 'Plan Básico';
     }
   }, [subscription?.subscription?.planType]);
@@ -71,7 +71,7 @@ export default function BillingInfo() {
   const formatAmount = () => {
     if (!subscription?.subscription) return "-";
     // Usar precios fijos basados en el plan
-    const amount = subscription.subscription.planType === 'basic' ? 2999 : 4999;
+    const amount = subscription.subscription.planType === 'crecimiento' ? 2999 : 4999;
     return (amount / 100).toLocaleString("es-ES", {
       style: "currency",
       currency: "USD"

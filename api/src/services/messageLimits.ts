@@ -70,13 +70,13 @@ export async function getMessageLimits(userId: string): Promise<MessageLimits> {
       planLimits = PLAN_LIMITS.free_trial;
     } else if (subscription.status === 'active') {
       switch (subscription.planType) {
-        case 'basic':
+        case 'crecimiento':
           planLimits = PLAN_LIMITS.basic;
           break;
-        case 'premium':
+        case 'pro':
           planLimits = PLAN_LIMITS.premium;
           break;
-        case 'enterprise':
+        case 'business':
           planLimits = PLAN_LIMITS.enterprise;
           break;
         default:
@@ -324,11 +324,11 @@ export async function checkIntegrationLimits(userId: string): Promise<{
       maxIntegrations = 5; // Trial: hasta 5 integraciones
     } else if (subscription.status === 'active') {
       switch (subscription.planType) {
-        case 'basic':
-          maxIntegrations = 3;  // Plan Básico: 3 integraciones
+        case 'crecimiento':
+          maxIntegrations = 3;  // Plan Crecimiento: 3 integraciones
           break;
-        case 'premium':
-          maxIntegrations = 10; // Plan Premium: 10 integraciones
+        case 'pro':
+          maxIntegrations = 10; // Plan Pro: 10 integraciones
           break;
         default:
           maxIntegrations = 3;

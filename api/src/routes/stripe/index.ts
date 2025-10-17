@@ -168,7 +168,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     }
 
     // Usar el plan del usuario si no se proporciona uno en el body
-    const finalPlanType = planType || user.selectedPlan || 'basic';
+    const finalPlanType = planType || user.selectedPlan || 'crecimiento';
 
     // Verificar si ya tiene una suscripción activa
     const existingActive = await Subscription.findOne({
@@ -186,11 +186,11 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     const cancelUrl = `${process.env.FRONTEND_URL}${STRIPE_CONFIG.CANCEL_URL}`;
     let stripeSession;
     
-    if (finalPlanType === 'basic') {
+    if (finalPlanType === 'crecimiento') {
       stripeSession = await stripeService.createBasicPlan(user.email, successUrl, cancelUrl);
-    } else if (finalPlanType === 'premium') {
+    } else if (finalPlanType === 'pro') {
       stripeSession = await stripeService.createPremiumPlan(user.email, successUrl, cancelUrl);
-    } else if (finalPlanType === 'enterprise') {
+    } else if (finalPlanType === 'business') {
       stripeSession = await stripeService.createEnterprisePlan(user.email, successUrl, cancelUrl);
     } else {
       throw new CustomError('Tipo de plan no válido', 400);
@@ -451,7 +451,7 @@ router.post('/change-plan', authenticateToken, asyncHandler(async (req: Authenti
       throw new CustomError('Usuario no autenticado', 401);
     }
 
-    if (!newPlanType || !['basic', 'premium', 'enterprise'].includes(newPlanType)) {
+    if (!newPlanType || !['crecimiento', 'pro', 'business'].includes(newPlanType)) {
       throw new CustomError('Tipo de plan inválido', 400);
     }
 
@@ -480,11 +480,11 @@ router.post('/change-plan', authenticateToken, asyncHandler(async (req: Authenti
     const cancelUrl = `${process.env.FRONTEND_URL}/dashboard?plan_change_cancelled=true`;
     
     let stripeSession;
-    if (newPlanType === 'basic') {
+    if (newPlanType === 'crecimiento') {
       stripeSession = await stripeService.createBasicPlan(user.email, successUrl, cancelUrl);
-    } else if (newPlanType === 'premium') {
+    } else if (newPlanType === 'pro') {
       stripeSession = await stripeService.createPremiumPlan(user.email, successUrl, cancelUrl);
-    } else if (newPlanType === 'enterprise') {
+    } else if (newPlanType === 'business') {
       stripeSession = await stripeService.createEnterprisePlan(user.email, successUrl, cancelUrl);
     }
 

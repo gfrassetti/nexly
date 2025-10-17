@@ -10,7 +10,7 @@ interface SubscriptionData {
   userSubscriptionStatus?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
   subscription?: {
     id: string;
-    planType: 'basic' | 'premium' | 'enterprise';
+    planType: 'crecimiento' | 'pro' | 'business';
     status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
     trialEndDate: string;
     currentPeriodStart?: string;
@@ -186,11 +186,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (status.pendingPaymentMethod || !subscription?.subscription) return 0;
     
     switch (subscription.subscription.planType) {
-      case 'basic':
+      case 'crecimiento':
         return 3; // WhatsApp, Instagram, Telegram
-      case 'premium':
+      case 'pro':
         return 4; // WhatsApp, Instagram, Facebook Messenger, Telegram
-      case 'enterprise':
+      case 'business':
         return 999; // Sin límite - todas las integraciones disponibles
       default:
         return 0;

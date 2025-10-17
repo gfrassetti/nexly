@@ -14,7 +14,7 @@ const ADDON_PRODUCT_ID = config.stripeAddOnProductId;
 
 export interface CreateAddOnSessionParams {
   userId: string;
-  planType: 'basic' | 'premium' | 'enterprise';
+  planType: 'crecimiento' | 'pro' | 'business';
   source: 'emergency_modal' | 'preventive_dashboard';
   req: Request;
 }

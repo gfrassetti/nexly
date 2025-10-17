@@ -144,8 +144,8 @@ export default function SubscriptionStatus() {
             <button
               onClick={() => {
                 const selectedPlan =
-                  localStorage.getItem("selectedPlan") || "basic";
-                createStripePaymentLink(selectedPlan as "basic" | "premium" | "enterprise");
+                  localStorage.getItem("selectedPlan") || "crecimiento";
+                createStripePaymentLink(selectedPlan as "crecimiento" | "pro" | "business");
               }}
               disabled={stripeLoading}
               className="bg-accent-cream/20 hover:bg-accent-cream/30 disabled:bg-accent-cream/10 disabled:opacity-50 text-accent-cream border border-accent-cream/30 px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
@@ -252,10 +252,10 @@ export default function SubscriptionStatus() {
             {/* Botón Stripe */}
             <button
               onClick={() => {
-                // Obtener el plan del usuario desde localStorage o usar 'basic' por defecto
+                // Obtener el plan del usuario desde localStorage o usar 'crecimiento' por defecto
                 const selectedPlan =
-                  localStorage.getItem("selectedPlan") || "basic";
-                createStripePaymentLink(selectedPlan as "basic" | "premium" | "enterprise");
+                  localStorage.getItem("selectedPlan") || "crecimiento";
+                createStripePaymentLink(selectedPlan as "crecimiento" | "pro" | "business");
               }}
               disabled={stripeLoading}
               className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 disabled:opacity-50 text-accent-cream px-6 py-3 rounded-lg transition-colors duration-300 flex items-center gap-3 min-w-[200px]"
@@ -387,9 +387,9 @@ export default function SubscriptionStatus() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-lg font-semibold text-accent-cream">
-              {sub.planType === "basic" ? "Plan Crecimiento" : 
-               sub.planType === "premium" ? "Plan Pro" : 
-               sub.planType === "enterprise" ? "Plan Business" : 
+              {sub.planType === "crecimiento" ? "Plan Crecimiento" : 
+               sub.planType === "pro" ? "Plan Pro" : 
+               sub.planType === "business" ? "Plan Business" : 
                "Plan Básico"}
             </h3>
             <span
@@ -451,9 +451,9 @@ export default function SubscriptionStatus() {
                 // Usar el planType de la suscripción actual, o el selectedPlan del localStorage como fallback
                 const planFromSubscription = sub.planType;
                 const planFromStorage = localStorage.getItem("selectedPlan");
-                const selectedPlan = planFromSubscription || planFromStorage || "basic";
+                const selectedPlan = planFromSubscription || planFromStorage || "crecimiento";
                 
-                createStripePaymentLink(selectedPlan as "basic" | "premium" | "enterprise");
+                createStripePaymentLink(selectedPlan as "crecimiento" | "pro" | "business");
               }}
               className="bg-warning/20 hover:bg-warning/30 text-warning border border-warning/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >

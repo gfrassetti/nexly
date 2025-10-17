@@ -117,7 +117,7 @@ router.post('/start-trial', authenticateToken, asyncHandler(async (req: any, res
       throw new CustomError('Usuario no encontrado', 401);
     }
 
-    if (!planType || !['basic', 'premium', 'enterprise'].includes(planType)) {
+    if (!planType || !['crecimiento', 'pro', 'business'].includes(planType)) {
       throw new CustomError('Tipo de plan inválido', 400);
     }
 
@@ -351,7 +351,7 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     }
 
     // Usar el plan del usuario si no se proporciona uno en el body
-    const finalPlanType = planType || user.selectedPlan || 'basic';
+    const finalPlanType = planType || user.selectedPlan || 'crecimiento';
 
     // Verificar si ya tiene una suscripción activa
     const existingActive = await Subscription.findOne({

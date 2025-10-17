@@ -210,7 +210,7 @@ function IntegrationsContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-foreground font-medium text-sm">
-                Current plan: {subscription.subscription.planType === 'basic' ? 'Basic' : 'Premium'}
+                Current plan: {subscription.subscription.planType === 'crecimiento' ? 'Crecimiento' : 'Pro'}
               </p>
               <p className="text-muted-foreground text-xs">
                 Available integrations: {getMaxIntegrations() === 999 ? 'All available' : `Up to ${getMaxIntegrations()}`}

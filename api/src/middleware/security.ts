@@ -134,7 +134,7 @@ export const sanitizePaymentData = (req: Request, res: Response, next: NextFunct
 export const validateSubscriptionData = (req: Request, res: Response, next: NextFunction) => {
   const { planType } = req.body;
   
-  if (!planType || !['basic', 'premium', 'enterprise'].includes(planType)) {
+  if (!planType || !['crecimiento', 'pro', 'business'].includes(planType)) {
     throw new CustomError('Tipo de plan inválido', 400);
   }
   
