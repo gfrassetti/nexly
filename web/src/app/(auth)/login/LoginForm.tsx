@@ -31,21 +31,34 @@ export default function LoginForm() {
     setError("");
     setLoading(true);
     try {
+      console.log("🔐 Intentando login con:", { identifier, password: "***" });
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),
       });
-      if (!res.ok) throw new Error("Credenciales inválidas");
+      
+      console.log("📡 Respuesta del servidor:", res.status, res.statusText);
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("❌ Error del servidor:", errorData);
+        throw new Error(errorData.message || "Credenciales inválidas");
+      }
+      
       const data = await res.json();
+      console.log("✅ Login exitoso, datos recibidos:", { token: data.token ? "***" : "undefined", user: data.user });
+      
       localStorage.setItem("token", data.token);
       document.cookie = `token=${data.token}; Path=/; SameSite=Lax`;
       setAuth(data.token, data.user);
       
+      console.log("🚀 Redirigiendo al dashboard...");
       // Siempre ir al dashboard después del login
       // El dashboard mostrará el botón de "Completar Pago" si es necesario
       router.replace("/dashboard");
     } catch (e: any) {
+      console.error("💥 Error en login:", e);
       setError(e.message || "Error de login");
     } finally {
       setLoading(false);
