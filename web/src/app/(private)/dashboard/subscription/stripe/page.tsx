@@ -291,9 +291,11 @@ export default function SubscriptionInfo() {
     ? (stripeSub.amount / 100).toFixed(2)
     : sub?.status === "trialing"
     ? "0.00"
-    : sub?.planType === "basic"
+    : sub?.planType === "crecimiento"
     ? "29.99"
-    : "49.99";
+    : sub?.planType === "pro"
+    ? "59.99"
+    : "149.99";
 
   // Usar estado real de Stripe
   const actualStatus = stripeSub?.status || sub?.status;
@@ -350,7 +352,9 @@ export default function SubscriptionInfo() {
                       Plan
                     </label>
                     <p className="text-sm font-semibold text-foreground mt-1 capitalize">
-                      {sub?.planType === "basic" ? "Básico" : "Premium"}
+                      {sub?.planType === "crecimiento" ? "Crecimiento" : 
+                       sub?.planType === "pro" ? "Pro" : 
+                       sub?.planType === "business" ? "Business" : "N/A"}
                     </p>
                   </div>
                 </div>

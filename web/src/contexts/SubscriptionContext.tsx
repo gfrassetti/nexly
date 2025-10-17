@@ -171,9 +171,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     // Durante suscripción activa, verificar límites del plan
     if (status.active) {
       const planFeatures = {
-        basic: ['whatsapp', 'instagram', 'telegram'],
-        premium: ['whatsapp', 'instagram', 'messenger', 'telegram'],
-        enterprise: ['whatsapp', 'instagram', 'messenger', 'telegram', 'tiktok', 'twitter']
+        crecimiento: ['whatsapp', 'instagram', 'telegram'],
+        pro: ['whatsapp', 'instagram', 'messenger', 'telegram'],
+        business: ['whatsapp', 'instagram', 'messenger', 'telegram', 'tiktok', 'twitter']
       };
       
       return planFeatures[sub.planType]?.includes(feature) || false;
