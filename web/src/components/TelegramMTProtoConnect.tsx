@@ -67,7 +67,7 @@ export default function TelegramMTProtoConnect({
 
     setIsLoading(true);
     
-    try {
+    try {/* reverteed */
       const response = await apiFetch('/telegram/verify-code', {
         method: 'POST',
         body: JSON.stringify({ 
