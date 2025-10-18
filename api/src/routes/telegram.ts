@@ -614,4 +614,73 @@ router.post('/reset', async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * GET /telegram/chats
+ * Obtener lista de chats/conversaciones de Telegram
+ */
+router.get('/chats', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Obteniendo chats de Telegram', { userId });
+
+    // Verificar que el usuario tenga una integración de Telegram activa
+    const integration = await Integration.findOne({
+      userId: new Types.ObjectId(userId),
+      provider: 'telegram',
+      status: 'active'
+    });
+
+    if (!integration) {
+      return res.status(404).json({
+        success: false,
+        error: 'telegram_not_connected',
+        message: 'Telegram no está conectado'
+      });
+    }
+
+    // Obtener chats usando el servicio de Telegram
+    const result = await telegramMTProtoService.getChats(userId);
+    
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        error: 'chats_fetch_failed',
+        message: result.error || 'Error obteniendo chats de Telegram'
+      });
+    }
+
+    logger.info('Chats de Telegram obtenidos exitosamente', { 
+      userId, 
+      chatCount: result.chats?.length || 0
+    });
+
+    res.json({
+      success: true,
+      chats: result.chats || [],
+      count: result.chats?.length || 0
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/chats', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
 export default router;
