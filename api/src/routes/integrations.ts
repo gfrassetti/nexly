@@ -332,9 +332,6 @@ router.get("/limits", async (req: AuthRequest, res: Response) => {
 router.get("/", handleAuth, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
-    console.log('🔍 Integrations GET - userId extraído:', userId);
-    console.log('🔍 Integrations GET - req.user completo:', req.user);
-    
     if (!userId) {
       const errorResponse: ApiErrorResponse = { 
         error: "authentication_required",
@@ -343,9 +340,22 @@ router.get("/", handleAuth, async (req: AuthRequest, res: Response) => {
       return res.status(401).json(errorResponse);
     }
 
-    console.log('🔍 Integrations GET - Buscando integraciones para userId:', userId);
+    // ✅ ARREGLO TEMPORAL: Buscar integraciones de Telegram con userId incorrecto y corregirlas
+    const incorrectIntegrations = await Integration.find({ 
+      provider: 'telegram',
+      userId: { $ne: userId }
+    });
+    
+    if (incorrectIntegrations.length > 0) {
+      console.log('🔧 Corrigiendo integraciones de Telegram con userId incorrecto:', incorrectIntegrations.length);
+      for (const integration of incorrectIntegrations) {
+        integration.userId = new Types.ObjectId(userId);
+        await integration.save();
+        console.log('✅ Integración corregida:', integration._id);
+      }
+    }
+
     const items = await Integration.find({ userId }).lean();
-    console.log('🔍 Integrations GET - Integraciones encontradas:', items.length, items);
     const withShape = items.map((it) => ({
       _id: it._id,
       userId: it.userId,

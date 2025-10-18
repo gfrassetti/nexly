@@ -44,9 +44,6 @@ router.get('/health', async (req: AuthRequest, res: Response) => {
 router.post('/send-code', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
-    console.log('🔍 Telegram send-code - userId extraído:', userId);
-    console.log('🔍 Telegram send-code - req.user completo:', req.user);
-    
     if (!userId) {
       return res.status(401).json({ 
         success: false,
