@@ -67,6 +67,7 @@ interface SubscriptionContextType {
   cancelSubscription: () => Promise<void>;
   updateAfterPayment: (newSubscriptionData: SubscriptionData) => void;
   forceRefresh: () => Promise<void>;
+  refreshAfterPayment: () => Promise<void>;
   startFreeTrial: () => Promise<void>;
   canUseFreeTrial: () => boolean;
   isFreeTrialActive: () => boolean;
@@ -94,37 +95,50 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       setLoading(true);
       setError(null);
 
-      // Forzar actualización con timestamp para evitar cache
+      console.log('🔄 Fetching subscription status...');
+      
+      // Consulta directa a la API - sin cache
       const response = await fetch(`${API_URL}/subscriptions/status?t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Cache-Control': 'no-cache',
         },
       });
+      
       if (!response.ok) {
-        if (response.status === 429) {
-          console.warn('Rate limit alcanzado, asumiendo sin suscripción');
-          setSubscription({
-            hasSubscription: false,
-            status: 'none',
-            userSubscriptionStatus: 'none'
-          });
-          setError(null);
-          return;
-        }
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('📊 Subscription data received:', data);
+      
+      // Actualizar el contexto
       setSubscription(data);
+      
+      // Actualizar localStorage INMEDIATAMENTE
+      if (data.subscription?.planType) {
+        localStorage.setItem('selectedPlan', data.subscription.planType);
+        console.log('💾 Updated localStorage selectedPlan:', data.subscription.planType);
+      } else {
+        localStorage.removeItem('selectedPlan');
+        console.log('🗑️ Cleared localStorage selectedPlan');
+      }
+      
+      // Guardar datos completos como cache
+      localStorage.setItem('subscriptionData', JSON.stringify(data));
+      
     } catch (err: any) {
-      console.warn('Error al cargar suscripción, asumiendo sin suscripción:', err.message);
+      console.error('❌ Error fetching subscription:', err);
       setSubscription({
         hasSubscription: false,
         status: 'none',
         userSubscriptionStatus: 'none'
       });
-      setError(null);
+      setError(err.message);
+      
+      // Limpiar localStorage en caso de error
+      localStorage.removeItem('selectedPlan');
+      localStorage.removeItem('subscriptionData');
     } finally {
       setLoading(false);
     }
@@ -142,6 +156,42 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       setLoading(false);
     }
   }, [token]);
+
+  // Función para actualizar después de pago exitoso
+  const refreshAfterPayment = useCallback(async () => {
+    console.log('💰 Payment completed - refreshing subscription data...');
+    // Pequeño delay para asegurar que el webhook haya procesado
+    setTimeout(async () => {
+      await fetchSubscriptionStatus();
+    }, 2000);
+  }, [fetchSubscriptionStatus]);
+
+  // Listener para actualizaciones cuando el usuario regresa de Stripe
+  useEffect(() => {
+    const handleFocus = () => {
+      // Si el usuario regresa a la pestaña, verificar si hay cambios
+      if (token && subscription) {
+        console.log('👁️ Window focused - checking for subscription updates...');
+        fetchSubscriptionStatus();
+      }
+    };
+
+    const handleMessage = (event: MessageEvent) => {
+      // Escuchar mensajes de Stripe o webhooks
+      if (event.data?.type === 'payment_completed') {
+        console.log('💳 Payment completed message received');
+        refreshAfterPayment();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [token, subscription, fetchSubscriptionStatus, refreshAfterPayment]);
 
   // Mapeo centralizado de estados - más limpio y mantenible
   const rawStatus = subscription?.subscription?.status;
@@ -405,6 +455,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     cancelSubscription,
     updateAfterPayment,
     forceRefresh,
+    refreshAfterPayment,
     startFreeTrial,
     canUseFreeTrial,
     isFreeTrialActive,
@@ -421,6 +472,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     cancelSubscription,
     updateAfterPayment,
     forceRefresh,
+    refreshAfterPayment,
     startFreeTrial,
     canUseFreeTrial,
     isFreeTrialActive,
