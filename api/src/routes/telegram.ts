@@ -683,4 +683,87 @@ router.get('/chats', async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * GET /telegram/messages/:chatId
+ * Obtener mensajes de una conversación específica de Telegram
+ */
+router.get('/messages/:chatId', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    const { chatId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    if (!chatId) {
+      return res.status(400).json({
+        success: false,
+        error: 'chat_id_required',
+        message: 'ID de chat requerido'
+      });
+    }
+
+    logger.info('Obteniendo mensajes de Telegram', { userId, chatId, limit });
+
+    // Verificar que el usuario tenga una integración de Telegram activa
+    const integration = await Integration.findOne({
+      userId: new Types.ObjectId(userId),
+      provider: 'telegram',
+      status: { $in: ['active', 'linked'] }
+    });
+
+    if (!integration) {
+      return res.status(404).json({
+        success: false,
+        error: 'telegram_not_connected',
+        message: 'Telegram no está conectado'
+      });
+    }
+
+    // Obtener mensajes usando el servicio de Telegram
+    const result = await telegramMTProtoService.getMessages(userId, parseInt(chatId), limit);
+    
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        error: 'messages_fetch_failed',
+        message: result.error || 'Error obteniendo mensajes de Telegram'
+      });
+    }
+
+    logger.info('Mensajes de Telegram obtenidos exitosamente', { 
+      userId, 
+      chatId,
+      messageCount: result.messages?.length || 0
+    });
+
+    res.json({
+      success: true,
+      messages: result.messages || [],
+      count: result.messages?.length || 0,
+      chatId: chatId
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/messages/:chatId', {
+      userId: req.user?.id || req.user?._id,
+      chatId: req.params.chatId,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
 export default router;
