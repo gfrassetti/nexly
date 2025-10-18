@@ -53,7 +53,25 @@ function IntegrationsContent() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${url}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
-      return res.json();
+      
+      if (!res.ok) {
+        console.error('Error fetching integrations:', res.status, res.statusText);
+        throw new Error(`Error ${res.status}: ${res.statusText}`);
+      }
+      
+      const data = await res.json();
+      
+      // Asegurar que siempre devolvemos un array
+      if (Array.isArray(data)) {
+        return data;
+      } else if (data && typeof data === 'object') {
+        // Si es un objeto individual, convertirlo a array
+        console.warn('Received single object instead of array, converting:', data);
+        return [data];
+      } else {
+        console.warn('Received unexpected data type, returning empty array:', data);
+        return [];
+      }
     }
   );
 
@@ -291,7 +309,6 @@ function IntegrationsContent() {
         <div className="mb-8">
           <h2 className="text-sm font-medium text-foreground mb-4">Connected Integrations</h2>
           <div className="integrations-status-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {console.log(connectedIntegrations)}
             {connectedIntegrations
               .filter((integration: any) => integration.status === 'linked' || integration.status === 'active')
               .map((integration: any) => (
