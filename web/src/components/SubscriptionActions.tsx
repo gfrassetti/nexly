@@ -138,6 +138,27 @@ export default function SubscriptionActions({
         </>
       )}
 
+      {status === "canceled" && (
+        <>
+          <div className="text-sm text-muted-foreground text-center mb-3">
+            <p>Tu suscripción ha sido cancelada</p>
+            <p className="text-xs mt-1">Puedes reactivar tu suscripción en cualquier momento</p>
+          </div>
+          <button
+            onClick={() => window.location.href = '/pricing'}
+            className="w-full px-4 py-2 text-sm font-medium text-accent-cream bg-nexly-azul hover:bg-nexly-light-blue rounded-lg transition-colors"
+          >
+            Reactivar Suscripción
+          </button>
+          <button
+            onClick={() => window.location.href = '/dashboard/integrations'}
+            className="w-full px-4 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+          >
+            Ver Integraciones
+          </button>
+        </>
+      )}
+
       {/* Modal de confirmación para cancelar */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
