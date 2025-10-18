@@ -285,11 +285,11 @@ function IntegrationsContent() {
                   </div>
                   <div className="flex items-center">
                     <span className={`px-2 py-1 rounded-md text-xs font-medium ${
-                      integration.status === 'linked' ? 'bg-success/20 text-success' :
+                      integration.status === 'linked' || integration.status === 'active' ? 'bg-success/20 text-success' :
                       integration.status === 'pending' ? 'bg-warning/20 text-warning' :
                       'bg-destructive/20 text-destructive'
                     }`}>
-                      {integration.status === 'linked' ? 'Connected' : 
+                      {integration.status === 'linked' || integration.status === 'active' ? 'Connected' : 
                        integration.status === 'pending' ? 'Pending' : 
                        'Error'}
                     </span>
