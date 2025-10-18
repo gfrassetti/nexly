@@ -298,19 +298,39 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       freeTrialUsed: true, // Si compró, el trial está superado
     });
 
-    // 8. Crear la suscripción en la base de datos
-    const subscription = new Subscription({
-      userId: user._id.toString(),
-      planType: planType,
-      status: initialStatus as 'trialing' | 'active', // Estado real de Stripe
-      startDate,
-      trialEndDate, // Fecha de trial real o undefined
-      autoRenew: true, // Si es de pago, se renueva automáticamente
-      stripeSubscriptionId: session.subscription as string,
-      stripeSessionId: session.id,
-    });
+    // 8. ACTUALIZAR O CREAR suscripción en la base de datos
+    // Primero buscar si ya existe una suscripción para este usuario
+    let subscription = await Subscription.findOne({ userId: user._id.toString() });
+    
+    if (subscription) {
+      // ACTUALIZAR suscripción existente
+      subscription.planType = planType;
+      subscription.status = initialStatus as 'trialing' | 'active';
+      subscription.startDate = startDate;
+      subscription.trialEndDate = trialEndDate as any;
+      subscription.autoRenew = true;
+      subscription.stripeSubscriptionId = session.subscription as string;
+      subscription.stripeSessionId = session.id;
+      subscription.updatedAt = new Date();
+      
+      await subscription.save();
+      console.log(`✅ Subscription UPDATED for user ${user._id}. Plan: ${planType}, Status: ${initialStatus}`);
+    } else {
+      // CREAR nueva suscripción solo si no existe
+      subscription = new Subscription({
+        userId: user._id.toString(),
+        planType: planType,
+        status: initialStatus as 'trialing' | 'active',
+        startDate,
+        trialEndDate,
+        autoRenew: true,
+        stripeSubscriptionId: session.subscription as string,
+        stripeSessionId: session.id,
+      });
 
-    await subscription.save();
+      await subscription.save();
+      console.log(`✅ Subscription CREATED for user ${user._id}. Plan: ${planType}, Status: ${initialStatus}`);
+    }
 
     console.log(`✅ Subscription created for user ${user._id}. Plan: ${planType}, Status: ${initialStatus} (User Status: ${initialUserStatus})`);
     console.log(`Subscription ID: ${subscription._id}, Stripe Subscription: ${session.subscription}`);

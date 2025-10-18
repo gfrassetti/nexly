@@ -43,8 +43,8 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: Aut
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    // Buscar la suscripción del usuario en nuestra base de datos
-    const subscription = await Subscription.findOne({ userId });
+    // Buscar la suscripción MÁS RECIENTE del usuario en nuestra base de datos
+    const subscription = await Subscription.findOne({ userId }).sort({ updatedAt: -1 });
 
     if (!subscription) {
       return res.status(404).json({ subscription: null });

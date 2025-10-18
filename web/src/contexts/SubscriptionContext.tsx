@@ -66,6 +66,7 @@ interface SubscriptionContextType {
   reactivateSubscription: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
   updateAfterPayment: (newSubscriptionData: SubscriptionData) => void;
+  forceRefresh: () => Promise<void>;
   startFreeTrial: () => Promise<void>;
   canUseFreeTrial: () => boolean;
   isFreeTrialActive: () => boolean;
@@ -93,9 +94,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_URL}/subscriptions/status`, {
+      // Forzar actualización con timestamp para evitar cache
+      const response = await fetch(`${API_URL}/subscriptions/status?t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
         },
       });
       if (!response.ok) {
@@ -347,6 +350,12 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setError(null);
   }, []);
 
+  // Función para forzar actualización completa del contexto
+  const forceRefresh = useCallback(async () => {
+    console.log('🔄 Forcing subscription context refresh...');
+    await fetchSubscriptionStatus();
+  }, [fetchSubscriptionStatus]);
+
   const startFreeTrial = useCallback(async (): Promise<void> => {
     if (!token) {
       throw new Error('Usuario no autenticado');
@@ -395,6 +404,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     reactivateSubscription,
     cancelSubscription,
     updateAfterPayment,
+    forceRefresh,
     startFreeTrial,
     canUseFreeTrial,
     isFreeTrialActive,
@@ -410,6 +420,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     reactivateSubscription,
     cancelSubscription,
     updateAfterPayment,
+    forceRefresh,
     startFreeTrial,
     canUseFreeTrial,
     isFreeTrialActive,
