@@ -26,10 +26,13 @@ export function useIntegrations(): UseIntegrationsReturn {
     // Si está pendiente de método de pago, no puede usar integraciones
     if (status.pendingPaymentMethod) return false;
     
+    // Si está cancelado, no puede usar integraciones
+    if (status.cancelled) return false;
+    
     const maxIntegrations = getMaxIntegrations();
     
-    // WhatsApp siempre está disponible (primera integración)
-    if (integrationName === 'whatsapp') return true;
+    // WhatsApp siempre está disponible (primera integración) - SOLO si no está cancelado
+    if (integrationName === 'whatsapp') return !status.cancelled;
     
     
     // Instagram está disponible en trial y planes activos

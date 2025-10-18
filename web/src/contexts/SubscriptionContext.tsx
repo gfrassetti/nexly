@@ -300,8 +300,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     try {
       // Determinar si es suscripción de Stripe
       const endpoint = subscription?.subscription?.stripeSubscriptionId 
-        ? '/stripe/cancel' 
-        : '/stripe/cancel'; // Force Stripe for now
+        ? '/stripe/cancel-subscription' 
+        : '/stripe/cancel-subscription'; // Force Stripe for now
 
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',

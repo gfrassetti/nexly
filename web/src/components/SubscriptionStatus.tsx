@@ -1,9 +1,13 @@
 "use client";
+import { useState } from "react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useDataRefresh } from "@/hooks/useDataRefresh";
+import { toast } from "sonner";
 
 export default function SubscriptionStatus() {
+  const [isCancelling, setIsCancelling] = useState(false);
   const {
     subscription,
     loading,
@@ -22,6 +26,7 @@ export default function SubscriptionStatus() {
     retryPayment,
     loading: stripeLoading,
   } = useStripePayment();
+  const { refreshAll } = useDataRefresh();
 
   if (loading) {
     return (
@@ -274,7 +279,7 @@ export default function SubscriptionStatus() {
 
   if (!subscription?.hasSubscription) {
     return (
-      <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+      <div className="bg-neutral-800 no-subcription-layout rounded-lg p-6 border border-neutral-700">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-accent-cream mb-2">
             Sin suscripción activa
@@ -297,7 +302,11 @@ export default function SubscriptionStatus() {
   const isExpired = sub.isCancelled && !sub.isInGracePeriod;
   
   // Cálculo robusto de trial basado en trialEndDate (no en isTrialActive del backend)
-  const isTrialActiveNow = sub.trialEndDate && new Date(sub.trialEndDate) > new Date();
+  // Pero NO si ya está cancelado
+  const isTrialActiveNow = sub.trialEndDate && 
+                          new Date(sub.trialEndDate) > new Date() && 
+                          !sub.isCancelled && 
+                          sub.status !== 'canceled';
 
   // Mapeo de estados de suscripción
   const SUBSCRIPTION_STATUS = {
@@ -505,17 +514,36 @@ export default function SubscriptionStatus() {
           {isTrialActiveNow && (
             <button
               onClick={async () => {
+                setIsCancelling(true);
                 try {
                   await cancelSubscription();
-                  // Refrescar el estado después de cancelar
-                  await refetch();
+                  toast.success("Período de prueba cancelado", {
+                    description: "Tu período de prueba ha sido cancelado exitosamente"
+                  });
+                  // Refrescar TODOS los datos inmediatamente
+                  await Promise.all([
+                    refetch(),
+                    refreshAll()
+                  ]);
                 } catch (error) {
                   console.error('Error cancelando período de prueba:', error);
+                  toast.error("Error al cancelar", {
+                    description: "No se pudo cancelar el período de prueba. Intenta de nuevo."
+                  });
+                } finally {
+                  setIsCancelling(false);
                 }
               }}
-              className="bg-accent-red/20 hover:bg-accent-red/30 text-accent-red border border-accent-red/30 px-4 py-2 rounded-lg transition-colors text-sm"
+              disabled={isCancelling}
+              className="bg-accent-red/20 hover:bg-accent-red/30 disabled:bg-accent-red/10 disabled:opacity-50 text-accent-red border border-accent-red/30 px-4 py-2 rounded-lg transition-colors text-sm flex items-center gap-2"
             >
-              Cancelar Período de Prueba
+              {isCancelling && (
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              {isCancelling ? 'Cancelando...' : 'Cancelar Período de Prueba'}
             </button>
           )}
         </div>

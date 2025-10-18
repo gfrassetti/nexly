@@ -42,7 +42,7 @@ export default function SubscriptionPage() {
 
   if (!loading && !hasActiveSubscription) {
     return (
-      <div className="min-h-screen bg-black p-6">
+      <div className="min-h-screen bg-black p-6 no-subcription-layout">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 text-center">
             <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">

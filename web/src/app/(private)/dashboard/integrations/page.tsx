@@ -240,9 +240,9 @@ function IntegrationsContent() {
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-warning rounded-full"></div>
               <div>
-                <p className="text-warning font-medium text-sm">Payment Method Pending</p>
+                <p className="text-warning font-medium text-sm">Método de Pago Pendiente</p>
                 <p className="text-muted-foreground text-xs">
-                  Complete your payment method to start your 7-day free trial
+                  Completa tu método de pago para iniciar tu período de prueba gratuito de 7 días
                 </p>
               </div>
             </div>
@@ -250,7 +250,7 @@ function IntegrationsContent() {
               onClick={() => createPaymentLink()}
               className="bg-warning/20 border border-warning/30 text-warning px-3 py-2 rounded-md text-xs font-medium hover:bg-warning/30 transition-colors"
             >
-              Complete Payment
+              Completar Pago
             </button>
           </div>
         </div>
