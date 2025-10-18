@@ -635,7 +635,7 @@ router.get('/chats', async (req: AuthRequest, res: Response) => {
     const integration = await Integration.findOne({
       userId: new Types.ObjectId(userId),
       provider: 'telegram',
-      status: 'active'
+      status: { $in: ['active', 'linked'] }
     });
 
     if (!integration) {
