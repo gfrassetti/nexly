@@ -65,7 +65,7 @@ const SubscriptionSchema: Schema = new Schema({
   },
   trialEndDate: {
     type: Date,
-    required: true,
+    required: false, // Cambiar a false para permitir cancelaciones
   },
   currentPeriodStart: {
     type: Date,

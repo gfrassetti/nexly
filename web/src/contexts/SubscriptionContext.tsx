@@ -147,7 +147,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     trialActive: rawStatus === 'trialing',
     active: rawStatus === 'active',
     paused: rawStatus === 'paused',
-    cancelled: rawStatus === 'canceled',
+    cancelled: rawStatus === 'canceled' || subscription?.userSubscriptionStatus === 'cancelled',
     inGracePeriod: rawStatus === 'past_due' || rawStatus === 'unpaid',
     pendingPaymentMethod: subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && 
                           !['trialing', 'active'].includes(rawStatus || '') && 

@@ -277,7 +277,8 @@ export default function SubscriptionStatus() {
     );
   }
 
-  if (!subscription?.hasSubscription) {
+  // Si está cancelado, mostrar layout de sin suscripción
+  if (status.cancelled || !subscription?.hasSubscription) {
     return (
       <div className="bg-neutral-800 no-subcription-layout rounded-lg p-6 border border-neutral-700">
         <div className="text-center">
@@ -306,7 +307,8 @@ export default function SubscriptionStatus() {
   const isTrialActiveNow = sub.trialEndDate && 
                           new Date(sub.trialEndDate) > new Date() && 
                           !sub.isCancelled && 
-                          sub.status !== 'canceled';
+                          sub.status !== 'canceled' &&
+                          !status.cancelled;
 
   // Mapeo de estados de suscripción
   const SUBSCRIPTION_STATUS = {
