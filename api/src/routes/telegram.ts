@@ -399,4 +399,176 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * POST /telegram/disconnect
+ * Desconectar la integración de Telegram del usuario
+ */
+router.post('/disconnect', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Desconectando Telegram', { userId });
+
+    // Desconectar el cliente de Telegram
+    try {
+      await telegramMTProtoService.disconnect(userId);
+      logger.info('Cliente de Telegram desconectado', { userId });
+    } catch (disconnectError) {
+      logger.warn('Error desconectando cliente (puede no existir)', { 
+        userId, 
+        error: disconnectError instanceof Error ? disconnectError.message : 'Error desconocido' 
+      });
+    }
+
+    // Marcar la sesión como inactiva
+    const sessionUpdated = await TelegramSession.updateOne(
+      { userId: new Types.ObjectId(userId) },
+      { 
+        isActive: false,
+        lastActivity: new Date()
+      }
+    );
+
+    logger.info('Sesión de Telegram marcada como inactiva', { 
+      userId, 
+      sessionUpdated: sessionUpdated.modifiedCount 
+    });
+
+    // Marcar la integración como desconectada
+    const integrationUpdated = await Integration.updateOne(
+      { 
+        userId: new Types.ObjectId(userId), 
+        provider: 'telegram'
+      },
+      { 
+        status: 'disconnected',
+        'meta.isActive': false
+      }
+    );
+
+    logger.info('Integración de Telegram marcada como desconectada', { 
+      userId, 
+      integrationUpdated: integrationUpdated.modifiedCount 
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Telegram desconectado exitosamente',
+      details: {
+        sessionUpdated: sessionUpdated.modifiedCount,
+        integrationUpdated: integrationUpdated.modifiedCount
+      }
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/disconnect', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor durante la desconexión'
+    });
+  }
+});
+
+/**
+ * POST /telegram/reset
+ * Reset completo de la integración de Telegram
+ */
+router.post('/reset', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Iniciando reset completo de Telegram', { userId });
+
+    try {
+      await telegramMTProtoService.disconnect(userId);
+      logger.info('Cliente de Telegram desconectado', { userId });
+    } catch (disconnectError) {
+      logger.warn('Error desconectando cliente (puede no existir)', { 
+        userId, 
+        error: disconnectError instanceof Error ? disconnectError.message : 'Error desconocido' 
+      });
+    }
+
+    const sessionsUpdated = await TelegramSession.updateMany(
+      { userId: new Types.ObjectId(userId) },
+      { 
+        isActive: false,
+        authState: 'error',
+        phoneCodeHash: undefined,
+        sessionString: undefined,
+        lastActivity: new Date()
+      }
+    );
+
+    logger.info('Sesiones de Telegram marcadas como inactivas', { 
+      userId, 
+      sessionsUpdated: sessionsUpdated.modifiedCount 
+    });
+
+    const integrationsUpdated = await Integration.updateMany(
+      { 
+        userId: new Types.ObjectId(userId), 
+        provider: 'telegram'
+      },
+      { 
+        status: 'error',
+        'meta.isActive': false,
+        'meta.sessionString': undefined
+      }
+    );
+
+    logger.info('Integraciones de Telegram actualizadas', { 
+      userId, 
+      integrationsUpdated: integrationsUpdated.modifiedCount 
+    });
+
+    telegramMTProtoService['clients'].delete(userId);
+    telegramMTProtoService['sessions'].delete(userId);
+
+    logger.info('Reset completo de Telegram finalizado', { userId });
+
+    res.status(200).json({
+      success: true,
+      message: 'Sistema de Telegram reseteado completamente',
+      details: {
+        sessionsReset: sessionsUpdated.modifiedCount,
+        integrationsReset: integrationsUpdated.modifiedCount
+      }
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/reset', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor durante el reset'
+    });
+  }
+});
+
 export default router;
