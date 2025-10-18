@@ -2,6 +2,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import { SubscriptionInfoProvider } from "@/contexts/SubscriptionInfoContext";
 import { StatsProvider } from "@/contexts/StatsContext";
+import { Toaster } from "@/components/ui/sonner";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SubscriptionInfoProvider>
           <StatsProvider>
             {children}
+            <Toaster />
           </StatsProvider>
         </SubscriptionInfoProvider>
       </body>

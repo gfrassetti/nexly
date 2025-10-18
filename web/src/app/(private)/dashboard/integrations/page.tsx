@@ -5,6 +5,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { useNotificationHelpers } from "@/hooks/useNotification";
+import { toast } from "sonner";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { useAuth } from "@/hooks/useAuth";
 import useSWR from "swr";
@@ -61,17 +62,23 @@ function IntegrationsContent() {
     const error = searchParams.get("error");
 
     if (success === "whatsapp_connected") {
-      showSuccess("¡WhatsApp conectado!", "WhatsApp se ha conectado exitosamente");
+      toast.success("¡WhatsApp conectado!", {
+        description: "WhatsApp se ha conectado exitosamente"
+      });
       setMessage("¡WhatsApp conectado exitosamente!");
       // Refrescar todos los datos
       refreshAll();
     } else if (success === "instagram_connected") {
-      showSuccess("¡Instagram conectado!", "Instagram se ha conectado exitosamente");
+      toast.success("¡Instagram conectado!", {
+        description: "Instagram se ha conectado exitosamente"
+      });
       setMessage("¡Instagram conectado exitosamente!");
       // Refrescar todos los datos
       refreshAll();
     } else if (success === "telegram_connected") {
-      showSuccess("¡Telegram conectado!", "Telegram se ha conectado exitosamente");
+      toast.success("¡Telegram conectado!", {
+        description: "Telegram se ha conectado exitosamente"
+      });
       setMessage("¡Telegram conectado exitosamente!");
       // Refrescar todos los datos
       refreshAll();
@@ -161,7 +168,9 @@ function IntegrationsContent() {
           break;
       }
       
-      showError(errorTitle, errorMessage);
+      toast.error(errorTitle, {
+        description: errorMessage
+      });
       setError(errorMessage);
     }
   }, [searchParams, showSuccess, showError, refreshIntegrations]);

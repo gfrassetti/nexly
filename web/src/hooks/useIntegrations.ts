@@ -1,7 +1,7 @@
 "use client";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { INTEGRATIONS, type Integration } from "@/lib/constants";
-import { showToast } from "./use-toast";
+import { toast } from "sonner";
 
 interface ConnectedIntegration {
   provider: string;
@@ -103,7 +103,7 @@ export function useIntegrations(): UseIntegrationsReturn {
       window.location.href = '/dashboard/integrations/connect/telegram';
     } else if (isIntegrationAvailable(integrationName)) {
       // Aquí iría la lógica para conectar otras plataformas
-      showToast.error(`${integrationName} aún no está implementado`);
+      toast.error(`${integrationName} aún no está implementado`);
     } else {
       // Redirigir a pricing
       window.location.href = '/pricing';
@@ -114,7 +114,7 @@ export function useIntegrations(): UseIntegrationsReturn {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        showToast.error('No se encontró el token de autenticación');
+        toast.error('No se encontró el token de autenticación');
         return;
       }
 
@@ -140,7 +140,7 @@ export function useIntegrations(): UseIntegrationsReturn {
         throw new Error('Error al desconectar la integración');
       }
 
-      showToast.success(`${integrationName} desconectado exitosamente`);
+      toast.success(`${integrationName} desconectado exitosamente`);
       
       // Recargar la página después de un breve delay
       setTimeout(() => {
@@ -148,7 +148,7 @@ export function useIntegrations(): UseIntegrationsReturn {
       }, 1000);
     } catch (error) {
       console.error('Error desconectando integración:', error);
-      showToast.error(`Error al desconectar ${integrationName}`);
+      toast.error(`Error al desconectar ${integrationName}`);
     }
   };
 
