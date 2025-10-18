@@ -766,4 +766,86 @@ router.get('/messages/:chatId', async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * POST /telegram/send-message
+ * Enviar un mensaje a una conversación específica de Telegram
+ */
+router.post('/send-message', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    const { chatId, message } = req.body;
+
+    if (!chatId || !message) {
+      return res.status(400).json({
+        success: false,
+        error: 'missing_parameters',
+        message: 'chatId y message son requeridos'
+      });
+    }
+
+    logger.info('Enviando mensaje de Telegram', { userId, chatId, messageLength: message.length });
+
+    // Verificar que el usuario tenga una integración de Telegram activa
+    const integration = await Integration.findOne({
+      userId: new Types.ObjectId(userId),
+      provider: 'telegram',
+      status: { $in: ['active', 'linked'] }
+    });
+
+    if (!integration) {
+      return res.status(404).json({
+        success: false,
+        error: 'telegram_not_connected',
+        message: 'Telegram no está conectado'
+      });
+    }
+
+    // Enviar mensaje usando el servicio de Telegram
+    const result = await telegramMTProtoService.sendMessage(userId, parseInt(chatId), message);
+    
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        error: 'message_send_failed',
+        message: result.error || 'Error enviando mensaje de Telegram'
+      });
+    }
+
+    logger.info('Mensaje de Telegram enviado exitosamente', { 
+      userId, 
+      chatId,
+      messageId: result.messageId
+    });
+
+    res.json({
+      success: true,
+      messageId: result.messageId,
+      chatId: chatId,
+      message: 'Mensaje enviado exitosamente'
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error en /telegram/send-message', {
+      userId: req.user?.id || req.user?._id,
+      chatId: req.body.chatId,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
 export default router;
