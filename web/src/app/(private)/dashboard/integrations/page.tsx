@@ -12,10 +12,35 @@ import useSWR from "swr";
 function IntegrationsContent() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loadingButtons, setLoadingButtons] = useState<Record<string, boolean>>({});
   const searchParams = useSearchParams();
   const { subscription, getMaxIntegrations, status } = useSubscription();
   const { createPaymentLink } = usePaymentLink();
   const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick, handleDisconnect } = useIntegrations();
+
+  // Función mejorada para manejar clics en integraciones
+  const handleIntegrationClickWithLoading = async (integrationId: string) => {
+    setLoadingButtons(prev => ({ ...prev, [integrationId]: true }));
+    try {
+      handleIntegrationClick(integrationId);
+    } finally {
+      setLoadingButtons(prev => ({ ...prev, [integrationId]: false }));
+    }
+  };
+
+  // Función mejorada para manejar desconexión
+  const handleDisconnectWithLoading = async (integrationId: string, integrationDbId: string) => {
+    setLoadingButtons(prev => ({ ...prev, [integrationId]: true }));
+    try {
+      await handleDisconnect(integrationId, integrationDbId);
+      // Refrescar datos después de desconectar
+      refreshAll();
+    } catch (error) {
+      console.error('Error en desconexión:', error);
+    } finally {
+      setLoadingButtons(prev => ({ ...prev, [integrationId]: false }));
+    }
+  };
   const { showSuccess, showError } = useNotificationHelpers();
   const { refreshAll } = useDataRefresh();
   const { token } = useAuth();
@@ -355,17 +380,20 @@ function IntegrationsContent() {
               const handleClick = () => {
                 if (isConnected && connectedIntegration) {
                   // Si está conectado, llama a Desconectar
-                  handleDisconnect(integration.id, connectedIntegration._id);
+                  handleDisconnectWithLoading(integration.id, connectedIntegration._id);
                 } else {
                   // Si no está conectado, llama a Conectar
-                  handleIntegrationClick(integration.id);
+                  handleIntegrationClickWithLoading(integration.id);
                 }
               };
 
-              // 5. Renderizar el botón con estilos dinámicos
+              // 5. Obtener estado de loading
+              const isLoading = loadingButtons[integration.id] || false;
+
+              // 6. Renderizar el botón con estilos dinámicos
               return (
                 <button 
-                  className={`w-full px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                  className={`w-full px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center justify-center gap-2 ${
                     // Estilos para DESCONECTAR (Rojo/Error)
                     isConnected 
                       ? 'bg-red-600/10 border border-red-600/20 text-red-600 hover:bg-red-600/20'
@@ -374,12 +402,17 @@ function IntegrationsContent() {
                       ? 'bg-accent-green/10 border border-accent-green/20 text-accent-green hover:bg-accent-green/20'
                     // Estilos para Upgrade/No Disponible (Gris/Muted)
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
-                  }`}
+                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   onClick={handleClick}
-                  // Solo deshabilitar si no está disponible Y no está conectado
-                  disabled={!isIntegrationAvailable(integration.id) && !isConnected}
+                  disabled={(!isIntegrationAvailable(integration.id) && !isConnected) || isLoading}
                 >
-                  {buttonText}
+                  {isLoading && (
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {isLoading ? (isConnected ? 'Desconectando...' : 'Conectando...') : buttonText}
                 </button>
               );
             })()}

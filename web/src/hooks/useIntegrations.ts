@@ -129,7 +129,7 @@ export function useIntegrations(): UseIntegrationsReturn {
       }
 
       const response = await fetch(`${apiUrl}${endpoint}`, {
-        method: 'DELETE',
+        method: integrationName === 'telegram' ? 'POST' : 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
