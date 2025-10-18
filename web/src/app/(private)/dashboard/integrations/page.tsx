@@ -285,12 +285,16 @@ function IntegrationsContent() {
       )}
 
       {/* Connected Integrations */}
-      {connectedIntegrations && connectedIntegrations.length > 0 && (
+      {connectedIntegrations && connectedIntegrations.filter((integration: any) => 
+        integration.status === 'linked' || integration.status === 'active'
+      ).length > 0 && (
         <div className="mb-8">
           <h2 className="text-sm font-medium text-foreground mb-4">Connected Integrations</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="integrations-status-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {console.log(connectedIntegrations)}
-            {connectedIntegrations.map((integration: any) => (
+            {connectedIntegrations
+              .filter((integration: any) => integration.status === 'linked' || integration.status === 'active')
+              .map((integration: any) => (
               <div key={integration._id} className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
