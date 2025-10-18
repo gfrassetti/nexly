@@ -86,6 +86,49 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       if (existingSession.isActive && existingSession.authState === 'authenticated' && existingSession.sessionString) {
         const connected = await telegramMTProtoService.connect(userId, existingSession.sessionString);
         if (connected) {
+          // ✅ ARREGLO: Crear/actualizar integración cuando se reconecta sesión existente
+          try {
+            // Obtener información del usuario de Telegram
+            const userInfo = await telegramMTProtoService.getUserInfo(userId);
+            
+            if (userInfo) {
+              const integration = await Integration.findOneAndUpdate(
+                { 
+                  userId: new Types.ObjectId(userId), 
+                  provider: 'telegram',
+                  externalId: userInfo.id.toString()
+                },
+                {
+                  name: userInfo.username || userInfo.firstName || `Telegram User ${userInfo.id}`,
+                  status: 'active',
+                  meta: {
+                    telegramUserId: userInfo.id,
+                    telegramUsername: userInfo.username,
+                    telegramFirstName: userInfo.firstName,
+                    telegramLastName: userInfo.lastName,
+                    telegramPhoneNumber: userInfo.phoneNumber,
+                    sessionString: existingSession.sessionString,
+                    isActive: true,
+                  },
+                },
+                { upsert: true, new: true }
+              );
+
+              logger.info('Integración de Telegram creada/actualizada al reconectar', {
+                userId,
+                integrationId: integration._id,
+                status: integration.status,
+                name: integration.name
+              });
+            }
+          } catch (integrationError) {
+            logger.warn('Error creando integración al reconectar', {
+              userId,
+              error: integrationError instanceof Error ? integrationError.message : 'Error desconocido'
+            });
+            // No fallar la reconexión por esto
+          }
+
           return res.status(200).json({
             success: true,
             message: 'Sesión existente reconectada',

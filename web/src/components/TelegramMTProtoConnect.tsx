@@ -67,7 +67,9 @@ export default function TelegramMTProtoConnect({
 
     setIsLoading(true);
     
-    try {/* reverteed */
+    try {
+      console.log('🔐 Enviando código de verificación:', { phoneNumber, code, hasPassword: !!password });
+      
       const response = await apiFetch('/telegram/verify-code', {
         method: 'POST',
         body: JSON.stringify({ 
@@ -77,7 +79,10 @@ export default function TelegramMTProtoConnect({
         })
       }, token || undefined);
 
+      console.log('📡 Respuesta de verify-code:', response);
+
       if (response.success) {
+        console.log('✅ Código verificado exitosamente');
         setStep('success');
         setCode(''); // Limpiar el input
         showToast.success('Telegram conectado exitosamente');

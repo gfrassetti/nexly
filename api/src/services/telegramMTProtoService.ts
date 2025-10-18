@@ -632,6 +632,41 @@ export class TelegramMTProtoService {
       });
     }
   }
+
+  /**
+   * Obtener información del usuario de Telegram
+   */
+  public async getUserInfo(userId: string): Promise<{ id: number; username?: string; firstName?: string; lastName?: string; phoneNumber?: string } | null> {
+    try {
+      const client = this.clients.get(userId);
+      
+      if (!client || !client.connected) {
+        logger.warn('Cliente no conectado para getUserInfo', { userId });
+        return null;
+      }
+
+      // Obtener información del usuario actual
+      const me = await client.getMe();
+      
+      if (me) {
+        return {
+          id: me.id.toJSNumber(),
+          username: me.username,
+          firstName: me.firstName,
+          lastName: me.lastName,
+          phoneNumber: me.phone
+        };
+      }
+
+      return null;
+    } catch (error) {
+      logger.error('Error obteniendo información del usuario', { 
+        userId, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      });
+      return null;
+    }
+  }
 }
 
 export const telegramMTProtoService = new TelegramMTProtoService();
