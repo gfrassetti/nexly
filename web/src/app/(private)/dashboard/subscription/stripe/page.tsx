@@ -41,36 +41,21 @@ const normalizeMethod = (brand: string | undefined) => {
 };
 
 const getSubscriptionLabel = (subscription: any) => {
-  const status = subscription.status;
-  const icon = StatusIcons[status as keyof typeof StatusIcons] || "?";
+  const icon = "●";
 
-  // Lógica mejorada: Si tiene stripeSubscriptionId, significa que ya pagó
-  const hasStripeSubscription = subscription.stripeSubscriptionId;
-
-  if (hasStripeSubscription) {
-    return `Activa`;
-  } else if (status === "trialing") {
-    const trialEnd = new Date(subscription.trialEndDate);
-    const now = new Date();
-    const daysLeft = Math.ceil(
-      (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return `Prueba Gratuita (${daysLeft} días restantes)`;
-  } else if (status === "active") return `Activa`;
-  else if (status === "paused") return `Pausada`;
-  else if (status === "canceled") return `Cancelada`;
-  else if (status === "past_due") return `Vencida`;
-  else if (status === "incomplete") return `Pago Pendiente`;
-  else if (status === "unpaid") return `Sin Pagar`;
-  return `Desconocida`;
+  if (subscription?.status === "active") {
+    return "Activa";
+  } else if (subscription?.status === "trialing") {
+    return "Prueba Gratuita";
+  } else if (subscription?.status === "paused") {
+    return "Pausada";
+  } else if (subscription?.status === "canceled") {
+    return "Cancelada";
+  }
+  return "Desconocida";
 };
 
-const getStatusColor = (status: string, hasStripeSubscription?: boolean) => {
-  // Si tiene stripeSubscriptionId, usar color verde (activa)
-  if (hasStripeSubscription) {
-    return "bg-transparent text-accent-green border border-accent-green/30";
-  }
-
+const getStatusColor = (status: string) => {
   switch (status) {
     case "active":
       return "bg-transparent text-accent-green border border-accent-green/30";
@@ -79,12 +64,6 @@ const getStatusColor = (status: string, hasStripeSubscription?: boolean) => {
     case "paused":
       return "bg-transparent text-accent-cream border border-accent-cream/30";
     case "canceled":
-      return "bg-transparent text-accent-red border border-accent-red/30";
-    case "past_due":
-      return "bg-transparent text-accent-cream border border-accent-cream/30";
-    case "incomplete":
-      return "bg-transparent text-warning border border-warning/30";
-    case "unpaid":
       return "bg-transparent text-accent-red border border-accent-red/30";
     default:
       return "bg-transparent text-muted-foreground border border-border";
@@ -225,13 +204,10 @@ export default function SubscriptionInfo() {
     );
   }
 
-  // Lógica más permisiva para detectar suscripción activa
-  const hasActiveSubscription =
-    subscription?.hasSubscription ||
-    (subscription?.subscription &&
-      subscription.subscription.stripeSubscriptionId) ||
-    subscription?.userSubscriptionStatus === "active_trial" ||
-    subscription?.userSubscriptionStatus === "active_paid";
+  // Lógica simple: usar el estado del contexto
+  const hasActiveSubscription = subscription?.hasSubscription;
+
+  console.log('subscription stripe page', subscription);
 
   if (!hasActiveSubscription) {
     return (
@@ -278,19 +254,11 @@ export default function SubscriptionInfo() {
         month: "2-digit",
         day: "2-digit",
       })
-    : sub?.trialEndDate
-    ? new Date(sub.trialEndDate).toLocaleDateString("es-ES", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      })
     : "Fecha no disponible";
 
   // Formatear monto
   const amount = stripeSub?.amount
     ? (stripeSub.amount / 100).toFixed(2)
-    : sub?.status === "trialing"
-    ? "0.00"
     : sub?.planType === "crecimiento"
     ? "29.99"
     : sub?.planType === "pro"
@@ -327,8 +295,7 @@ export default function SubscriptionInfo() {
                 </h2>
                 <div
                   className={`px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(
-                    actualStatus,
-                    !!sub?.stripeSubscriptionId
+                    actualStatus
                   )}`}
                 >
                   {getSubscriptionLabel({ ...sub, status: actualStatus })}
@@ -439,8 +406,8 @@ export default function SubscriptionInfo() {
                 status={actualStatus}
                 isPaused={isPaused}
                 onStatusChange={() => {
-                  // Recargar datos si es necesario
-                  window.location.reload();
+                  // Forzar actualización del contexto
+                  forceRefresh();
                 }}
               />
             </div>

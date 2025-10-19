@@ -31,7 +31,7 @@ export function useStats() {
         }
 
         const response = await apiFetch<ApiResponse>("/analytics/dashboard");
-        console.log("Stats response:", response);
+        
         
         // Extraer las stats de la propiedad 'data'
         if (response.success) {

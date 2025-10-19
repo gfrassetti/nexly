@@ -16,9 +16,7 @@ export default function AuthGuard({ children, requireAuth = true }: AuthGuardPro
 
   // No necesitamos useEffect aquí, el hook useAuth maneja todo
 
-  useEffect(() => {
-    console.log("🛡️ AuthGuard - Estado:", { isLoading, isAuthenticated, requireAuth, token: token ? "***" : "null", user: user ? "***" : "null" });
-    
+  useEffect(() => {    
     if (isLoading) return;
 
     if (requireAuth && !isAuthenticated) {

@@ -279,6 +279,9 @@ export default function SubscriptionStatus() {
 
   // Si está cancelado, mostrar layout de sin suscripción
   if (status.cancelled || !subscription?.hasSubscription) {
+    console.log(' sub status jsx');
+    console.log('status', status);
+    console.log('subscription', subscription);
     return (
       <div className="bg-neutral-800 no-subcription-layout rounded-lg p-6 border border-neutral-700">
         <div className="text-center">

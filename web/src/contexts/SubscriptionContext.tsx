@@ -6,52 +6,19 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 interface SubscriptionData {
   hasSubscription: boolean;
-  status?: 'none' | 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
-  userSubscriptionStatus?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
   subscription?: {
     id: string;
     planType: 'crecimiento' | 'pro' | 'business';
     status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
-    trialEndDate: string;
-    currentPeriodStart?: string;
-    currentPeriodEnd?: string;
-    daysRemaining: number;
-    gracePeriodDaysRemaining: number;
-    isTrialActive: boolean;
-    isActive: boolean;
-    isPaused: boolean;
-    isCancelled: boolean;
-    isInGracePeriod: boolean;
-    isIncomplete: boolean;
-    isPastDue: boolean;
-    isUnpaid: boolean;
-    pausedAt?: string;
-    cancelledAt?: string;
-    gracePeriodEndDate?: string;
-    maxIntegrations: number;
     stripeSubscriptionId?: string;
   };
-  freeTrial?: {
-    used: boolean;
-    canUse: boolean;
-    isActive: boolean;
-    startDate?: string;
-    endDate?: string;
-    timeRemaining: number;
-    hoursRemaining: number;
-  };
+  userSubscriptionStatus?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
 }
 
 type SubscriptionStatus = {
-  trialActive: boolean;
-  active: boolean;
-  paused: boolean;
-  cancelled: boolean;
-  inGracePeriod: boolean;
-  pendingPaymentMethod: boolean;
-  incomplete: boolean;
-  pastDue: boolean;
-  unpaid: boolean;
+  isPaid: boolean;
+  isTrial: boolean;
+  isFree: boolean;
 };
 
 interface SubscriptionContextType {
@@ -62,15 +29,8 @@ interface SubscriptionContextType {
   refetch: () => Promise<void>;
   canUseFeature: (feature: string) => boolean;
   getMaxIntegrations: () => number;
-  pauseSubscription: () => Promise<void>;
-  reactivateSubscription: () => Promise<void>;
-  cancelSubscription: () => Promise<void>;
   updateAfterPayment: (newSubscriptionData: SubscriptionData) => void;
   forceRefresh: () => Promise<void>;
-  refreshAfterPayment: () => Promise<void>;
-  startFreeTrial: () => Promise<void>;
-  canUseFreeTrial: () => boolean;
-  isFreeTrialActive: () => boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -96,308 +56,116 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       setError(null);
 
       console.log('🔄 Fetching subscription status...');
-      
-      // Consulta directa a la API - sin cache
+
       const response = await fetch(`${API_URL}/subscriptions/status?t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Cache-Control': 'no-cache',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
       console.log('📊 Subscription data received:', data);
-      
-      // Actualizar el contexto
+
       setSubscription(data);
-      
-      // Actualizar localStorage INMEDIATAMENTE
-      if (data.subscription?.planType) {
+
+      // Actualizar localStorage solo si hay suscripción activa
+      if (data.hasSubscription && data.subscription?.planType) {
         localStorage.setItem('selectedPlan', data.subscription.planType);
-        console.log('💾 Updated localStorage selectedPlan:', data.subscription.planType);
+        localStorage.setItem('hasActiveSubscription', 'true');
       } else {
         localStorage.removeItem('selectedPlan');
-        console.log('🗑️ Cleared localStorage selectedPlan');
+        localStorage.removeItem('hasActiveSubscription');
       }
-      
-      // Guardar datos completos como cache
-      localStorage.setItem('subscriptionData', JSON.stringify(data));
-      
-    } catch (err: any) {
+
+    } catch (err: unknown) {
       console.error('❌ Error fetching subscription:', err);
-      setSubscription({
-        hasSubscription: false,
-        status: 'none',
-        userSubscriptionStatus: 'none'
-      });
-      setError(err.message);
-      
-      // Limpiar localStorage en caso de error
-      localStorage.removeItem('selectedPlan');
-      localStorage.removeItem('subscriptionData');
+      setSubscription({ hasSubscription: false });
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+      localStorage.removeItem('hasActiveSubscription');
     } finally {
       setLoading(false);
     }
   }, [token]);
 
   useEffect(() => {
-    // Limpiar estado anterior cuando cambia el token
     setSubscription(null);
     setError(null);
     setLoading(true);
-    
+
     if (token) {
-      fetchSubscriptionStatus(); // Una vez al montar o al cambiar token
+      fetchSubscriptionStatus();
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, fetchSubscriptionStatus]);
 
-  // Función para actualizar después de pago exitoso
-  const refreshAfterPayment = useCallback(async () => {
-    console.log('💰 Payment completed - refreshing subscription data...');
-    // Pequeño delay para asegurar que el webhook haya procesado
-    setTimeout(async () => {
-      await fetchSubscriptionStatus();
-    }, 2000);
-  }, [fetchSubscriptionStatus]);
+  // Lógica simplificada para determinar el estado
+  const status: SubscriptionStatus = useMemo(() => {
+    if (!subscription) {
+      return { isPaid: false, isTrial: false, isFree: true };
+    }
 
-  // Listener para actualizaciones cuando el usuario regresa de Stripe
-  useEffect(() => {
-    const handleFocus = () => {
-      // Si el usuario regresa a la pestaña, verificar si hay cambios
-      if (token && subscription) {
-        console.log('👁️ Window focused - checking for subscription updates...');
-        fetchSubscriptionStatus();
-      }
-    };
+    const hasSub = subscription.hasSubscription;
+    const userStatus = subscription.userSubscriptionStatus;
+    const subStatus = subscription.subscription?.status;
 
-    const handleMessage = (event: MessageEvent) => {
-      // Escuchar mensajes de Stripe o webhooks
-      if (event.data?.type === 'payment_completed') {
-        console.log('💳 Payment completed message received');
-        refreshAfterPayment();
-      }
-    };
+    // Si tiene suscripción activa (pagada o trial)
+    if (hasSub && (userStatus === 'active_paid' || userStatus === 'active_trial' || subStatus === 'active' || subStatus === 'trialing')) {
+      return {
+        isPaid: userStatus === 'active_paid' || subStatus === 'active',
+        isTrial: userStatus === 'active_trial' || subStatus === 'trialing',
+        isFree: false
+      };
+    }
 
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('message', handleMessage);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [token, subscription, fetchSubscriptionStatus, refreshAfterPayment]);
-
-  // Mapeo centralizado de estados - más limpio y mantenible
-  const rawStatus = subscription?.subscription?.status;
-  
-  const status: SubscriptionStatus = {
-    trialActive: rawStatus === 'trialing',
-    active: rawStatus === 'active',
-    paused: rawStatus === 'paused',
-    cancelled: rawStatus === 'canceled' || subscription?.userSubscriptionStatus === 'cancelled',
-    inGracePeriod: rawStatus === 'past_due' || rawStatus === 'unpaid',
-    pendingPaymentMethod: subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && 
-                          !['trialing', 'active'].includes(rawStatus || '') && 
-                          !subscription?.subscription?.stripeSubscriptionId,
-    incomplete: rawStatus === 'incomplete',
-    pastDue: rawStatus === 'past_due',
-    unpaid: rawStatus === 'unpaid'
-  };
+    // Si no tiene suscripción activa
+    return { isPaid: false, isTrial: false, isFree: true };
+  }, [subscription]);
 
   const canUseFeature = useCallback((feature: string): boolean => {
-    if (status.pendingPaymentMethod || !subscription?.hasSubscription || !subscription.subscription) {
-      return false;
-    }
+    // Si no tiene suscripción activa, no puede usar ninguna función
+    if (!subscription?.hasSubscription) return false;
 
-    const sub = subscription.subscription;
-    // Durante el trial, acceso completo
-    if (status.trialActive) {
-      return true;
-    }
+    // Si tiene suscripción activa (pagada o trial), verificar límites del plan
+    const planType = subscription.subscription?.planType;
+    if (!planType) return false;
 
-    // Durante suscripción activa, verificar límites del plan
-    if (status.active) {
-      const planFeatures = {
-        crecimiento: ['whatsapp', 'instagram', 'telegram'],
-        pro: ['whatsapp', 'instagram', 'messenger', 'telegram'],
-        business: ['whatsapp', 'instagram', 'messenger', 'telegram', 'tiktok', 'twitter']
-      };
-      
-      return planFeatures[sub.planType]?.includes(feature) || false;
-    }
+    const planFeatures = {
+      crecimiento: ['whatsapp', 'instagram', 'telegram'],
+      pro: ['whatsapp', 'instagram', 'messenger', 'telegram'],
+      business: ['whatsapp', 'instagram', 'messenger', 'telegram', 'tiktok', 'twitter']
+    };
 
-    return false;
-  }, [status, subscription]);
+    return planFeatures[planType]?.includes(feature) || false;
+  }, [subscription]);
 
   const getMaxIntegrations = useCallback((): number => {
-    if (status.pendingPaymentMethod || !subscription?.subscription) return 0;
-    
-    switch (subscription.subscription.planType) {
-      case 'crecimiento':
-        return 3; // WhatsApp, Instagram, Telegram
-      case 'pro':
-        return 4; // WhatsApp, Instagram, Facebook Messenger, Telegram
-      case 'business':
-        return 999; // Sin límite - todas las integraciones disponibles
-      default:
-        return 0;
+    if (!subscription?.hasSubscription) return 0;
+
+    const planType = subscription.subscription?.planType;
+    switch (planType) {
+      case 'crecimiento': return 3;
+      case 'pro': return 4;
+      case 'business': return 999;
+      default: return 0;
     }
-  }, [status, subscription]);
-
-
-  const pauseSubscription = useCallback(async (): Promise<void> => {
-    if (!token) return;
-
-    try {
-      const endpoint = '/stripe/pause/pause';
-
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subscriptionId: subscription?.subscription?.stripeSubscriptionId,
-          pauseBehavior: 'mark_uncollectible', // Marcar facturas como no cobrables
-          resumeBehavior: 'create_prorations', // Crear proraciones al reanudar
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Actualizar estado local inmediatamente para UX instantánea
-        if (subscription?.subscription) {
-          setSubscription({
-            ...subscription,
-            subscription: {
-              ...subscription.subscription,
-              status: 'paused',
-              pausedAt: new Date().toISOString(),
-              isPaused: true,
-              isActive: false,
-            }
-          });
-        }
-        // Refrescar desde el servidor en background para sincronizar
-        fetchSubscriptionStatus().catch(() => {
-          // Silently handle errors to prevent console spam
-        });
-      } else {
-        throw new Error(data.error || 'Error al pausar la suscripción');
-      }
-    } catch (error) {
-      // Handle pause subscription error
-      throw error;
-    }
-  }, [token, subscription]);
-
-  const reactivateSubscription = useCallback(async (): Promise<void> => {
-    if (!token) return;
-
-    try {
-      const endpoint = '/stripe/pause/resume';
-
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subscriptionId: subscription?.subscription?.stripeSubscriptionId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Actualizar estado local inmediatamente para UX instantánea
-        if (subscription?.subscription) {
-          setSubscription({
-            ...subscription,
-            subscription: {
-              ...subscription.subscription,
-              status: 'active',
-              isPaused: false,
-              isActive: true,
-              isCancelled: false,
-              pausedAt: undefined,
-            }
-          });
-        }
-        
-        // Refrescar desde el servidor en background para sincronizar
-        fetchSubscriptionStatus().catch(() => {
-          // Silently handle errors to prevent console spam
-        });
-      } else {
-        throw new Error(data.error || 'Error al reactivar la suscripción');
-      }
-    } catch (error) {
-      // Handle reactivate subscription error
-      throw error;
-    }
-  }, [token, subscription]);
-
-  const cancelSubscription = useCallback(async (): Promise<void> => {
-    if (!token) return;
-
-    try {
-      // Determinar si es suscripción de Stripe
-      const endpoint = subscription?.subscription?.stripeSubscriptionId 
-        ? '/stripe/cancel-subscription' 
-        : '/stripe/cancel-subscription'; // Force Stripe for now
-
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Actualizar estado local inmediatamente para UX instantánea
-        if (subscription?.subscription) {
-          setSubscription({
-            ...subscription,
-            subscription: {
-              ...subscription.subscription,
-              status: 'canceled',
-              cancelledAt: new Date().toISOString(),
-              isCancelled: true,
-              isActive: false,
-              isPaused: false,
-            }
-          });
-        }
-        // Refrescar desde el servidor en background para sincronizar
-        fetchSubscriptionStatus().catch(() => {
-          // Silently handle errors to prevent console spam
-        });
-      } else {
-        throw new Error(data.error || 'Error al cancelar la suscripción');
-      }
-    } catch (error) {
-      // Handle cancel subscription error
-      throw error;
-    }
-  }, [token, subscription]);
+  }, [subscription]);
 
   // Función para actualizar el estado después de un pago exitoso
   const updateAfterPayment = useCallback((newSubscriptionData: SubscriptionData) => {
     setSubscription(newSubscriptionData);
     setError(null);
+
+    // Actualizar localStorage inmediatamente
+    if (newSubscriptionData.hasSubscription && newSubscriptionData.subscription?.planType) {
+      localStorage.setItem('selectedPlan', newSubscriptionData.subscription.planType);
+      localStorage.setItem('hasActiveSubscription', 'true');
+    }
   }, []);
 
   // Función para forzar actualización completa del contexto
@@ -405,42 +173,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     console.log('🔄 Forcing subscription context refresh...');
     await fetchSubscriptionStatus();
   }, [fetchSubscriptionStatus]);
-
-  const startFreeTrial = useCallback(async (): Promise<void> => {
-    if (!token) {
-      throw new Error('Usuario no autenticado');
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/subscriptions/start-free-trial`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al activar período de prueba gratuito');
-      }
-
-      // Refrescar el estado de suscripción
-      await fetchSubscriptionStatus();
-    } catch (error) {
-      console.error('Error starting free trial:', error);
-      throw error;
-    }
-  }, [token, fetchSubscriptionStatus]);
-
-  const canUseFreeTrial = useCallback((): boolean => {
-    return subscription?.freeTrial?.canUse ?? false;
-  }, [subscription]);
-
-  const isFreeTrialActive = useCallback((): boolean => {
-    return subscription?.freeTrial?.isActive ?? false;
-  }, [subscription]);
 
   const value: SubscriptionContextType = useMemo(() => ({
     subscription,
@@ -450,15 +182,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     refetch: fetchSubscriptionStatus,
     canUseFeature,
     getMaxIntegrations,
-    pauseSubscription,
-    reactivateSubscription,
-    cancelSubscription,
     updateAfterPayment,
     forceRefresh,
-    refreshAfterPayment,
-    startFreeTrial,
-    canUseFreeTrial,
-    isFreeTrialActive,
   }), [
     subscription,
     loading,
@@ -467,15 +192,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     fetchSubscriptionStatus,
     canUseFeature,
     getMaxIntegrations,
-    pauseSubscription,
-    reactivateSubscription,
-    cancelSubscription,
     updateAfterPayment,
     forceRefresh,
-    refreshAfterPayment,
-    startFreeTrial,
-    canUseFreeTrial,
-    isFreeTrialActive,
   ]);
 
   return (

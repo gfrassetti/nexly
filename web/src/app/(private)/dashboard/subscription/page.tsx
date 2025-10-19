@@ -2,45 +2,35 @@
 
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/hooks/useAuth";
+import { usePaymentUpdates } from "@/hooks/usePaymentUpdates";
 import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function SubscriptionPage() {
-  const { subscription, loading, refetch } = useSubscription();
+  const { subscription, loading } = useSubscription();
   const { user } = useAuth();
   const router = useRouter();
 
-  // Refrescar suscripción al cargar la página - solo una vez
+  // Hook para manejar actualizaciones de pago en tiempo real
+  usePaymentUpdates({ enabled: true, pollingInterval: 1500 });
+
+  // Redirigir si hay suscripción activa
   useEffect(() => {
-    refetch();
-  }, []); // Sin dependencias para evitar bucle infinito
-
-  useEffect(() => {
-    if (!loading && subscription !== null) {
-
-      // Lógica simple: si hay suscripción activa
-      const hasActiveSubscription = subscription?.hasSubscription === true;
-
-      if (hasActiveSubscription) {
-        // Redirigir a la página específica del proveedor
-        const provider = getProviderFromSubscription(subscription.subscription);
-        router.replace(`/dashboard/subscription/${provider}`);
+    if (!loading && subscription) {
+      if (subscription.hasSubscription) {
+        router.replace(`/dashboard/subscription/stripe`);
       }
-      // Si no hay suscripción activa, NO redirigir - mostrar la página de "Sin Suscripción"
     }
   }, [subscription, loading, router]);
 
-  // Mostrar loading mientras se carga la suscripción
+  // Mostrar loading mientras se carga
   if (loading) {
     return <Loader size="lg" text="Cargando suscripción..." />;
   }
 
-  // Lógica simple: si hay suscripción activa
-  const hasActiveSubscription = subscription?.hasSubscription === true;
-
-
-  if (!loading && !hasActiveSubscription) {
+  // Si no hay suscripción activa, mostrar página de "Sin Suscripción"
+  if (!subscription?.hasSubscription) {
     return (
       <div className="min-h-screen bg-black p-6 no-subcription-layout">
         <div className="max-w-4xl mx-auto">
@@ -79,21 +69,4 @@ export default function SubscriptionPage() {
       <span className="ml-2 text-gray-600">Redirigiendo a tu suscripción...</span>
     </div>
   );
-}
-
-// Función para determinar el proveedor de la suscripción
-function getProviderFromSubscription(sub: any): string {
-  // Si no hay objeto de suscripción, usar Stripe por defecto
-  if (!sub) {
-    return "stripe";
-  }
-  
-  // Si tiene stripeSubscriptionId, es Stripe
-  if (sub.stripeSubscriptionId) {
-    return "stripe";
-  }
-  
-  
-  // Por defecto, usar Stripe (proveedor principal)
-  return "stripe";
 }

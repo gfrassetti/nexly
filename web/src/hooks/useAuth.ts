@@ -10,41 +10,34 @@ export function useAuth() {
 
   // Cargar datos del localStorage al inicializar
   useEffect(() => {
-    console.log("🔑 useAuth - Inicializando...");
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
     
-    console.log("🔑 useAuth - Datos del localStorage:", { 
-      hasToken: !!storedToken, 
-      hasUser: !!storedUser,
-      token: storedToken ? "***" : "null",
-      user: storedUser ? "***" : "null"
-    });
     
     if (storedToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setToken(storedToken);
         setUser(parsedUser);
-        console.log("🔑 useAuth - Usuario cargado desde localStorage:", parsedUser);
+        
       } catch (error) {
-        console.error("🔑 useAuth - Error parseando usuario del localStorage:", error);
+       
         localStorage.removeItem("token");
         localStorage.removeItem("user");
       }
     }
     
     setIsLoading(false);
-    console.log("🔑 useAuth - Inicialización completada");
+  
   }, []);
 
   const setAuth = (newToken: string, newUser: NonNullable<User>) => {
-    console.log("🔑 useAuth - setAuth llamado:", { token: newToken ? "***" : "null", user: newUser });
+    
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem("token", newToken);
     localStorage.setItem("user", JSON.stringify(newUser));
-    console.log("🔑 useAuth - setAuth completado");
+    
   };
 
   const clear = () => {
