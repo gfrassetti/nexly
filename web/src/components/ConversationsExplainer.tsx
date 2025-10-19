@@ -78,14 +78,14 @@ export default function ConversationsExplainer() {
                   </div>
                   <div className="flex-1 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                     <div className="text-xs text-blue-400 mb-1">10:00 AM - Cliente</div>
-                    <p className="text-sm">"Hola, ¿tienen stock del producto X?"</p>
+                    <p className="text-sm">&quot;Hola, ¿tienen stock del producto X?&quot;</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 justify-end">
                   <div className="flex-1 bg-green-500/10 border border-green-500/20 rounded-lg p-3 max-w-md">
                     <div className="text-xs text-green-400 mb-1 text-right">10:05 AM - Tú</div>
-                    <p className="text-sm text-right">"¡Sí! Tenemos en stock. ¿Cuántas unidades necesitas?"</p>
+                    <p className="text-sm text-right">&quot;¡Sí! Tenemos en stock. ¿Cuántas unidades necesitas?&quot;</p>
                   </div>
                   <div className="flex-shrink-0 w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
                     <span className="text-green-400 text-xs font-bold">T</span>
@@ -98,14 +98,14 @@ export default function ConversationsExplainer() {
                   </div>
                   <div className="flex-1 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                     <div className="text-xs text-blue-400 mb-1">10:10 AM - Cliente</div>
-                    <p className="text-sm">"Necesito 5 unidades. ¿Cuánto sería?"</p>
+                    <p className="text-sm">&quot;Necesito 5 unidades. ¿Cuánto sería?&quot;</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 justify-end">
                   <div className="flex-1 bg-green-500/10 border border-green-500/20 rounded-lg p-3 max-w-md">
                     <div className="text-xs text-green-400 mb-1 text-right">11:30 AM - Tú</div>
-                    <p className="text-sm text-right">"El total sería $500. ¿Pasas a retirar o te lo enviamos?"</p>
+                    <p className="text-sm text-right">&quot;El total sería $500. ¿Pasas a retirar o te lo enviamos?&quot;</p>
                   </div>
                   <div className="flex-shrink-0 w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
                     <span className="text-green-400 text-xs font-bold">T</span>
@@ -167,8 +167,8 @@ export default function ConversationsExplainer() {
                   <div className="flex-1 bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 max-w-md">
                     <div className="text-xs text-orange-400 mb-1 text-right">2:00 PM - Tú (Plantilla aprobada)</div>
                     <p className="text-sm text-right">
-                      "🎉 ¡Oferta especial! 20% de descuento en todos nuestros productos hasta el viernes. 
-                      ¿Te interesa conocer más?"
+                      &quot;🎉 ¡Oferta especial! 20% de descuento en todos nuestros productos hasta el viernes. 
+                      ¿Te interesa conocer más?&quot;
                     </p>
                   </div>
                   <div className="flex-shrink-0 w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center">

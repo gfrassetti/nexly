@@ -11,14 +11,31 @@ interface SubscriptionData {
     planType: 'crecimiento' | 'pro' | 'business';
     status: 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
     stripeSubscriptionId?: string;
+    // Campos opcionales usados en componentes de facturación
+    currentPeriodStart?: string;
+    trialEndDate?: string;
+    isInGracePeriod?: boolean;
+    gracePeriodDaysRemaining?: number;
+    cancelledAt?: string;
   };
   userSubscriptionStatus?: 'none' | 'trial_pending_payment_method' | 'active_trial' | 'active_paid' | 'cancelled';
+  freeTrial?: {
+    isActive: boolean;
+    endsAt?: string; // ISO date string if available
+  };
 }
 
 type SubscriptionStatus = {
   isPaid: boolean;
   isTrial: boolean;
   isFree: boolean;
+  active: boolean;
+  trialActive: boolean;
+  pendingPaymentMethod: boolean;
+  paused: boolean;
+  cancelled: boolean;
+  pastDue: boolean;
+  incomplete: boolean;
 };
 
 interface SubscriptionContextType {
@@ -107,24 +124,44 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   // Lógica simplificada para determinar el estado
   const status: SubscriptionStatus = useMemo(() => {
     if (!subscription) {
-      return { isPaid: false, isTrial: false, isFree: true };
+      return {
+        isPaid: false,
+        isTrial: false,
+        isFree: true,
+        active: false,
+        trialActive: false,
+        pendingPaymentMethod: false,
+        paused: false,
+        cancelled: false,
+        pastDue: false,
+        incomplete: false,
+      };
     }
 
     const hasSub = subscription.hasSubscription;
     const userStatus = subscription.userSubscriptionStatus;
     const subStatus = subscription.subscription?.status;
 
-    // Si tiene suscripción activa (pagada o trial)
-    if (hasSub && (userStatus === 'active_paid' || userStatus === 'active_trial' || subStatus === 'active' || subStatus === 'trialing')) {
-      return {
-        isPaid: userStatus === 'active_paid' || subStatus === 'active',
-        isTrial: userStatus === 'active_trial' || subStatus === 'trialing',
-        isFree: false
-      };
-    }
+    const isActivePaid = (userStatus === 'active_paid') || (subStatus === 'active');
+    const isTrial = (userStatus === 'active_trial') || (subStatus === 'trialing');
+    const pendingPM = userStatus === 'trial_pending_payment_method';
+    const paused = subStatus === 'paused';
+    const cancelled = subStatus === 'canceled';
+    const pastDue = subStatus === 'past_due';
+    const incomplete = subStatus === 'incomplete' || subStatus === 'incomplete_expired';
 
-    // Si no tiene suscripción activa
-    return { isPaid: false, isTrial: false, isFree: true };
+    return {
+      isPaid: !!isActivePaid,
+      isTrial: !!isTrial,
+      isFree: !(isActivePaid || isTrial) || !hasSub,
+      active: !!isActivePaid,
+      trialActive: !!isTrial,
+      pendingPaymentMethod: !!pendingPM,
+      paused: !!paused,
+      cancelled: !!cancelled,
+      pastDue: !!pastDue,
+      incomplete: !!incomplete,
+    };
   }, [subscription]);
 
   const canUseFeature = useCallback((feature: string): boolean => {
@@ -209,4 +246,8 @@ export function useSubscription() {
     throw new Error('useSubscription must be used within a SubscriptionProvider');
   }
   return context;
+}
+
+export function useSubscriptionOptional() {
+  return useContext(SubscriptionContext);
 }

@@ -29,8 +29,8 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">1. Aceptación de los Términos</h2>
               <p className="text-neutral-300 leading-relaxed">
-                Al acceder y utilizar Nexly ("el Servicio"), usted acepta estar sujeto a estos términos y condiciones 
-                de uso ("Términos"). Si no está de acuerdo con alguna parte de estos términos, no debe utilizar 
+                Al acceder y utilizar Nexly (&quot;el Servicio&quot;), usted acepta estar sujeto a estos términos y condiciones 
+                de uso (&quot;Términos&quot;). Si no está de acuerdo con alguna parte de estos términos, no debe utilizar 
                 nuestro servicio.
               </p>
             </section>
@@ -138,7 +138,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">7. Limitación de Responsabilidad</h2>
               <p className="text-neutral-300 leading-relaxed">
-                Nexly se proporciona "tal como está". No garantizamos que el servicio esté libre de errores 
+                Nexly se proporciona &quot;tal como está&quot;. No garantizamos que el servicio esté libre de errores 
                 o interrupciones. En ningún caso seremos responsables por daños indirectos, incidentales 
                 o consecuenciales que surjan del uso del servicio.
               </p>

@@ -8,19 +8,10 @@ import Footer from "./Footer";
 import FAQSection from "./FAQSection";
 import HowItWorksTimeline from "./HowItWorksTimeline";
 
-export default function a() {
+export default function HomePageContent() {
   const { token, user } = useAuth();
   const router = useRouter();
-
-  // Si está autenticado, redirigir al dashboard
-  if (token && user) {
-    router.replace("/dashboard");
-    return (
-      <div className="min-h-screen bg-accent-dark text-accent-cream flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+  const isAuthenticated = !!(token && user);
 
   return (
     <div className="min-h-screen bg-accent-dark text-accent-cream">
@@ -75,10 +66,10 @@ export default function a() {
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
               <Link
-                href="/pricing"
+                href={isAuthenticated ? "/dashboard" : "/pricing"}
                 className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green px-4 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-colors duration-300 flex items-center justify-center space-x-2 border border-accent-green/30 hover:border-accent-green/50"
               >
-                <span>Registrarse y Probar Gratis</span>
+                <span>{isAuthenticated ? "Ir al Dashboard" : "Registrarse y Probar Gratis"}</span>
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

@@ -104,10 +104,10 @@ export default function Topbar() {
     const sub = subscription.subscription;
     
     // Solo mostrar progress bar si está en trial (usando la misma lógica que SubscriptionStatus)
-    const isTrialActiveNow = sub.trialEndDate && new Date(sub.trialEndDate) > new Date();
+    const isTrialActiveNow = !!(sub.trialEndDate && new Date(sub.trialEndDate) > new Date());
     if (!isTrialActiveNow) return null;
     
-    const trialEndDate = new Date(sub.trialEndDate);
+    const trialEndDate = new Date(sub.trialEndDate!);
     const now = new Date();
     const daysRemaining = Math.max(0, Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     

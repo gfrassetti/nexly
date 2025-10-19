@@ -199,7 +199,7 @@ export default function ConnectWhatsAppPage() {
         </Button>
         
         <p className="text-sm text-gray-500 mt-4 max-w-2xl mx-auto">
-          Al hacer clic en "Conectar", se abrirá una ventana segura de Meta para completar el proceso de registro. 
+          Al hacer clic en &quot;Conectar&quot;, se abrirá una ventana segura de Meta para completar el proceso de registro. 
           Tu información se maneja de forma segura y nunca almacenamos tus credenciales de Facebook.
         </p>
       </div>

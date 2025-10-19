@@ -1,0 +1,6 @@
+{
+  "/api/stripe/subscription-info/route": "app/api/stripe/subscription-info/route.js",
+  "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
+  "/(private)/dashboard/subscription/page": "app/(private)/dashboard/subscription/page.js",
+  "/(private)/dashboard/integrations/page": "app/(private)/dashboard/integrations/page.js"
+}

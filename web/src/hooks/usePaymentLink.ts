@@ -1,19 +1,11 @@
 "use client";
 import { useState } from "react";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useSubscriptionOptional } from "@/contexts/SubscriptionContext";
 
 export function usePaymentLink() {
   const [loading, setLoading] = useState(false);
-  
-  // Usar useSubscription solo si está disponible (en dashboard)
-  let subscription;
-  try {
-    const { subscription: sub } = useSubscription();
-    subscription = sub;
-  } catch (error) {
-    // Si no está disponible (como en pricing), subscription será undefined
-    subscription = undefined;
-  }
+  const subscriptionContext = useSubscriptionOptional();
+  const subscription = subscriptionContext?.subscription;
 
   const createPaymentLink = async (planType?: 'crecimiento' | 'pro' | 'business'): Promise<boolean> => {
     setLoading(true);
@@ -59,11 +51,12 @@ export function usePaymentLink() {
         alert(data.error || 'Error al crear el enlace de pago');
         return false;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating payment link:', error);
       
       // Si es un error de red o timeout
-      if (error.name === 'TypeError' || error.message.includes('fetch')) {
+      const err = error as { name?: string; message?: string };
+      if (err?.name === 'TypeError' || (err?.message || '').includes('fetch')) {
         alert('Error de conexión. Verifica tu internet e intenta nuevamente.');
       } else {
         alert('Error inesperado al crear el enlace de pago');

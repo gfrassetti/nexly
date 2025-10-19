@@ -29,7 +29,7 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-2xl font-semibold mb-4 text-nexly-teal">1. Información General</h2>
               <p className="text-neutral-300 leading-relaxed mb-4">
-                Nexly ("nosotros", "nuestro" o "la empresa") se compromete a proteger la privacidad de nuestros usuarios. 
+                Nexly (&quot;nosotros&quot;, &quot;nuestro&quot; o &quot;la empresa&quot;) se compromete a proteger la privacidad de nuestros usuarios. 
                 Esta Política de Privacidad describe cómo recopilamos, utilizamos, almacenamos y protegemos su información 
                 personal cuando utiliza nuestra plataforma de gestión de mensajería.
               </p>

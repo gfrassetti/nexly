@@ -192,7 +192,7 @@ export default function FAQSection() {
               <ol className="space-y-3 text-sm">
                 <li className="flex items-start">
                   <span className="bg-nexly-teal text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">1</span>
-                  <span>Desde tu dashboard de Nexly, haz clic en "Conectar WhatsApp"</span>
+                  <span>Desde tu dashboard de Nexly, haz clic en &quot;Conectar WhatsApp&quot;</span>
                 </li>
                 <li className="flex items-start">
                   <span className="bg-nexly-teal text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">2</span>

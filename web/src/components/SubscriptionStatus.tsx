@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useStripePayment } from "@/hooks/useStripePayment";
-import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { toast } from "sonner";
 
 export default function SubscriptionStatus() {
@@ -15,9 +14,6 @@ export default function SubscriptionStatus() {
     refetch,
     getMaxIntegrations,
     status,
-    pauseSubscription,
-    reactivateSubscription,
-    cancelSubscription,
   } = useSubscription();
 
   const { createPaymentLink } = usePaymentLink();
@@ -26,7 +22,7 @@ export default function SubscriptionStatus() {
     retryPayment,
     loading: stripeLoading,
   } = useStripePayment();
-  const { refreshAll } = useDataRefresh();
+  
 
   if (loading) {
     return (
@@ -303,15 +299,14 @@ export default function SubscriptionStatus() {
   }
 
   const sub = subscription.subscription!;
-  const isExpired = sub.isCancelled && !sub.isInGracePeriod;
+  const isExpired = status.cancelled && !sub.isInGracePeriod;
   
   // Cálculo robusto de trial basado en trialEndDate (no en isTrialActive del backend)
   // Pero NO si ya está cancelado
-  const isTrialActiveNow = sub.trialEndDate && 
+  const isTrialActiveNow = !!(sub.trialEndDate && 
                           new Date(sub.trialEndDate) > new Date() && 
-                          !sub.isCancelled && 
-                          sub.status !== 'canceled' &&
-                          !status.cancelled;
+                          !status.cancelled && 
+                          sub.status !== 'canceled');
 
   // Mapeo de estados de suscripción
   const SUBSCRIPTION_STATUS = {
@@ -326,7 +321,7 @@ export default function SubscriptionStatus() {
 
   // Configuración de estados con estilos y textos
   const getSubscriptionConfig = () => {
-    if (sub.isActive) {
+    if (status.active) {
       return {
         text: 'Activo',
         className: 'text-accent-green border border-accent-green/30',
@@ -334,7 +329,7 @@ export default function SubscriptionStatus() {
       };
     }
     
-    if (sub.isPaused) {
+    if (status.paused) {
       return {
         text: 'Pausada',
         className: 'text-accent-cream border border-accent-cream/30',
@@ -344,11 +339,11 @@ export default function SubscriptionStatus() {
 
     const statusConfig = {
       [SUBSCRIPTION_STATUS.TRIALING]: {
-        text: sub.isTrialActive ? 'En Prueba' : 'Prueba Expirada',
-        className: sub.isTrialActive 
+        text: isTrialActiveNow ? 'En Prueba' : 'Prueba Expirada',
+        className: isTrialActiveNow 
           ? 'text-accent-blue border border-accent-blue/30'
           : 'text-warning border border-warning/30',
-        message: sub.isTrialActive 
+        message: isTrialActiveNow 
           ? 'Período de prueba activo'
           : 'Período de prueba terminado. Se requiere pago para continuar'
       },
@@ -388,11 +383,11 @@ export default function SubscriptionStatus() {
       className={`rounded-lg p-6 border ${
         isExpired
           ? "bg-nexly-light-blue/20 border-nexly-light-blue/50"
-          : sub.isPaused
+          : status.paused
           ? "bg-accent-cream/10 border-accent-cream/20"
           : sub.isInGracePeriod
           ? "bg-warning/10 border-warning/20"
-          : sub.isActive
+          : status.active
           ? "bg-accent-green/10 border-accent-green/20"
           : "bg-muted border-border"
       }`}
@@ -415,8 +410,8 @@ export default function SubscriptionStatus() {
 
           {subscriptionConfig.message && (
             <p className={`text-sm ${
-              sub.isActive ? 'text-accent-green' :
-              sub.isPaused ? 'text-accent-cream' :
+              status.active ? 'text-accent-green' :
+              status.paused ? 'text-accent-cream' :
               sub.status === 'trialing' ? 'text-accent-blue' :
               'text-neutral-300'
             }`}>
@@ -459,7 +454,7 @@ export default function SubscriptionStatus() {
           )}
 
           {/* Botón para completar pago cuando trial expiró pero status es trialing */}
-          {sub.status === 'trialing' && !sub.isTrialActive && sub.daysRemaining === 0 && (
+          {sub.status === 'trialing' && !isTrialActiveNow && (
             <button
               onClick={() => {
                 // Usar el planType de la suscripción actual, o el selectedPlan del localStorage como fallback
@@ -478,7 +473,7 @@ export default function SubscriptionStatus() {
           {/* Botón para reactivar suscripción pausada - Solo para usuarios pagos (no trial) */}
           {status.paused && !isTrialActiveNow && (
             <button
-              onClick={reactivateSubscription}
+              onClick={() => (window.location.href = '/dashboard/subscription/stripe')}
               className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green border border-accent-green/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Reactivar
@@ -488,7 +483,7 @@ export default function SubscriptionStatus() {
           {/* Botón para pausar suscripción activa - Solo para usuarios pagos (no trial) */}
           {status.active && !isTrialActiveNow && (
             <button
-              onClick={pauseSubscription}
+              onClick={() => (window.location.href = '/dashboard/subscription/stripe')}
               className="bg-accent-cream/20 hover:bg-accent-cream/30 text-accent-cream border border-accent-cream/30 px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Pausar
@@ -498,7 +493,7 @@ export default function SubscriptionStatus() {
           {/* Botón para cancelar - Solo para usuarios pagos (no trial) */}
           {(status.active || status.paused) && !isTrialActiveNow && (
             <button
-              onClick={cancelSubscription}
+              onClick={() => (window.location.href = '/dashboard/subscription/stripe')}
               className="bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cancelar
@@ -521,15 +516,7 @@ export default function SubscriptionStatus() {
               onClick={async () => {
                 setIsCancelling(true);
                 try {
-                  await cancelSubscription();
-                  toast.success("Período de prueba cancelado", {
-                    description: "Tu período de prueba ha sido cancelado exitosamente"
-                  });
-                  // Refrescar TODOS los datos inmediatamente
-                  await Promise.all([
-                    refetch(),
-                    refreshAll()
-                  ]);
+                  window.location.href = '/dashboard/subscription/stripe';
                 } catch (error) {
                   console.error('Error cancelando período de prueba:', error);
                   toast.error("Error al cancelar", {
@@ -566,7 +553,7 @@ export default function SubscriptionStatus() {
               style={{
                 width: `${Math.max(
                   0,
-                  ((7 - sub.gracePeriodDaysRemaining) / 7) * 100
+                  ((7 - (sub.gracePeriodDaysRemaining ?? 0)) / 7) * 100
                 )}%`,
               }}
             ></div>

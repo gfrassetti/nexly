@@ -118,7 +118,7 @@ export default function WhatsAppTester() {
           <ol className="text-sm text-blue-200 space-y-1">
             <li>1. Fill in a real WhatsApp number (yours or a test number)</li>
             <li>2. Customize the message if needed</li>
-            <li>3. Click "Send Test Message"</li>
+            <li>3. Click &quot;Send Test Message&quot;</li>
             <li>4. Verify the message appears in WhatsApp Web/App</li>
             <li>5. Record this process for your Meta submission</li>
           </ol>

@@ -101,7 +101,7 @@ async function reactivateStripeSubscription(subscriptionId: string) {
 }
 
 export default function SubscriptionInfo() {
-  const { subscription, loading } = useSubscription();
+  const { subscription, loading, forceRefresh } = useSubscription();
   const { user } = useAuth();
   const { showSuccess, showError } = useNotificationHelpers();
   const { handleOpenPortal, loading: stripeOperationsLoading } =
