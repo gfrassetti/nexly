@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/ .next_build/
 /out/
 
 # production
@@ -42,6 +43,7 @@ next-env.d.ts
 
 # Next.js
 .next/
+.next_build/
 out/
 
 # deps & logs
