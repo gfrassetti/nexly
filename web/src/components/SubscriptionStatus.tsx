@@ -414,7 +414,8 @@ export default function SubscriptionStatus() {
   // Configuración de estados basada en el estado del usuario en MongoDB
   const getSubscriptionConfig = () => {
     const userStatus = subscription.userSubscriptionStatus;
-
+    console.log('subscription', subscription);
+    console.log('sub', sub);
     // Estado activo pagado
     if (userStatus === 'active_paid') {
       if (sub.isActive) {

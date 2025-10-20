@@ -43,8 +43,11 @@ router.get('/subscription-info', authenticateToken, asyncHandler(async (req: Aut
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    // Buscar la suscripción del usuario en nuestra base de datos
-    const subscription = await Subscription.findOne({ userId });
+    // Buscar la suscripción ACTIVA más reciente del usuario
+    const subscription = await Subscription.findOne({ 
+      userId,
+      status: { $nin: ['canceled', 'incomplete_expired'] }
+    }).sort({ createdAt: -1 });
 
     if (!subscription) {
       return res.status(404).json({ subscription: null });
@@ -129,7 +132,12 @@ router.get('/invoices', authenticateToken, asyncHandler(async (req: Authenticate
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Usuario no autenticado' });
 
-    const subscription = await Subscription.findOne({ userId });
+    // Buscar la suscripción ACTIVA más reciente
+    const subscription = await Subscription.findOne({ 
+      userId,
+      status: { $nin: ['canceled', 'incomplete_expired'] }
+    }).sort({ createdAt: -1 });
+    
     if (!subscription || !subscription.stripeSubscriptionId) {
       return res.json({ invoices: [] });
     }
@@ -170,13 +178,14 @@ router.post('/create-payment-link', authenticateToken, paymentRateLimit, asyncHa
     // Usar el plan del usuario si no se proporciona uno en el body
     const finalPlanType = planType || user.selectedPlan || 'crecimiento';
 
-    // Verificar si ya tiene una suscripción activa
+    // Verificar si ya tiene una suscripción activa (NO CANCELADA)
     const existingActive = await Subscription.findOne({
       userId,
-      status: { $in: ['active', 'paused'] }
-    });
+      status: { $in: ['active', 'trialing', 'paused'] } // Excluir 'canceled'
+    }).sort({ createdAt: -1 }); // Más reciente primero
 
     if (existingActive) {
+      console.log(`⚠️ User ${userId} already has an active subscription: ${existingActive._id}`);
       return res.status(400).json({ error: 'Ya tienes una suscripción activa' });
     }
 
@@ -228,7 +237,12 @@ router.put('/cancel-subscription', authenticateToken, asyncHandler(async (req: A
       throw new CustomError('Usuario no autenticado', 401);
     }
 
-    const subscription = await Subscription.findOne({ userId });
+    // CORRECCIÓN: Buscar la suscripción activa más reciente
+    const subscription = await Subscription.findOne({ 
+      userId,
+      status: { $nin: ['canceled', 'incomplete_expired'] }
+    }).sort({ createdAt: -1 });
+    
     if (!subscription || !subscription.stripeSubscriptionId) {
       throw new CustomError('No tienes una suscripción activa o no vinculada a Stripe', 404);
     }
@@ -282,10 +296,14 @@ router.post('/fix-trial-status', authenticateToken, asyncHandler(async (req: Aut
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    const subscription = await Subscription.findOne({ userId });
+    // Buscar la suscripción ACTIVA más reciente
+    const subscription = await Subscription.findOne({ 
+      userId,
+      status: { $nin: ['canceled', 'incomplete_expired'] }
+    }).sort({ createdAt: -1 });
 
     if (!subscription) {
-      return res.status(404).json({ error: 'No se encontró suscripción' });
+      return res.status(404).json({ error: 'No se encontró suscripción activa' });
     }
 
     // Si la suscripción está activa pero aún está dentro del período de prueba, corregir el estado
@@ -336,10 +354,11 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: Authenticated
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
+    // CORRECCIÓN: Buscar la suscripción activa más reciente
     const subscription = await Subscription.findOne({
       userId,
       status: { $in: ['trialing', 'active', 'paused'] }
-    });
+    }).sort({ createdAt: -1 }); // Ordenar por más reciente primero
 
     if (!subscription) {
       throw new CustomError('No tienes una suscripción activa para cancelar', 404);
@@ -394,10 +413,11 @@ router.post('/pause', authenticateToken, asyncHandler(async (req: AuthenticatedR
       throw new CustomError('Usuario no autenticado', 401);
     }
 
+    // Buscar la suscripción activa más reciente
     const subscription = await Subscription.findOne({
       userId,
       status: { $in: ['active'] }
-    });
+    }).sort({ createdAt: -1 });
 
     if (!subscription) {
       throw new CustomError('No tienes una suscripción activa para pausar', 404);

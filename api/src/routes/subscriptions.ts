@@ -245,7 +245,12 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    const subscription = await Subscription.findOne({ userId });
+    // CRÍTICO: Buscar la suscripción MÁS RECIENTE y ACTIVA primero
+    // No traer suscripciones canceladas si hay una activa
+    const subscription = await Subscription.findOne({ 
+      userId,
+      status: { $nin: ['canceled', 'incomplete_expired'] } // Excluir canceladas y expiradas
+    }).sort({ createdAt: -1 }); // Ordenar por más reciente primero
 
     // Si el usuario está en trial_pending_payment_method pero no tiene suscripción, es normal
     if (!subscription && user.subscription_status === 'trial_pending_payment_method') {

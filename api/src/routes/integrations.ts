@@ -61,7 +61,11 @@ async function checkIntegrationLimits(userId: string): Promise<IntegrationLimits
     const currentIntegrations = await Integration.countDocuments({ userId, status: 'linked' });
     
     // Verificar si tiene alguna suscripción (activa, cancelada, pausada, etc.)
-    const subscription = await Subscription.findOne({ userId });
+    // Buscar la suscripción ACTIVA más reciente
+    const subscription = await Subscription.findOne({ 
+      userId,
+      status: { $nin: ['canceled', 'incomplete_expired'] }
+    }).sort({ createdAt: -1 });
     
     // Determinar límite máximo
     let maxIntegrations = 0;
