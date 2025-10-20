@@ -45,10 +45,9 @@ export function useMessagesTimeline(): UseMessagesTimelineReturn {
       const result = await response.json();
       
       if (result.success && result.data) {
-        setData(result.data);
-        console.log('✅ Using real data from API');
+        setData(result.data)
       } else {
-        console.log('📊 No data available from API');
+        
         setData([]);
       }
     } catch (err) {

@@ -354,14 +354,26 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: Authenticated
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    // CORRECCIÓN: Buscar la suscripción activa más reciente
+    // CORRECCIÓN: Buscar la suscripción activa más reciente (excluir solo canceled e incomplete_expired)
     const subscription = await Subscription.findOne({
       userId,
-      status: { $in: ['trialing', 'active', 'paused'] }
+      status: { $nin: ['canceled', 'incomplete_expired'] }
     }).sort({ createdAt: -1 }); // Ordenar por más reciente primero
 
     if (!subscription) {
-      throw new CustomError('No tienes una suscripción activa para cancelar', 404);
+      // Si no hay suscripción, simplemente actualizar el estado del usuario
+      const user = await User.findById(userId);
+      if (user && user.subscription_status !== 'cancelled') {
+        user.subscription_status = 'cancelled';
+        await user.save();
+        console.log(`User ${user._id} marked as cancelled (no active subscription found)`);
+      }
+      
+      return res.json({
+        success: true,
+        message: 'Tu cuenta ha sido marcada como cancelada.',
+        subscription: null
+      });
     }
 
     // Si tiene ID de Stripe, cancelar allí también
@@ -387,9 +399,13 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: Authenticated
       console.log(`User ${user._id} subscription_status updated to: ${user.subscription_status}`);
     }
 
+    const message = gracePeriodDays > 0 
+      ? `Suscripción cancelada exitosamente. Tienes ${gracePeriodDays} días de acceso restante.`
+      : 'Período de prueba cancelado exitosamente.';
+
     res.json({
       success: true,
-      message: 'Suscripción cancelada exitosamente. Tienes 7 días de acceso restante.',
+      message,
       subscription: {
         id: subscription._id,
         status: subscription.status,
@@ -398,9 +414,15 @@ router.post('/cancel', authenticateToken, asyncHandler(async (req: Authenticated
       }
     });
 
-  } catch (error) {
-    console.error('Error cancelling Stripe subscription:', error);
-    throw error;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor';
+    console.error('Error cancelling Stripe subscription:', errorMessage, error);
+    
+    // Devolver error apropiado
+    res.status(500).json({
+      success: false,
+      error: { message: errorMessage }
+    });
   }
 }));
 

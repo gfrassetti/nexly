@@ -100,7 +100,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           'Authorization': `Bearer ${token}`,
         },
       });
-      console.log('🔄 Response:', response);
       if (!response.ok) {
         if (response.status === 429) {
           console.warn('Rate limit alcanzado, asumiendo sin suscripción');

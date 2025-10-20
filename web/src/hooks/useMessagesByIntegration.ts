@@ -48,9 +48,7 @@ export function useMessagesByIntegration(): UseMessagesByIntegrationReturn {
       
       if (result.success && result.data) {
         setData(result.data);
-        console.log('✅ Using real data from API');
       } else {
-        console.log('📊 No data available from API');
         setData([]);
       }
     } catch (err) {

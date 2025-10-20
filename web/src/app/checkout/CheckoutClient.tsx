@@ -65,9 +65,10 @@ export default function CheckoutClient() {
           const errorMessage = paymentData.error || paymentData.message || 'Error desconocido';
           setError('Error al crear el enlace de pago: ' + errorMessage);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error en checkout:', err);
-        setError('Error al procesar el pago: ' + err.message);
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+        setError('Error al procesar el pago: ' + errorMessage);
       } finally {
         setLoading(false);
       }
@@ -84,9 +85,6 @@ export default function CheckoutClient() {
   if (loading) {
     return (
       <div className="w-full max-w-md text-center">
-        <div className="flex justify-center mb-6">
-          <Logo size="md" />
-        </div>
         <div className="rounded-2xl">
           <Loader size="xl" text="Redirigiendo a Stripe para completar tu suscripción" />
         </div>
