@@ -73,8 +73,6 @@ export default function SubscriptionStatus() {
     }
   }, [isPolling, syncMessage]);
 
-  console.log('🔄 Subscription:', { subscription });
-  console.log('🔄 Status:', { status });
 
   if (loading) {
     return (

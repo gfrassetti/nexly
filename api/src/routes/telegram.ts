@@ -6,6 +6,7 @@ import { TelegramSession } from '../models/TelegramSession';
 import { Integration } from '../models/Integration';
 import { Message } from '../models/Message';
 import { checkIntegrationLimits } from '../services/messageLimits';
+import { Contact } from '../models/Contact';
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -406,9 +407,43 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
           chatId: message.chatId
         });
 
-        // Aquí podrías guardar el mensaje en la base de datos
-        // o enviarlo via WebSocket al frontend
         // TODO: Implementar guardado en DB y notificación al frontend
+        // Guardar el mensaje entrante en la base de datos
+        if (message.message && message.senderId && message.chatId) {
+          const contact = await Contact.findOneAndUpdate(
+            {
+              userId: new Types.ObjectId(userId),
+              externalId: String(message.senderId), // ID de Telegram del remitente
+              provider: 'telegram',
+            },
+            {
+              $setOnInsert: {
+                name: message.senderName || `Telegram User ${message.senderId}`,
+                phoneNumber: message.senderUsername ? `@${message.senderUsername}` : undefined, // Usar username como phoneNumber si existe
+              },
+              $set: { lastActivity: new Date() },
+            },
+            { upsert: true, new: true }
+          );
+
+          const newMessage = new Message({
+            userId: new Types.ObjectId(userId),
+            integrationId: integration._id, // Usar la integración encontrada
+            contactId: contact._id,
+            conversationId: String(message.chatId),
+            direction: 'in',
+            body: message.message,
+            provider: 'telegram',
+            externalMessageId: String(message.id),
+            from: String(message.senderId),
+            senderName: message.senderName,
+            timestamp: new Date(message.timestamp * 1000), // Convertir a milisegundos
+            isRead: false,
+          });
+          await newMessage.save();
+
+          logger.info('Mensaje de Telegram entrante guardado en DB', { userId, messageId: message.id });
+        }
       });
     } catch (listenerError) {
       logger.error('Error iniciando listener de mensajes', {
@@ -817,6 +852,27 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
     }
 
     logger.info('Mensaje de Telegram enviado exitosamente', {
+      userId,
+      chatId,
+      messageId: result.messageId
+    });
+
+    // Registrar el mensaje enviado en nuestra base de datos
+    const newMessage = new Message({
+      userId: new Types.ObjectId(userId),
+      integrationId: integration._id,
+      conversationId: chatId, // Usar chatId como conversationId por ahora
+      direction: 'out',
+      body: message,
+      provider: 'telegram',
+      externalMessageId: result.messageId ? String(result.messageId) : undefined, // Guardar el ID de mensaje de Telegram
+      from: integration.meta?.telegramPhoneNumber || integration.meta?.telegramUsername || integration.name,
+      senderName: integration.name,
+      status: 'sent',
+    });
+    await newMessage.save();
+
+    logger.info('Mensaje de Telegram enviado y registrado en DB', {
       userId,
       chatId,
       messageId: result.messageId

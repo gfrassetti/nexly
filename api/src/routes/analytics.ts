@@ -322,9 +322,9 @@ router.get('/messages-timeline', async (req: AuthRequest, res: Response) => {
 
       if (dateMap.has(dateStr)) {
         const entry = dateMap.get(dateStr)!;
-        if (direction === 'out' || direction === 'outbound') {
+        if (direction === 'out') {
           entry.sent += count;
-        } else if (direction === 'in' || direction === 'inbound') {
+        } else if (direction === 'in') {
           entry.received += count;
         }
       }
@@ -583,6 +583,66 @@ router.get('/integration-stats', async (req: AuthRequest, res: Response) => {
     logger.error('Error obteniendo estadísticas de integraciones', {
       userId: req.user?.id || req.user?._id,
       error: error instanceof Error ? error.message : 'Error desconocido'
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'server_error',
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * POST /analytics/test-message
+ * DEBUG: Crear un mensaje de prueba para verificar la conexión a la DB
+ */
+router.post('/test-message', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'authentication_required',
+        message: 'Token de autenticación requerido'
+      });
+    }
+
+    logger.info('Creando mensaje de prueba', { userId });
+
+    // Crear un mensaje de prueba
+    const testMessage = new Message({
+      userId: new Types.ObjectId(userId),
+      direction: 'out',
+      body: 'Mensaje de prueba para crear la colección',
+      provider: 'telegram',
+      externalMessageId: 'test-123',
+      from: 'test-user',
+      senderName: 'Test User',
+      status: 'sent',
+    });
+
+    await testMessage.save();
+
+    logger.info('Mensaje de prueba guardado exitosamente', { 
+      userId, 
+      messageId: testMessage._id 
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Mensaje de prueba creado exitosamente',
+      data: {
+        messageId: testMessage._id,
+        userId: userId
+      }
+    });
+
+  } catch (error: unknown) {
+    logger.error('Error creando mensaje de prueba', {
+      userId: req.user?.id || req.user?._id,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined
     });
 
     res.status(500).json({
