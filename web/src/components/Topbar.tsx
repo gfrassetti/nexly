@@ -77,7 +77,7 @@ export default function Topbar() {
     } else if (rawStatus === 'canceled') {
       planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} (Cancelado)`;
       badgeColor = sub.planType === 'pro' 
-        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30'
+        ? 'bg-accent-cream text-black border border-accent-cream/30'
         : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-muted-foreground border border-border';
@@ -85,7 +85,7 @@ export default function Topbar() {
       // Estado por defecto - mostrar el plan
       planText = sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business';
       badgeColor = sub.planType === 'pro' 
-        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
+        ? 'bg-accent-cream text-black border border-accent-cream/30' 
         : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-muted-foreground border border-border';
