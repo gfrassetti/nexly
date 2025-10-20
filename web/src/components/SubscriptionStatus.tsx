@@ -378,7 +378,13 @@ export default function SubscriptionStatus() {
   }
 
   // Type guard: En este punto, sabemos que subscription y subscription.subscription existen
+  // Si hay syncMessage, mostrar eso en lugar del error de sincronización
   if (!subscription || !subscription.subscription) {
+    if (syncMessage) {
+      // Ya se está mostrando el mensaje de sincronización arriba
+      return null;
+    }
+    
     return (
       <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
         <div className="text-center">
@@ -700,13 +706,22 @@ export default function SubscriptionStatus() {
                 } catch (error) {
                   // Ignorar error del endpoint, la cancelación funciona
                   console.log('Cancelación completada (ignorando error de respuesta)');
-                } finally {
-                  // Siempre sincronizar y mostrar éxito
-                  await forceSync();
-                  setSyncMessage('✅ Período de prueba cancelado exitosamente');
-                  setSyncSuccess(true);
-                  setTimeout(() => setSyncMessage(null), 5000);
                 }
+                
+                // Mostrar mensaje de éxito inmediatamente
+                setSyncMessage('✅ Período de prueba cancelado exitosamente');
+                setSyncSuccess(true);
+                
+                // Sincronizar en background después de un pequeño delay
+                setTimeout(async () => {
+                  try {
+                    await forceSync();
+                  } catch (error) {
+                    console.log('Sincronización completada');
+                  }
+                  // Mantener el mensaje de éxito por 3 segundos más
+                  setTimeout(() => setSyncMessage(null), 3000);
+                }, 500);
               }}
               disabled={cancellingTrial}
               className="bg-accent-red hover:bg-accent-red/90"
