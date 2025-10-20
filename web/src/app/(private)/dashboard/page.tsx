@@ -15,6 +15,7 @@ import UsageMeter from "@/components/UsageMeter";
 import LimitReachedModal from "@/components/LimitReachedModal";
 import Toast from "@/components/Toast";
 import { useConversationUsage } from "@/hooks/useConversationUsage";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -23,6 +24,9 @@ export default function DashboardPage() {
   const [showPaymentError, setShowPaymentError] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
+
+  // Obtener estado de suscripción
+  const { hasValidSubscription } = useSubscription();
 
   // Obtener estadísticas reales desde el backend
   const { stats, loading: statsLoading, error: statsError } = useStats();
@@ -166,8 +170,8 @@ export default function DashboardPage() {
         {/* Subscription Status */}
         <SubscriptionStatus />
 
-        {/* Usage Meter */}
-        <UsageMeter />
+        {/* Usage Meter - Solo mostrar si hay suscripción activa */}
+        {hasValidSubscription() && <UsageMeter />}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
