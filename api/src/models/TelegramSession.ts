@@ -26,12 +26,10 @@ const telegramSessionSchema = new Schema<TelegramSessionDoc>(
       type: Schema.Types.ObjectId, 
       ref: "User", 
       required: true,
-      unique: true // Un usuario solo puede tener una sesión activa
     },
     phoneNumber: { 
       type: String, 
       required: true,
-      unique: true // Un número de teléfono solo puede estar en una sesión
     },
     sessionString: { 
       type: String, 
@@ -71,8 +69,7 @@ const telegramSessionSchema = new Schema<TelegramSessionDoc>(
 );
 
 // Índices para optimizar consultas
-telegramSessionSchema.index({ userId: 1 });
-telegramSessionSchema.index({ phoneNumber: 1 });
+telegramSessionSchema.index({ userId: 1, phoneNumber: 1 }, { unique: true });
 telegramSessionSchema.index({ isActive: 1 });
 telegramSessionSchema.index({ authState: 1 });
 

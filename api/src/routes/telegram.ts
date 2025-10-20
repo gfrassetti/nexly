@@ -45,7 +45,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         error: 'authentication_required',
         message: 'Token de autenticación requerido'
@@ -53,7 +53,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
     }
 
     const { phoneNumber } = req.body;
-    
+
     if (!phoneNumber) {
       return res.status(400).json({
         success: false,
@@ -76,9 +76,10 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Verificar si ya existe una sesión (activa o no) para este usuario
-    let existingSession = await TelegramSession.findOne({ 
-      userId: new Types.ObjectId(userId)
+    // Verificar si ya existe una sesión (activa o no) para este usuario y número de teléfono
+    let existingSession = await TelegramSession.findOne({
+        userId: new Types.ObjectId(userId),
+        phoneNumber: phoneNumber.trim(), // Añadir phoneNumber a la consulta
     });
 
     if (existingSession) {
@@ -90,11 +91,11 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
           try {
             // Obtener información del usuario de Telegram
             const userInfo = await telegramMTProtoService.getUserInfo(userId);
-            
+
             if (userInfo) {
               const integration = await Integration.findOneAndUpdate(
-                { 
-                  userId: new Types.ObjectId(userId), 
+                {
+                  userId: new Types.ObjectId(userId),
                   provider: 'telegram',
                   externalId: userInfo.id.toString()
                 },
@@ -137,24 +138,20 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
           });
         }
       }
-      
-      // Si la sesión existe pero no está activa o no se pudo reconectar, marcar como inactiva
-      existingSession.isActive = false;
-      existingSession.authState = 'error';
-      await existingSession.save();
     }
 
-    // Inicializar cliente para nueva autenticación
+    // Si la sesión no existe, o existe pero no está activa/autenticada, continuar con el envío de código.
+    // La sesión será creada/actualizada al final del proceso.
     logger.info('Iniciando conexión con Telegram', { userId, phoneNumber });
-    
+
     let connected;
     try {
       connected = await telegramMTProtoService.connect(userId);
       logger.info('Resultado de connect()', { userId, phoneNumber, connected });
     } catch (connectError) {
-      logger.error('Error en connect() de Telegram', { 
-        userId, 
-        phoneNumber, 
+      logger.error('Error en connect() de Telegram', {
+        userId,
+        phoneNumber,
         error: connectError instanceof Error ? connectError.message : 'Error desconocido',
         stack: connectError instanceof Error ? connectError.stack : undefined
       });
@@ -164,7 +161,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
         message: connectError instanceof Error ? connectError.message : 'Error conectando con Telegram'
       });
     }
-    
+
     if (!connected) {
       logger.error('Error conectando con Telegram - connect() retornó false', { userId, phoneNumber });
       return res.status(500).json({
@@ -176,7 +173,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
 
     // Enviar código de verificación
     const result = await telegramMTProtoService.sendCode(userId, phoneNumber.trim());
-    
+
     if (!result.success) {
       logger.error('Error en sendCode', { userId, phoneNumber, error: result.error });
       return res.status(400).json({
@@ -195,7 +192,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Crear o actualizar sesión con phoneCodeHash
+    // Crear o actualizar sesión con phoneCodeHash usando findOneAndUpdate
     const sessionData = {
       userId: new Types.ObjectId(userId),
       phoneNumber: phoneNumber.trim(),
@@ -204,13 +201,13 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       isActive: false,
     };
 
-    logger.info('Guardando sesión', { userId, phoneNumber, hasExistingSession: !!existingSession });
+    logger.info('Creando/actualizando sesión de Telegram', { userId, phoneNumber, hasExistingSession: !!existingSession });
 
-    if (existingSession) {
-      await TelegramSession.findByIdAndUpdate(existingSession._id, sessionData);
-    } else {
-      await TelegramSession.create(sessionData);
-    }
+    await TelegramSession.findOneAndUpdate(
+      { userId: new Types.ObjectId(userId), phoneNumber: phoneNumber.trim() },
+      { $set: sessionData },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     logger.info('Código de verificación enviado exitosamente', { userId, phoneNumber });
 
@@ -243,7 +240,7 @@ router.post('/send-code', async (req: AuthRequest, res: Response) => {
       error: error instanceof Error ? error.message : 'Error desconocido',
       stack: error instanceof Error ? error.stack : undefined
     });
-    
+
     res.status(500).json({
       success: false,
       error: 'server_error',
@@ -260,7 +257,7 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         error: 'authentication_required',
         message: 'Token de autenticación requerido'
@@ -268,7 +265,7 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     }
 
     const { phoneNumber, code, password } = req.body;
-    
+
     if (!phoneNumber || !code) {
       return res.status(400).json({
         success: false,
@@ -313,12 +310,12 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     );
 
     if (!result.success) {
-      logger.error('Error en signIn', { 
-        userId, 
+      logger.error('Error en signIn', {
+        userId,
         error: result.error,
         requiresPassword: result.requiresPassword
       });
-      
+
       if (result.requiresPassword) {
         // Actualizar sesión para requerir contraseña
         session.authState = 'pending_password';
@@ -371,8 +368,8 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     });
 
     const integration = await Integration.findOneAndUpdate(
-      { 
-        userId: new Types.ObjectId(userId), 
+      {
+        userId: new Types.ObjectId(userId),
         provider: 'telegram',
         externalId: result.user.id.toString()
       },
@@ -403,20 +400,20 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
     // Iniciar listener de mensajes en tiempo real
     try {
       await telegramMTProtoService.startMessageListener(userId, async (message) => {
-        logger.info('Mensaje recibido en tiempo real', { 
-          userId, 
+        logger.info('Mensaje recibido en tiempo real', {
+          userId,
           messageId: message.id,
-          chatId: message.chatId 
+          chatId: message.chatId
         });
-        
+
         // Aquí podrías guardar el mensaje en la base de datos
         // o enviarlo via WebSocket al frontend
         // TODO: Implementar guardado en DB y notificación al frontend
       });
     } catch (listenerError) {
-      logger.error('Error iniciando listener de mensajes', { 
-        userId, 
-        error: listenerError instanceof Error ? listenerError.message : 'Error desconocido' 
+      logger.error('Error iniciando listener de mensajes', {
+        userId,
+        error: listenerError instanceof Error ? listenerError.message : 'Error desconocido'
       });
       // No fallar la autenticación por esto
     }
@@ -433,7 +430,7 @@ router.post('/verify-code', async (req: AuthRequest, res: Response) => {
       userId: req.user?.id || req.user?._id,
       error: error instanceof Error ? error.message : 'Error desconocido'
     });
-    
+
     res.status(500).json({
       success: false,
       error: 'server_error',
@@ -450,7 +447,7 @@ router.post('/disconnect', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         error: 'authentication_required',
         message: 'Token de autenticación requerido'
@@ -464,41 +461,41 @@ router.post('/disconnect', async (req: AuthRequest, res: Response) => {
       await telegramMTProtoService.disconnect(userId);
       logger.info('Cliente de Telegram desconectado', { userId });
     } catch (disconnectError) {
-      logger.warn('Error desconectando cliente (puede no existir)', { 
-        userId, 
-        error: disconnectError instanceof Error ? disconnectError.message : 'Error desconocido' 
+      logger.warn('Error desconectando cliente (puede no existir)', {
+        userId,
+        error: disconnectError instanceof Error ? disconnectError.message : 'Error desconocido'
       });
     }
 
     // Marcar la sesión como inactiva
     const sessionUpdated = await TelegramSession.updateOne(
       { userId: new Types.ObjectId(userId) },
-      { 
+      {
         isActive: false,
         lastActivity: new Date()
       }
     );
 
-    logger.info('Sesión de Telegram marcada como inactiva', { 
-      userId, 
-      sessionUpdated: sessionUpdated.modifiedCount 
+    logger.info('Sesión de Telegram marcada como inactiva', {
+      userId,
+      sessionUpdated: sessionUpdated.modifiedCount
     });
 
     // Marcar la integración como desconectada
     const integrationUpdated = await Integration.updateOne(
-      { 
-        userId: new Types.ObjectId(userId), 
+      {
+        userId: new Types.ObjectId(userId),
         provider: 'telegram'
       },
-      { 
+      {
         status: 'disconnected',
         'meta.isActive': false
       }
     );
 
-    logger.info('Integración de Telegram marcada como desconectada', { 
-      userId, 
-      integrationUpdated: integrationUpdated.modifiedCount 
+    logger.info('Integración de Telegram marcada como desconectada', {
+      userId,
+      integrationUpdated: integrationUpdated.modifiedCount
     });
 
     res.status(200).json({
@@ -516,7 +513,7 @@ router.post('/disconnect', async (req: AuthRequest, res: Response) => {
       error: error instanceof Error ? error.message : 'Error desconocido',
       stack: error instanceof Error ? error.stack : undefined
     });
-    
+
     res.status(500).json({
       success: false,
       error: 'server_error',
@@ -533,7 +530,7 @@ router.post('/reset', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         error: 'authentication_required',
         message: 'Token de autenticación requerido'
@@ -546,15 +543,15 @@ router.post('/reset', async (req: AuthRequest, res: Response) => {
       await telegramMTProtoService.disconnect(userId);
       logger.info('Cliente de Telegram desconectado', { userId });
     } catch (disconnectError) {
-      logger.warn('Error desconectando cliente (puede no existir)', { 
-        userId, 
-        error: disconnectError instanceof Error ? disconnectError.message : 'Error desconocido' 
+      logger.warn('Error desconectando cliente (puede no existir)', {
+        userId,
+        error: disconnectError instanceof Error ? disconnectError.message : 'Error desconocido'
       });
     }
 
     const sessionsUpdated = await TelegramSession.updateMany(
       { userId: new Types.ObjectId(userId) },
-      { 
+      {
         isActive: false,
         authState: 'error',
         phoneCodeHash: undefined,
@@ -563,26 +560,26 @@ router.post('/reset', async (req: AuthRequest, res: Response) => {
       }
     );
 
-    logger.info('Sesiones de Telegram marcadas como inactivas', { 
-      userId, 
-      sessionsUpdated: sessionsUpdated.modifiedCount 
+    logger.info('Sesiones de Telegram marcadas como inactivas', {
+      userId,
+      sessionsUpdated: sessionsUpdated.modifiedCount
     });
 
     const integrationsUpdated = await Integration.updateMany(
-      { 
-        userId: new Types.ObjectId(userId), 
+      {
+        userId: new Types.ObjectId(userId),
         provider: 'telegram'
       },
-      { 
+      {
         status: 'error',
         'meta.isActive': false,
         'meta.sessionString': undefined
       }
     );
 
-    logger.info('Integraciones de Telegram actualizadas', { 
-      userId, 
-      integrationsUpdated: integrationsUpdated.modifiedCount 
+    logger.info('Integraciones de Telegram actualizadas', {
+      userId,
+      integrationsUpdated: integrationsUpdated.modifiedCount
     });
 
     telegramMTProtoService['clients'].delete(userId);
@@ -605,7 +602,7 @@ router.post('/reset', async (req: AuthRequest, res: Response) => {
       error: error instanceof Error ? error.message : 'Error desconocido',
       stack: error instanceof Error ? error.stack : undefined
     });
-    
+
     res.status(500).json({
       success: false,
       error: 'server_error',
@@ -622,7 +619,7 @@ router.get('/chats', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         error: 'authentication_required',
         message: 'Token de autenticación requerido'
@@ -648,7 +645,7 @@ router.get('/chats', async (req: AuthRequest, res: Response) => {
 
     // Obtener chats usando el servicio de Telegram
     const result = await telegramMTProtoService.getChats(userId);
-    
+
     if (!result.success) {
       return res.status(500).json({
         success: false,
@@ -657,8 +654,8 @@ router.get('/chats', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    logger.info('Chats de Telegram obtenidos exitosamente', { 
-      userId, 
+    logger.info('Chats de Telegram obtenidos exitosamente', {
+      userId,
       chatCount: result.chats?.length || 0
     });
 
@@ -674,7 +671,7 @@ router.get('/chats', async (req: AuthRequest, res: Response) => {
       error: error instanceof Error ? error.message : 'Error desconocido',
       stack: error instanceof Error ? error.stack : undefined
     });
-    
+
     res.status(500).json({
       success: false,
       error: 'server_error',
@@ -691,7 +688,7 @@ router.get('/messages/:chatId', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         error: 'authentication_required',
         message: 'Token de autenticación requerido'
@@ -728,7 +725,7 @@ router.get('/messages/:chatId', async (req: AuthRequest, res: Response) => {
 
     // Obtener mensajes usando el servicio de Telegram
     const result = await telegramMTProtoService.getMessages(userId, parseInt(chatId), limit);
-    
+
     if (!result.success) {
       return res.status(500).json({
         success: false,
@@ -737,8 +734,8 @@ router.get('/messages/:chatId', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    logger.info('Mensajes de Telegram obtenidos exitosamente', { 
-      userId, 
+    logger.info('Mensajes de Telegram obtenidos exitosamente', {
+      userId,
       chatId,
       messageCount: result.messages?.length || 0
     });
@@ -757,7 +754,7 @@ router.get('/messages/:chatId', async (req: AuthRequest, res: Response) => {
       error: error instanceof Error ? error.message : 'Error desconocido',
       stack: error instanceof Error ? error.stack : undefined
     });
-    
+
     res.status(500).json({
       success: false,
       error: 'server_error',
@@ -774,7 +771,7 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id || req.user?._id;
     if (!userId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
         error: 'authentication_required',
         message: 'Token de autenticación requerido'
@@ -810,7 +807,7 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
 
     // Enviar mensaje usando el servicio de Telegram
     const result = await telegramMTProtoService.sendMessage(userId, parseInt(chatId), message);
-    
+
     if (!result.success) {
       return res.status(500).json({
         success: false,
@@ -819,8 +816,8 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
       });
     }
 
-    logger.info('Mensaje de Telegram enviado exitosamente', { 
-      userId, 
+    logger.info('Mensaje de Telegram enviado exitosamente', {
+      userId,
       chatId,
       messageId: result.messageId
     });
@@ -839,7 +836,7 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
       error: error instanceof Error ? error.message : 'Error desconocido',
       stack: error instanceof Error ? error.stack : undefined
     });
-    
+
     res.status(500).json({
       success: false,
       error: 'server_error',

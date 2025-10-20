@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Phone, MessageSquare, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { showToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
@@ -25,6 +25,15 @@ export default function TelegramMTProtoConnect({
   const [isLoading, setIsLoading] = useState(false);
   const [maskedPhone, setMaskedPhone] = useState('');
 
+  // Logging para debugging - monitorear cambios de step
+  useEffect(() => {
+    console.log('🔄 Estado del componente cambió:');
+    console.log('   - step:', step);
+    console.log('   - phoneNumber:', phoneNumber);
+    console.log('   - maskedPhone:', maskedPhone);
+    console.log('   - isLoading:', isLoading);
+  }, [step, phoneNumber, maskedPhone, isLoading]);
+
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -36,22 +45,42 @@ export default function TelegramMTProtoConnect({
     setIsLoading(true);
     
     try {
+      console.log('📞 Enviando código a:', phoneNumber.trim());
+      
       const response = await apiFetch('/telegram/send-code', {
         method: 'POST',
         body: JSON.stringify({ phoneNumber: phoneNumber.trim() })
       }, token || undefined);
 
+      console.log('📡 Respuesta completa de send-code:', response);
+      console.log('✅ response.success:', response.success);
+      console.log('📱 response.phoneNumber:', response.phoneNumber);
+      console.log('🔑 response.requiresCode:', response.requiresCode);
+      console.log('🔐 response.requiresPassword:', response.requiresPassword);
+
       if (response.success) {
-        setMaskedPhone(response.phoneNumber || phoneNumber);
-        setStep('code');
-        showToast.success('Código de verificación enviado');
+        // Si no requiere código, la sesión se reconectó automáticamente
+        if (response.requiresCode === false && response.requiresPassword === false) {
+          console.log('✨ Sesión reconectada automáticamente');
+          setStep('success');
+          showToast.success('Telegram conectado exitosamente (sesión existente)');
+          onConnect?.();
+        } else {
+          // Necesita código de verificación
+          console.log('🎉 Cambiando step a "code"');
+          setMaskedPhone(response.phoneNumber || phoneNumber);
+          setStep('code');
+          showToast.success('Código de verificación enviado');
+        }
       } else {
+        console.error('❌ Response no tiene success:true', response);
         throw new Error(response.message || 'Error enviando código');
       }
-    } catch (error: any) {
-      console.error('Error enviando código:', error);
-      showToast.error(error.message || 'Error enviando código de verificación');
-      onError?.(error.message);
+    } catch (error: unknown) {
+      console.error('💥 Error enviando código:', error);
+      const message = error instanceof Error ? error.message : 'Error enviando código de verificación';
+      showToast.error(message);
+      onError?.(message);
     } finally {
       setIsLoading(false);
     }
@@ -97,10 +126,11 @@ export default function TelegramMTProtoConnect({
           throw new Error(response.message || 'Error verificando código');
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error verificando código:', error);
-      showToast.error(error.message || 'Error verificando código');
-      onError?.(error.message);
+      const message = error instanceof Error ? error.message : 'Error verificando código';
+      showToast.error(message);
+      onError?.(message);
     } finally {
       setIsLoading(false);
     }
@@ -132,10 +162,11 @@ export default function TelegramMTProtoConnect({
       } else {
         throw new Error(response.message || 'Error verificando contraseña');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error verificando contraseña:', error);
-      showToast.error(error.message || 'Error verificando contraseña');
-      onError?.(error.message);
+      const message = error instanceof Error ? error.message : 'Error verificando contraseña';
+      showToast.error(message);
+      onError?.(message);
     } finally {
       setIsLoading(false);
     }
