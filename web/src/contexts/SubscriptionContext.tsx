@@ -131,28 +131,6 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
   }, [token]);
 
-  // NUEVO: Función para sincronización reactiva en tiempo real
-  const startRealtimeSync = useCallback(() => {
-    if (!token) return;
-
-    // Polling cada 3 segundos durante 30 segundos después de montar (para detectar cambios post-pago)
-    let pollCount = 0;
-    const maxPolls = 10;
-    const pollInterval = setInterval(() => {
-      pollCount++;
-      
-      console.log(`🔄 Sincronización en tiempo real (${pollCount}/${maxPolls})`);
-      fetchSubscriptionStatus();
-      
-      if (pollCount >= maxPolls) {
-        clearInterval(pollInterval);
-        console.log('✅ Sincronización en tiempo real completada');
-      }
-    }, 3000);
-
-    return () => clearInterval(pollInterval);
-  }, [token, fetchSubscriptionStatus]);
-
   useEffect(() => {
     // Limpiar estado anterior cuando cambia el token
     setSubscription(null);
@@ -161,32 +139,29 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     
     if (token) {
       fetchSubscriptionStatus(); // Una vez al montar o al cambiar token
-      
-      // NUEVO: Iniciar polling para detectar cambios de pago/cancelación
-      const cleanup = startRealtimeSync();
-      
-      return cleanup;
     } else {
       setLoading(false);
     }
-  }, [token, fetchSubscriptionStatus, startRealtimeSync]);
+  }, [token, fetchSubscriptionStatus]);
 
   // Mapeo centralizado de estados - más limpio y mantenible
-  const rawStatus = subscription?.subscription?.status;
-  
-  const status: SubscriptionStatus = {
-    trialActive: rawStatus === 'trialing',
-    active: rawStatus === 'active',
-    paused: rawStatus === 'paused',
-    cancelled: rawStatus === 'canceled',
-    inGracePeriod: rawStatus === 'past_due' || rawStatus === 'unpaid',
-    pendingPaymentMethod: subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && 
-                          !['trialing', 'active'].includes(rawStatus || '') && 
-                          !subscription?.subscription?.stripeSubscriptionId,
-    incomplete: rawStatus === 'incomplete',
-    pastDue: rawStatus === 'past_due',
-    unpaid: rawStatus === 'unpaid'
-  };
+  const status: SubscriptionStatus = useMemo(() => {
+    const rawStatus = subscription?.subscription?.status;
+    
+    return {
+      trialActive: rawStatus === 'trialing',
+      active: rawStatus === 'active',
+      paused: rawStatus === 'paused',
+      cancelled: rawStatus === 'canceled',
+      inGracePeriod: rawStatus === 'past_due' || rawStatus === 'unpaid',
+      pendingPaymentMethod: subscription?.userSubscriptionStatus === 'trial_pending_payment_method' && 
+                            !['trialing', 'active'].includes(rawStatus || '') && 
+                            !subscription?.subscription?.stripeSubscriptionId,
+      incomplete: rawStatus === 'incomplete',
+      pastDue: rawStatus === 'past_due',
+      unpaid: rawStatus === 'unpaid'
+    };
+  }, [subscription]);
 
   const hasValidSubscription = useCallback(() => {
     if (!subscription) return false;
