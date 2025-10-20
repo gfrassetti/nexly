@@ -42,35 +42,35 @@ export default function Topbar() {
     if (hasStripeSubscription) {
       planText = sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business';
       badgeColor = sub.planType === 'pro' 
-        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
+        ? 'bg-accent-cream text-black border border-accent-cream/30' 
         : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-green border border-accent-green/30';
     } else if (rawStatus === 'trialing') {
       planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} Trial`;
       badgeColor = sub.planType === 'pro' 
-        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
+        ? 'bg-accent-cream text-black border border-accent-cream/30' 
         : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-blue border border-accent-blue/30';
     } else if (rawStatus === 'active') {
       planText = sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business';
       badgeColor = sub.planType === 'pro' 
-        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
+        ? 'bg-accent-cream text-black border border-accent-cream/30' 
         : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-green border border-accent-green/30';
     } else if (rawStatus === 'paused') {
       planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} (Pausado)`;
       badgeColor = sub.planType === 'pro' 
-        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
+        ? 'bg-accent-cream text-black border border-accent-cream/30' 
         : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-accent-cream border border-accent-cream/30';
     } else if (rawStatus === 'past_due' || rawStatus === 'unpaid') {
       planText = `${sub.planType === 'crecimiento' ? 'Crecimiento' : sub.planType === 'pro' ? 'Pro' : 'Business'} (Gracia)`;
       badgeColor = sub.planType === 'pro' 
-        ? 'bg-accent-dark text-accent-cream border border-accent-dark/30' 
+        ? 'bg-accent-cream text-black border border-accent-cream/30' 
         : sub.planType === 'business'
         ? 'bg-purple-600 text-white border border-purple-600/30'
         : 'text-warning border border-warning/30';
