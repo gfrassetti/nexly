@@ -10,12 +10,23 @@ import Composer from "@/components/Composer";
 import { sendMessage } from "@/hooks/sendMessage";
 import { CHANNELS } from "@/lib/constants";
 
+// Tipo para los datos de threads
+interface ThreadsData {
+  items: Array<{
+    id: string;
+    title: string;
+    last: string;
+    at: string;
+    [key: string]: unknown;
+  }>;
+}
+
 export default function InboxPage() {
   const { token } = useAuth();
   const [channel, setChannel] = useState<(typeof CHANNELS)[number]>("whatsapp");
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const { data: threads } = useSWR(
+  const { data: threads } = useSWR<ThreadsData>(
     token ? ["/inbox", channel] : null,
     ([p, c]) => apiFetch(`${p}?channel=${c}`, {}, token!)
   );

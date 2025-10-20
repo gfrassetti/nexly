@@ -1,11 +1,13 @@
 // web/src/hooks/useStripePayment.ts
 import { useState } from 'react';
 import { useAuth } from './useAuth';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import api from '@/lib/api';
 
 export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const { token } = useAuth();
+  const { forceSync } = useSubscription();
 
   const createPaymentLink = async (planType: 'crecimiento' | 'pro' | 'business') => {
     if (!token) {
@@ -27,6 +29,10 @@ export const useStripePayment = () => {
       }, token);
 
       if (response.success && response.paymentUrl) {
+        // NUEVO: Cuando se regrese de Stripe, se sincronizará automáticamente
+        // Guardar timestamp para referencia
+        localStorage.setItem('paymentInitiatedAt', Date.now().toString());
+        
         // Redirigir a Stripe Checkout
         window.location.href = response.paymentUrl;
         return true;

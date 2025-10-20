@@ -62,6 +62,7 @@ interface SubscriptionContextType {
   refetch: () => Promise<void>;
   canUseFeature: (feature: string) => boolean;
   getMaxIntegrations: () => number;
+  hasValidSubscription: () => boolean;
   pauseSubscription: () => Promise<void>;
   reactivateSubscription: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
@@ -69,6 +70,7 @@ interface SubscriptionContextType {
   startFreeTrial: () => Promise<void>;
   canUseFreeTrial: () => boolean;
   isFreeTrialActive: () => boolean;
+  forceSync: () => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -98,6 +100,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           'Authorization': `Bearer ${token}`,
         },
       });
+      console.log('🔄 Response:', response);
       if (!response.ok) {
         if (response.status === 429) {
           console.warn('Rate limit alcanzado, asumiendo sin suscripción');
@@ -114,8 +117,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
       const data = await response.json();
       setSubscription(data);
-    } catch (err: any) {
-      console.warn('Error al cargar suscripción, asumiendo sin suscripción:', err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      console.warn('Error al cargar suscripción, asumiendo sin suscripción:', errorMessage);
       setSubscription({
         hasSubscription: false,
         status: 'none',
@@ -127,6 +131,28 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
   }, [token]);
 
+  // NUEVO: Función para sincronización reactiva en tiempo real
+  const startRealtimeSync = useCallback(() => {
+    if (!token) return;
+
+    // Polling cada 3 segundos durante 30 segundos después de montar (para detectar cambios post-pago)
+    let pollCount = 0;
+    const maxPolls = 10;
+    const pollInterval = setInterval(() => {
+      pollCount++;
+      
+      console.log(`🔄 Sincronización en tiempo real (${pollCount}/${maxPolls})`);
+      fetchSubscriptionStatus();
+      
+      if (pollCount >= maxPolls) {
+        clearInterval(pollInterval);
+        console.log('✅ Sincronización en tiempo real completada');
+      }
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [token, fetchSubscriptionStatus]);
+
   useEffect(() => {
     // Limpiar estado anterior cuando cambia el token
     setSubscription(null);
@@ -135,10 +161,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     
     if (token) {
       fetchSubscriptionStatus(); // Una vez al montar o al cambiar token
+      
+      // NUEVO: Iniciar polling para detectar cambios de pago/cancelación
+      const cleanup = startRealtimeSync();
+      
+      return cleanup;
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, fetchSubscriptionStatus, startRealtimeSync]);
 
   // Mapeo centralizado de estados - más limpio y mantenible
   const rawStatus = subscription?.subscription?.status;
@@ -157,34 +188,37 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     unpaid: rawStatus === 'unpaid'
   };
 
+  const hasValidSubscription = useCallback(() => {
+    if (!subscription) return false;
+
+    // La fuente de verdad es el estado del usuario en MongoDB
+    const userStatus = subscription.userSubscriptionStatus;
+
+    // Una suscripción es VÁLIDA si el usuario tiene estado 'active_paid' o 'active_trial'
+    return userStatus === 'active_paid' || userStatus === 'active_trial';
+  }, [subscription]);
+
   const canUseFeature = useCallback((feature: string): boolean => {
-    if (status.pendingPaymentMethod || !subscription?.hasSubscription || !subscription.subscription) {
+    // La fuente de verdad es el estado del usuario en MongoDB
+    if (!hasValidSubscription() || !subscription?.subscription) {
       return false;
     }
 
     const sub = subscription.subscription;
-    // Durante el trial, acceso completo
-    if (status.trialActive) {
-      return true;
-    }
 
-    // Durante suscripción activa, verificar límites del plan
-    if (status.active) {
-      const planFeatures = {
-        crecimiento: ['whatsapp', 'instagram', 'telegram'],
-        pro: ['whatsapp', 'instagram', 'messenger', 'telegram'],
-        business: ['whatsapp', 'instagram', 'messenger', 'telegram', 'tiktok', 'twitter']
-      };
-      
-      return planFeatures[sub.planType]?.includes(feature) || false;
-    }
+    // Verificar límites del plan basado en el planType del usuario
+    const planFeatures = {
+      crecimiento: ['whatsapp', 'instagram', 'telegram'],
+      pro: ['whatsapp', 'instagram', 'messenger', 'telegram'],
+      business: ['whatsapp', 'instagram', 'messenger', 'telegram', 'tiktok', 'twitter']
+    };
 
-    return false;
-  }, [status, subscription]);
+    return planFeatures[sub.planType]?.includes(feature) || false;
+  }, [hasValidSubscription, subscription]);
 
   const getMaxIntegrations = useCallback((): number => {
-    if (status.pendingPaymentMethod || !subscription?.subscription) return 0;
-    
+    if (!hasValidSubscription() || !subscription?.subscription) return 0;
+
     switch (subscription.subscription.planType) {
       case 'crecimiento':
         return 3; // WhatsApp, Instagram, Telegram
@@ -195,7 +229,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       default:
         return 0;
     }
-  }, [status, subscription]);
+  }, [hasValidSubscription, subscription]);
 
 
   const pauseSubscription = useCallback(async (): Promise<void> => {
@@ -383,6 +417,33 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     return subscription?.freeTrial?.isActive ?? false;
   }, [subscription]);
 
+  const forceSync = useCallback(async (): Promise<void> => {
+    if (!token) {
+      throw new Error('Usuario no autenticado');
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/subscriptions/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setSubscription(data);
+      setError(null);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      console.warn('Error al forzar sincronización de suscripción:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
   const value: SubscriptionContextType = useMemo(() => ({
     subscription,
     loading,
@@ -391,6 +452,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     refetch: fetchSubscriptionStatus,
     canUseFeature,
     getMaxIntegrations,
+    hasValidSubscription,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription,
@@ -398,6 +460,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     startFreeTrial,
     canUseFreeTrial,
     isFreeTrialActive,
+    forceSync,
   }), [
     subscription,
     loading,
@@ -406,6 +469,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     fetchSubscriptionStatus,
     canUseFeature,
     getMaxIntegrations,
+    hasValidSubscription,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription,
@@ -413,6 +477,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     startFreeTrial,
     canUseFreeTrial,
     isFreeTrialActive,
+    forceSync,
   ]);
 
   return (

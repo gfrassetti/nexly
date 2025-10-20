@@ -2,6 +2,8 @@
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useState, useEffect } from "react";
 
 export default function SubscriptionStatus() {
   const {
@@ -11,6 +13,7 @@ export default function SubscriptionStatus() {
     refetch,
     getMaxIntegrations,
     status,
+    hasValidSubscription,
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription,
@@ -23,12 +26,70 @@ export default function SubscriptionStatus() {
     loading: stripeLoading,
   } = useStripePayment();
 
+  // NUEVO: Sincronización en tiempo real
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+  const { isPolling } = useRealtimeSubscription({
+    maxAttempts: 15,
+    pollInterval: 2000,
+    onSubscriptionChange: (newStatus) => {
+      setSyncMessage(`✅ Suscripción actualizada: ${newStatus}`);
+      setSyncSuccess(true);
+      setTimeout(() => setSyncMessage(null), 5000);
+    },
+    onSyncComplete: () => {
+      setSyncMessage('✅ Sincronización completada');
+      setSyncSuccess(true);
+      setTimeout(() => setSyncMessage(null), 3000);
+    }
+  });
+
+  // Mostrar mensaje de sincronización si está en progreso
+  useEffect(() => {
+    if (isPolling && !syncMessage) {
+      setSyncMessage('🔄 Sincronizando cambios de suscripción...');
+    }
+  }, [isPolling, syncMessage]);
+
+  console.log('🔄 Subscription:', { subscription });
+  console.log('🔄 Status:', { status });
+
   if (loading) {
     return (
       <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
         <div className="animate-pulse">
           <div className="h-4 bg-neutral-700 rounded w-1/3 mb-2"></div>
           <div className="h-3 bg-neutral-700 rounded w-2/3"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // NUEVO: Mostrar estado de sincronización en tiempo real
+  if (syncMessage) {
+    return (
+      <div className={`rounded-lg p-4 border ${
+        syncSuccess
+          ? 'bg-accent-green/10 border-accent-green/20'
+          : 'bg-accent-blue/10 border-accent-blue/20'
+      }`}>
+        <div className="flex items-center gap-3">
+          {isPolling ? (
+            <div className="animate-spin">
+              <svg className="w-5 h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+          ) : (
+            <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          <p className={`text-sm font-medium ${
+            syncSuccess ? 'text-accent-green' : 'text-accent-blue'
+          }`}>
+            {syncMessage}
+          </p>
         </div>
       </div>
     );
@@ -272,7 +333,8 @@ export default function SubscriptionStatus() {
     );
   }
 
-  if (!subscription?.hasSubscription) {
+  // Usar la nueva lógica basada en el estado del usuario en MongoDB
+  if (!hasValidSubscription()) {
     return (
       <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
         <div className="text-center">
@@ -293,7 +355,24 @@ export default function SubscriptionStatus() {
     );
   }
 
-  const sub = subscription.subscription!;
+  // Type guard: En este punto, sabemos que subscription y subscription.subscription existen
+  if (!subscription || !subscription.subscription) {
+    return (
+      <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-accent-cream mb-2">Error de sincronización</h3>
+          <button
+            onClick={refetch}
+            className="bg-accent-blue/20 hover:bg-accent-blue/30 text-accent-blue border border-accent-blue/30 px-4 py-2 rounded-lg transition-colors text-sm"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const sub = subscription.subscription;
   const isExpired = sub.isCancelled && !sub.isInGracePeriod;
   
   // Cálculo robusto de trial basado en trialEndDate (no en isTrialActive del backend)
@@ -310,34 +389,55 @@ export default function SubscriptionStatus() {
     UNPAID: 'unpaid'
   } as const;
 
-  // Configuración de estados con estilos y textos
+  // Configuración de estados basada en el estado del usuario en MongoDB
   const getSubscriptionConfig = () => {
-    if (sub.isActive) {
-      return {
-        text: 'Activo',
-        className: 'text-accent-green border border-accent-green/30',
-        message: 'Suscripción activa y renovando automáticamente'
-      };
+    const userStatus = subscription.userSubscriptionStatus;
+
+    // Estado activo pagado
+    if (userStatus === 'active_paid') {
+      if (sub.isActive) {
+        return {
+          text: 'Activo',
+          className: 'text-accent-green border border-accent-green/30',
+          message: 'Suscripción activa y renovando automáticamente'
+        };
+      } else if (sub.isPaused) {
+        return {
+          text: 'Pausada',
+          className: 'text-accent-cream border border-accent-cream/30',
+          message: 'Suscripción pausada. Puedes reactivarla cuando quieras'
+        };
+      }
     }
-    
-    if (sub.isPaused) {
+
+    // Estado de prueba activo
+    if (userStatus === 'active_trial') {
+      if (sub.isTrialActive) {
+        return {
+          text: 'En Prueba',
+          className: 'text-accent-blue border border-accent-blue/30',
+          message: 'Período de prueba activo'
+        };
+      } else {
+        return {
+          text: 'Prueba Expirada',
+          className: 'text-warning border border-warning/30',
+          message: 'Período de prueba terminado. Se requiere pago para continuar'
+        };
+      }
+    }
+
+    // Estados especiales
+    if (userStatus === 'trial_pending_payment_method') {
       return {
-        text: 'Pausada',
-        className: 'text-accent-cream border border-accent-cream/30',
-        message: 'Suscripción pausada. Puedes reactivarla cuando quieras'
+        text: 'Pago Pendiente',
+        className: 'text-warning border border-warning/30',
+        message: 'Tu cuenta está registrada pero necesitas completar el método de pago'
       };
     }
 
+    // Estados de error o desconocidos
     const statusConfig = {
-      [SUBSCRIPTION_STATUS.TRIALING]: {
-        text: sub.isTrialActive ? 'En Prueba' : 'Prueba Expirada',
-        className: sub.isTrialActive 
-          ? 'text-accent-blue border border-accent-blue/30'
-          : 'text-warning border border-warning/30',
-        message: sub.isTrialActive 
-          ? 'Período de prueba activo'
-          : 'Período de prueba terminado. Se requiere pago para continuar'
-      },
       [SUBSCRIPTION_STATUS.INCOMPLETE]: {
         text: 'Incompleto',
         className: 'text-warning border border-warning/30',
@@ -362,24 +462,30 @@ export default function SubscriptionStatus() {
 
     return statusConfig[sub.status as keyof typeof statusConfig] || {
       text: `Desconocido (${sub.status})`,
-      className: 'text-muted-foreground boimage.pngrder border-border',
+      className: 'text-muted-foreground border border-border',
       message: null
     };
   };
 
   const subscriptionConfig = getSubscriptionConfig();
-  /* reverted */
+  // Determinar colores basados en el estado del usuario en MongoDB
   return (
     <div
       className={`rounded-lg p-6 border ${
-        isExpired
-          ? "bg-nexly-light-blue/20 border-nexly-light-blue/50"
-          : sub.isPaused
+        subscription.userSubscriptionStatus === 'active_paid' && sub.isActive
+          ? "bg-accent-green/10 border-accent-green/20"
+          : subscription.userSubscriptionStatus === 'active_paid' && sub.isPaused
           ? "bg-accent-cream/10 border-accent-cream/20"
+          : subscription.userSubscriptionStatus === 'active_trial' && sub.isTrialActive
+          ? "bg-accent-blue/10 border-accent-blue/20"
+          : subscription.userSubscriptionStatus === 'active_trial' && !sub.isTrialActive
+          ? "bg-warning/10 border-warning/20"
+          : subscription.userSubscriptionStatus === 'trial_pending_payment_method'
+          ? "bg-warning/10 border-warning/20"
           : sub.isInGracePeriod
           ? "bg-warning/10 border-warning/20"
-          : sub.isActive
-          ? "bg-accent-green/10 border-accent-green/20"
+          : isExpired
+          ? "bg-nexly-light-blue/20 border-nexly-light-blue/50"
           : "bg-muted border-border"
       }`}
     >
@@ -401,9 +507,11 @@ export default function SubscriptionStatus() {
 
           {subscriptionConfig.message && (
             <p className={`text-sm ${
-              sub.isActive ? 'text-accent-green' :
-              sub.isPaused ? 'text-accent-cream' :
-              sub.status === 'trialing' ? 'text-accent-blue' :
+              subscription.userSubscriptionStatus === 'active_paid' && sub.isActive ? 'text-accent-green' :
+              subscription.userSubscriptionStatus === 'active_paid' && sub.isPaused ? 'text-accent-cream' :
+              subscription.userSubscriptionStatus === 'active_trial' && sub.isTrialActive ? 'text-accent-blue' :
+              subscription.userSubscriptionStatus === 'active_trial' && !sub.isTrialActive ? 'text-warning' :
+              subscription.userSubscriptionStatus === 'trial_pending_payment_method' ? 'text-warning' :
               'text-neutral-300'
             }`}>
               {subscriptionConfig.message}
@@ -444,15 +552,15 @@ export default function SubscriptionStatus() {
             </button>
           )}
 
-          {/* Botón para completar pago cuando trial expiró pero status es trialing */}
-          {sub.status === 'trialing' && !sub.isTrialActive && sub.daysRemaining === 0 && (
+          {/* Botón para completar pago cuando trial expiró pero status es active_trial */}
+          {subscription.userSubscriptionStatus === 'active_trial' && !sub.isTrialActive && sub.daysRemaining === 0 && (
             <button
               onClick={() => {
                 // Usar el planType de la suscripción actual, o el selectedPlan del localStorage como fallback
                 const planFromSubscription = sub.planType;
                 const planFromStorage = localStorage.getItem("selectedPlan");
                 const selectedPlan = planFromSubscription || planFromStorage || "crecimiento";
-                
+
                 createStripePaymentLink(selectedPlan as "crecimiento" | "pro" | "business");
               }}
               className="bg-warning/20 hover:bg-warning/30 text-warning border border-warning/30 px-4 py-2 rounded-lg transition-colors text-sm"
@@ -462,7 +570,7 @@ export default function SubscriptionStatus() {
           )}
 
           {/* Botón para reactivar suscripción pausada - Solo para usuarios pagos (no trial) */}
-          {status.paused && !isTrialActiveNow && (
+          {subscription.userSubscriptionStatus === 'active_paid' && sub.isPaused && (
             <button
               onClick={reactivateSubscription}
               className="bg-accent-green/20 hover:bg-accent-green/30 text-accent-green border border-accent-green/30 px-4 py-2 rounded-lg transition-colors text-sm"
@@ -472,7 +580,7 @@ export default function SubscriptionStatus() {
           )}
 
           {/* Botón para pausar suscripción activa - Solo para usuarios pagos (no trial) */}
-          {status.active && !isTrialActiveNow && (
+          {subscription.userSubscriptionStatus === 'active_paid' && sub.isActive && !isTrialActiveNow && (
             <button
               onClick={pauseSubscription}
               className="bg-accent-cream/20 hover:bg-accent-cream/30 text-accent-cream border border-accent-cream/30 px-4 py-2 rounded-lg transition-colors text-sm"
@@ -482,9 +590,23 @@ export default function SubscriptionStatus() {
           )}
 
           {/* Botón para cancelar - Solo para usuarios pagos (no trial) */}
-          {(status.active || status.paused) && !isTrialActiveNow && (
+          {subscription.userSubscriptionStatus === 'active_paid' && (sub.isActive || sub.isPaused) && (
             <button
-              onClick={cancelSubscription}
+              onClick={async () => {
+                if (confirm('¿Estás seguro de que deseas cancelar tu suscripción? Tendrás 7 días de acceso restante.')) {
+                  try {
+                    await cancelSubscription();
+                    setSyncMessage('✅ Suscripción cancelada. Tienes 7 días de acceso restante.');
+                    setSyncSuccess(true);
+                    setTimeout(() => setSyncMessage(null), 5000);
+                  } catch (error) {
+                    console.error('Error al cancelar:', error);
+                    setSyncMessage('❌ Error al cancelar la suscripción');
+                    setSyncSuccess(false);
+                    setTimeout(() => setSyncMessage(null), 5000);
+                  }
+                }
+              }}
               className="bg-nexly-light-blue hover:bg-nexly-light-blue/80 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
             >
               Cancelar
@@ -492,7 +614,7 @@ export default function SubscriptionStatus() {
           )}
 
           {/* Botón para cambiar plan - Solo para usuarios pagos (no trial) */}
-          {status.active && !isTrialActiveNow && (
+          {subscription.userSubscriptionStatus === 'active_paid' && sub.isActive && (
             <button
               onClick={() => window.location.href = '/pricing'}
               className="bg-neutral-600 hover:bg-neutral-700 text-accent-cream px-4 py-2 rounded-lg transition-colors text-sm"
@@ -501,8 +623,8 @@ export default function SubscriptionStatus() {
             </button>
           )}
 
-          {/* Botón para cancelar período de prueba - Solo para usuarios en trial */}
-          {isTrialActiveNow && (
+          {/* Botón para cancelar período de prueba - Solo para usuarios en trial activo */}
+          {subscription.userSubscriptionStatus === 'active_trial' && isTrialActiveNow && (
             <button
               onClick={async () => {
                 try {

@@ -16,7 +16,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["node"],
+    "types": ["node", "next/navigation"],
     "incremental": true,
     "plugins": [{ "name": "next" }]
   },
