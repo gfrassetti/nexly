@@ -3,7 +3,20 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { usePaymentLink } from "@/hooks/usePaymentLink";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useStripeOperations } from "@/hooks/useStripeOperations";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function SubscriptionStatus() {
   const {
@@ -17,6 +30,7 @@ export default function SubscriptionStatus() {
     pauseSubscription,
     reactivateSubscription,
     cancelSubscription,
+    forceSync,
   } = useSubscription();
 
   const { createPaymentLink } = usePaymentLink();
@@ -29,6 +43,14 @@ export default function SubscriptionStatus() {
   // NUEVO: Sincronización en tiempo real
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [syncSuccess, setSyncSuccess] = useState(false);
+  
+  // Hook de operaciones de Stripe con Alert Dialog
+  const {
+    loading: cancellingTrial,
+    dialogOpen,
+    setDialogOpen,
+    cancelTrial,
+  } = useStripeOperations();
   const { isPolling } = useRealtimeSubscription({
     maxAttempts: 15,
     pollInterval: 2000,
@@ -625,20 +647,16 @@ export default function SubscriptionStatus() {
 
           {/* Botón para cancelar período de prueba - Solo para usuarios en trial activo */}
           {subscription.userSubscriptionStatus === 'active_trial' && isTrialActiveNow && (
-            <button
-              onClick={async () => {
-                try {
-                  await cancelSubscription();
-                  // Refrescar el estado después de cancelar
-                  await refetch();
-                } catch (error) {
-                  console.error('Error cancelando período de prueba:', error);
-                }
-              }}
-              className="bg-accent-red/20 hover:bg-accent-red/30 text-accent-red border border-accent-red/30 px-4 py-2 rounded-lg transition-colors text-sm"
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setDialogOpen(true)}
+              disabled={cancellingTrial}
+              className="bg-accent-red/20 hover:bg-accent-red/30 text-accent-red border border-accent-red/30"
             >
-              Cancelar Período de Prueba
-            </button>
+              {cancellingTrial && <Spinner size="sm" />}
+              {cancellingTrial ? 'Cancelando...' : 'Cancelar Período de Prueba'}
+            </Button>
           )}
         </div>
       </div>
@@ -662,6 +680,42 @@ export default function SubscriptionStatus() {
           </div>
         </div>
       )}
+
+      {/* Alert Dialog para confirmar cancelación */}
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción cancelará tu período de prueba. Perderás acceso inmediato a todas las funciones premium.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancellingTrial}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await cancelTrial();
+                  await forceSync();
+                  setSyncMessage('✅ Período de prueba cancelado exitosamente');
+                  setSyncSuccess(true);
+                  setTimeout(() => setSyncMessage(null), 5000);
+                } catch (error) {
+                  console.error('Error:', error);
+                  setSyncMessage('❌ Error al cancelar el período de prueba');
+                  setSyncSuccess(false);
+                  setTimeout(() => setSyncMessage(null), 5000);
+                }
+              }}
+              disabled={cancellingTrial}
+              className="bg-accent-red hover:bg-accent-red/90"
+            >
+              {cancellingTrial && <Spinner size="sm" className="mr-2" />}
+              Sí, cancelar período de prueba
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

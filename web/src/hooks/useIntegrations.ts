@@ -11,10 +11,10 @@ interface ConnectedIntegration {
 
 interface UseIntegrationsReturn {
   integrations: readonly Integration[];
-  isIntegrationAvailable: (integrationName: string) => boolean;
+  isIntegrationAvailable: (integrationName: string, connectedIntegrations?: ConnectedIntegration[]) => boolean;
   isIntegrationConnected: (integrationName: string) => boolean;
   getButtonText: (integrationName: string, connectedIntegrations?: ConnectedIntegration[]) => string;
-  getButtonStyle: (integrationName: string) => string;
+  getButtonStyle: (integrationName: string, connectedIntegrations?: ConnectedIntegration[]) => string;
   handleIntegrationClick: (integrationName: string) => void;
   handleDisconnect: (integrationName: string, integrationId: string) => Promise<void>;
 }
@@ -22,39 +22,38 @@ interface UseIntegrationsReturn {
 export function useIntegrations(): UseIntegrationsReturn {
   const { getMaxIntegrations, status } = useSubscription();
 
-  const isIntegrationAvailable = (integrationName: string): boolean => {
+  const isIntegrationAvailable = (
+    integrationName: string, 
+    connectedIntegrations?: ConnectedIntegration[]
+  ): boolean => {
     // Si está pendiente de método de pago, no puede usar integraciones
     if (status.pendingPaymentMethod) return false;
     
     const maxIntegrations = getMaxIntegrations();
     
-    // WhatsApp siempre está disponible (primera integración)
-    if (integrationName === 'whatsapp') return true;
+    // Contar integraciones actualmente conectadas
+    const connectedCount = connectedIntegrations?.filter(
+      int => int.status === 'linked' || int.status === 'active'
+    ).length || 0;
     
+    // Si esta integración ya está conectada, está "disponible" (para poder desconectar)
+    const isThisConnected = connectedIntegrations?.some(
+      int => int.provider === integrationName && (int.status === 'linked' || int.status === 'active')
+    );
     
-    // Instagram está disponible en trial y planes activos
-    if (integrationName === 'instagram') {
-      return status.trialActive || status.active || maxIntegrations >= 999;
-    }
+    if (isThisConnected) return true;
     
-    // Telegram está disponible en trial y planes activos
-    if (integrationName === 'telegram') {
-      return status.trialActive || status.active || maxIntegrations >= 999;
-    }
+    // Si ya alcanzó el límite de integraciones, no puede conectar más
+    if (connectedCount >= maxIntegrations) return false;
     
-    // Durante trial activo, todo disponible
+    // Durante trial activo, todo disponible (hasta el límite)
     if (status.trialActive) return true;
     
-    // Si está activo (no trial), también todo disponible
+    // Si está activo (no trial), también todo disponible (hasta el límite)
     if (status.active) return true;
     
-    // Para premium, todo disponible
-    if (maxIntegrations >= 999) return true;
-    
-    // Para plan básico (maxIntegrations = 2), solo permitir WhatsApp + 1 más
-    // Nota: En una implementación real, aquí deberías contar las integraciones ya conectadas
-    // Por simplicidad, asumimos que el usuario puede conectar hasta el límite
-    return maxIntegrations > 1; // Si tiene más de 1 integración permitida
+    // Sin suscripción activa, no puede conectar
+    return false;
   };
 
   const isIntegrationConnected = (integrationName: string): boolean => {
@@ -84,9 +83,9 @@ export function useIntegrations(): UseIntegrationsReturn {
     return 'Upgrade para habilitar';
   };
 
-  const getButtonStyle = (integrationName: string): string => {
+  const getButtonStyle = (integrationName: string, connectedIntegrations?: ConnectedIntegration[]): string => {
     if (integrationName === 'whatsapp') return 'w-full bg-nexly-teal text-accent-cream px-4 py-2 rounded hover:bg-nexly-green transition-colors duration-200';
-    if (isIntegrationAvailable(integrationName)) return 'w-full bg-nexly-azul text-accent-cream px-4 py-2 rounded hover:bg-nexly-light-blue transition-colors duration-200';
+    if (isIntegrationAvailable(integrationName, connectedIntegrations)) return 'w-full bg-nexly-azul text-accent-cream px-4 py-2 rounded hover:bg-nexly-light-blue transition-colors duration-200';
     return 'w-full bg-neutral-600 text-neutral-400 px-4 py-2 rounded cursor-not-allowed transition-colors duration-200';
   };
 

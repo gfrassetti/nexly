@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { useAuth } from "./useAuth";
+import { toast } from "sonner";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export function useStripeOperations() {
   const { user } = useAuth();
+  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
 
   const handleOpenPortal = async () => {
     if (!user) {
@@ -39,15 +45,22 @@ export function useStripeOperations() {
     }
   };
 
-  const cancelSubscription = async (subscriptionId: string) => {
+  const cancelSubscription = async (subscriptionId?: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/stripe/cancel-subscription", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscriptionId }),
+      if (!token) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      const res = await fetch(`${API_URL}/stripe/cancel`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: subscriptionId ? JSON.stringify({ subscriptionId }) : undefined,
       });
 
       if (!res.ok) {
@@ -56,14 +69,41 @@ export function useStripeOperations() {
       }
 
       const data = await res.json();
+      
+      toast.success('Suscripción cancelada', {
+        description: 'Tu suscripción ha sido cancelada exitosamente'
+      });
+      
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error al cancelar la suscripción";
       setError(errorMessage);
+      
+      toast.error('Error al cancelar', {
+        description: errorMessage
+      });
+      
       console.error("Error al cancelar suscripción:", err);
       throw err;
     } finally {
       setLoading(false);
+      setDialogOpen(false);
+    }
+  };
+
+  const cancelTrial = async () => {
+    return cancelSubscription();
+  };
+
+  const confirmCancellation = (action: () => Promise<void>) => {
+    setPendingAction(() => action);
+    setDialogOpen(true);
+  };
+
+  const executeConfirmedAction = async () => {
+    if (pendingAction) {
+      await pendingAction();
+      setPendingAction(null);
     }
   };
 
@@ -126,8 +166,13 @@ export function useStripeOperations() {
   return {
     loading,
     error,
+    dialogOpen,
+    setDialogOpen,
     handleOpenPortal,
     cancelSubscription,
+    cancelTrial,
+    confirmCancellation,
+    executeConfirmedAction,
     pauseSubscription,
     resumeSubscription,
     clearError: () => setError(null)

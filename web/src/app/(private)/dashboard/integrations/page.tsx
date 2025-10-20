@@ -17,7 +17,7 @@ function IntegrationsContent() {
   const searchParams = useSearchParams();
   const { subscription, getMaxIntegrations, status } = useSubscription();
   const { createPaymentLink } = usePaymentLink();
-  const { integrations, isIntegrationAvailable, getButtonText, getButtonStyle, handleIntegrationClick, handleDisconnect } = useIntegrations();
+  const { integrations, isIntegrationAvailable, getButtonText, handleIntegrationClick, handleDisconnect } = useIntegrations();
 
   // Función mejorada para manejar clics en integraciones
   const handleIntegrationClickWithLoading = async (integrationId: string) => {
@@ -173,7 +173,7 @@ function IntegrationsContent() {
       });
       setError(errorMessage);
     }
-  }, [searchParams, showSuccess, showError, refreshIntegrations]);
+  }, [searchParams, showSuccess, showError, refreshIntegrations, refreshAll]);
 
 
   return (
@@ -285,7 +285,7 @@ function IntegrationsContent() {
       )}
 
       {/* Connected Integrations */}
-      {connectedIntegrations && connectedIntegrations.filter((integration: any) => 
+      {connectedIntegrations && connectedIntegrations.filter((integration: { provider: string; status: string; _id: string; name?: string }) => 
         integration.status === 'linked' || integration.status === 'active'
       ).length > 0 && (
         <div className="mb-8">
@@ -293,8 +293,8 @@ function IntegrationsContent() {
           <div className="integrations-status-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {console.log(connectedIntegrations)}
             {connectedIntegrations
-              .filter((integration: any) => integration.status === 'linked' || integration.status === 'active')
-              .map((integration: any) => (
+              .filter((integration: { provider: string; status: string; _id: string; name?: string }) => integration.status === 'linked' || integration.status === 'active')
+              .map((integration: { provider: string; status: string; _id: string; name?: string }) => (
               <div key={integration._id} className="bg-muted/50 border border-border rounded-lg p-4 hover:bg-muted/80 transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
@@ -380,23 +380,29 @@ function IntegrationsContent() {
             {(() => {
               // 1. Encontrar si esta integración está conectada
               const connectedIntegration = connectedIntegrations?.find(
-                (int: any) => int.provider === integration.id && (int.status === 'linked' || int.status === 'active')
+                (int: { provider: string; status: string; _id: string }) => int.provider === integration.id && (int.status === 'linked' || int.status === 'active')
               );
 
-              // 2. Obtener el texto del botón basado en el estado
+              // 2. Verificar disponibilidad pasando las integraciones conectadas
+              const isAvailable = isIntegrationAvailable(integration.id, connectedIntegrations);
+              
+              // 3. Obtener el texto del botón basado en el estado
               const buttonText = getButtonText(integration.id, connectedIntegrations);
               
-              // 3. Determinar si está conectado
+              // 4. Determinar si está conectado
               const isConnected = buttonText === 'Desconectar';
               
-              // 4. Definir el manejo de clics
+              // 5. Definir el manejo de clics
               const handleClick = () => {
                 if (isConnected && connectedIntegration) {
                   // Si está conectado, llama a Desconectar
                   handleDisconnectWithLoading(integration.id, connectedIntegration._id);
-                } else {
-                  // Si no está conectado, llama a Conectar
+                } else if (isAvailable) {
+                  // Si está disponible y no conectado, llama a Conectar
                   handleIntegrationClickWithLoading(integration.id);
+                } else {
+                  // Si no está disponible, redirigir a pricing
+                  window.location.href = '/pricing';
                 }
               };
 
@@ -417,7 +423,7 @@ function IntegrationsContent() {
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
                   } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   onClick={handleClick}
-                  disabled={(!isIntegrationAvailable(integration.id) && !isConnected) || isLoading}
+                  disabled={(!isAvailable && !isConnected) || isLoading}
                 >
                   {isLoading && (
                     <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
