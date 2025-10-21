@@ -22,6 +22,21 @@ interface TelegramMessage {
   isOutgoing: boolean;
 }
 
+interface TelegramChatsResponse {
+  success: boolean;
+  chats?: TelegramChat[];
+}
+
+interface TelegramMessagesResponse {
+  success: boolean;
+  messages?: TelegramMessage[];
+}
+
+interface TelegramDisconnectResponse {
+  success: boolean;
+  message?: string;
+}
+
 interface TelegramMTProtoStatusProps {
   integration: {
     _id: string;
@@ -51,7 +66,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
   const loadChats = async () => {
     setIsLoadingChats(true);
     try {
-      const response = await apiFetch('/telegram/chats', {}, token || undefined);
+      const response = await apiFetch('/telegram/chats', {}, token || undefined) as TelegramChatsResponse;
       if (response.success) {
         setChats(response.chats || []);
       } else {
@@ -68,7 +83,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
   const loadMessages = async (chatId: number) => {
     setIsLoadingMessages(true);
     try {
-      const response = await apiFetch(`/telegram/messages/${chatId}?limit=20`, {}, token || undefined);
+      const response = await apiFetch(`/telegram/messages/${chatId}?limit=20`, {}, token || undefined) as TelegramMessagesResponse;
       if (response.success) {
         setMessages(response.messages || []);
       } else {
@@ -91,7 +106,7 @@ export default function TelegramMTProtoStatus({ integration, onDisconnect }: Tel
     try {
       const response = await apiFetch('/telegram/disconnect', {
         method: 'DELETE'
-      }, token || undefined);
+      }, token || undefined) as TelegramDisconnectResponse;
       
       if (response.success) {
         showToast.success('Telegram desconectado exitosamente');

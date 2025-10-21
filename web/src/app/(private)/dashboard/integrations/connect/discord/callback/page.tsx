@@ -8,6 +8,12 @@ import { CheckCircle, AlertCircle } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import apiFetch from '@/lib/api';
 
+interface DiscordCallbackResponse {
+  success: boolean;
+  error?: string;
+  message?: string;
+}
+
 export default function DiscordCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -48,7 +54,7 @@ export default function DiscordCallbackPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ code, state }),
-        });
+        }) as DiscordCallbackResponse;
 
         if (response.success) {
           setStatus('success');

@@ -21,6 +21,12 @@ interface ChatListProps {
   className?: string;
 }
 
+interface ChatsResponse {
+  success: boolean;
+  chats?: unknown[];
+  conversations?: unknown[];
+}
+
 export default function ChatList({ channel, className = '' }: ChatListProps) {
   const { token } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
@@ -41,7 +47,7 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
     try {
       // Endpoint dinámico según el canal
       const endpoint = getChatsEndpoint(channel);
-      const response = await apiFetch(endpoint, {}, token);
+      const response = await apiFetch(endpoint, {}, token) as ChatsResponse;
       
       if (response.success) {
         const chatsData = normalizeChats(response.chats || response.conversations || [], channel);
@@ -69,7 +75,7 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
       const response = await apiFetch(endpoint, {
         method: 'POST',
         body: JSON.stringify(body)
-      }, token);
+      }, token) as ChatsResponse;
       
       if (response.success) {
         showToast.success('Mensaje enviado');

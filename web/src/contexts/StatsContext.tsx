@@ -16,6 +16,12 @@ interface StatsContextType {
   refreshStats: () => Promise<void>;
 }
 
+interface StatsResponse {
+  success: boolean;
+  data?: DashboardStats;
+  message?: string;
+}
+
 const StatsContext = createContext<StatsContextType | undefined>(undefined);
 
 export function StatsProvider({ children }: { children: ReactNode }) {
@@ -35,9 +41,9 @@ export function StatsProvider({ children }: { children: ReactNode }) {
       setError(null);
       
       // Obtener estadísticas reales del backend
-      const response = await apiFetch('/analytics/dashboard', {}, token);
+      const response = await apiFetch('/analytics/dashboard', {}, token) as StatsResponse;
       
-      if (response.success) {
+      if (response.success && response.data) {
         setStats(response.data);
       } else {
         console.warn('Error en respuesta de stats:', response.message);

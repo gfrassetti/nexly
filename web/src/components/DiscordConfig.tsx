@@ -13,6 +13,12 @@ interface DiscordConfigProps {
   onError?: (error: string) => void;
 }
 
+interface DiscordOAuthResponse {
+  success: boolean;
+  url?: string;
+  error?: string;
+}
+
 export default function DiscordConfig({ onSuccess, onError }: DiscordConfigProps) {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -32,7 +38,7 @@ export default function DiscordConfig({ onSuccess, onError }: DiscordConfigProps
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+      }) as DiscordOAuthResponse;
 
       if (response.success && response.url) {
         // Redirigir a Discord OAuth2

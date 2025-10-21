@@ -4,6 +4,12 @@ import { useAuth } from './useAuth';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import api from '@/lib/api';
 
+interface StripePaymentResponse {
+  success: boolean;
+  paymentUrl?: string;
+  error?: string;
+}
+
 export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const { token } = useAuth();
@@ -26,7 +32,7 @@ export const useStripePayment = () => {
           payment_behavior: 'default_incomplete', // Mejor manejo de pagos fallidos
           payment_method_types: ['card'], // Solo tarjetas para mejor compatibilidad
         }),
-      }, token);
+      }, token) as StripePaymentResponse;
 
       if (response.success && response.paymentUrl) {
         // NUEVO: Cuando se regrese de Stripe, se sincronizará automáticamente
@@ -76,7 +82,7 @@ export const useStripePayment = () => {
         body: JSON.stringify({
           subscriptionId,
         }),
-      }, token);
+      }, token) as StripePaymentResponse;
 
       if (response.success) {
         return response;
@@ -105,7 +111,7 @@ export const useStripePayment = () => {
           subscriptionId,
           paymentMethodId,
         }),
-      }, token);
+      }, token) as StripePaymentResponse;
 
       if (response.success) {
         return response;

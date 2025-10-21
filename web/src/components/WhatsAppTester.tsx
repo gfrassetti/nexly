@@ -4,6 +4,11 @@ import { useState } from 'react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { sendMessageApi } from '@/lib/api';
 
+interface WhatsAppResponse {
+  success: boolean;
+  externalMessageId?: string;
+}
+
 export default function WhatsAppTester() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [message, setMessage] = useState('Hello from Nexly! This is a test message.');
@@ -25,7 +30,7 @@ export default function WhatsAppTester() {
         provider: 'whatsapp',
         to: phoneNumber,
         body: message
-      });
+      }) as WhatsAppResponse;
 
       setResult({ 
         success: true, 

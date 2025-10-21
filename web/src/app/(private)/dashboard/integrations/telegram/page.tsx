@@ -21,6 +21,17 @@ interface TelegramIntegration {
   };
 }
 
+interface IntegrationsResponse {
+  success: boolean;
+  message?: string;
+  integrations: Array<{
+    _id: string;
+    provider: string;
+    status: string;
+    [key: string]: unknown;
+  }>;
+}
+
 export default function TelegramPage() {
   const router = useRouter();
   const [integration, setIntegration] = useState<TelegramIntegration | null>(null);
@@ -37,15 +48,15 @@ export default function TelegramPage() {
       setError(null);
 
       // Buscar integración de Telegram
-      const response = await apiFetch('/integrations');
+      const response = await apiFetch('/integrations') as IntegrationsResponse;
       
       if (response.success) {
         const telegramIntegration = response.integrations.find(
-          (int: any) => int.provider === 'telegram' && int.status === 'linked'
+          (int) => int.provider === 'telegram' && int.status === 'linked'
         );
 
         if (telegramIntegration) {
-          setIntegration(telegramIntegration);
+          setIntegration(telegramIntegration as unknown as TelegramIntegration);
         } else {
           setError('No se encontró una integración de Telegram activa');
         }
