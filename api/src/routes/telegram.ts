@@ -858,19 +858,36 @@ router.post('/send-message', async (req: AuthRequest, res: Response) => {
     });
 
     // Registrar el mensaje enviado en nuestra base de datos
-    const newMessage = new Message({
-      userId: new Types.ObjectId(userId),
-      integrationId: integration._id,
-      conversationId: chatId, // Usar chatId como conversationId por ahora
-      direction: 'out',
-      body: message,
-      provider: 'telegram',
-      externalMessageId: result.messageId ? String(result.messageId) : undefined, // Guardar el ID de mensaje de Telegram
-      from: integration.meta?.telegramPhoneNumber || integration.meta?.telegramUsername || integration.name,
-      senderName: integration.name,
-      status: 'sent',
-    });
-    await newMessage.save();
+    try {
+      const newMessage = new Message({
+        userId: new Types.ObjectId(userId),
+        integrationId: integration._id,
+        conversationId: chatId, // Usar chatId como conversationId por ahora
+        direction: 'out',
+        body: message,
+        provider: 'telegram',
+        externalMessageId: result.messageId ? String(result.messageId) : undefined, // Guardar el ID de mensaje de Telegram
+        from: integration.meta?.telegramPhoneNumber || integration.meta?.telegramUsername || integration.name,
+        senderName: integration.name,
+        status: 'sent',
+      });
+      await newMessage.save();
+
+      logger.info('Mensaje de Telegram enviado y registrado en DB', { 
+        userId, 
+        chatId,
+        messageId: result.messageId,
+        dbMessageId: newMessage._id
+      });
+    } catch (saveError) {
+      logger.error('Error guardando mensaje de Telegram en DB', {
+        userId,
+        chatId,
+        error: saveError instanceof Error ? saveError.message : 'Error desconocido',
+        stack: saveError instanceof Error ? saveError.stack : undefined
+      });
+      // No fallar el envío del mensaje por esto
+    }
 
     logger.info('Mensaje de Telegram enviado y registrado en DB', {
       userId,
