@@ -47,7 +47,7 @@ export default function RegisterForm() {
         // Auto-login
         localStorage.setItem("token", response.token);
         document.cookie = `token=${response.token}; Path=/; SameSite=Lax`;
-        setAuth(response.token, response.user);
+        setAuth(response.token, response.user as { id: string; email: string; username: string });
         
         // Redirigir directo al checkout después del registro
         setTimeout(() => {
