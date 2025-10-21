@@ -36,7 +36,7 @@ export function resolveToken(override?: string) {
  * - Authorization: Bearer <token> (si hay)
  * - Manejo de error coherente
  */
-export async function apiFetch<T = any>(
+export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {},
   tokenOverride?: string
@@ -99,7 +99,7 @@ export function registerApi(body: {
   password: string;
   plan?: string;
 }) {
-  return apiFetch<{ message: string; token?: string; user?: any }>("/auth/register", {
+  return apiFetch<{ message: string; token?: string; user?: unknown }>("/auth/register", {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -121,10 +121,10 @@ export function loginApi(body: {
 // Endpoints de CONTACTOS / MENSAJES
 // ------------------------------------------------------
 
-export type Provider = "whatsapp" | "instagram" | "messenger" | "telegram";
+export type Provider = "whatsapp" | "instagram" | "messenger" | "telegram" | "discord";
 
 export function getContacts(token?: string) {
-  return apiFetch<any[]>("/contacts", { method: "GET" }, token);
+  return apiFetch<unknown[]>("/contacts", { method: "GET" }, token);
 }
 
 /**
@@ -225,7 +225,7 @@ export function getMessages(params: { contactId?: string; provider?: Provider; i
   if (params.provider) q.set("provider", params.provider);
   if (params.integrationId) q.set("integrationId", params.integrationId);
   const suffix = q.toString() ? `?${q.toString()}` : "";
-  return apiFetch<any[]>(`/messages${suffix}`);
+  return apiFetch<unknown[]>(`/messages${suffix}`);
 }
 
 /**
@@ -348,7 +348,7 @@ export function sendWhatsAppMessage(body: {
   return apiFetch<{
     success: boolean;
     messageId: string;
-    response: any;
+    response: unknown;
   }>("/integrations/send-whatsapp", {
     method: "POST",
     body: JSON.stringify(body),

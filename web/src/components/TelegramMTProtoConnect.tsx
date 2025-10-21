@@ -12,6 +12,14 @@ interface TelegramMTProtoConnectProps {
   disabled?: boolean;
 }
 
+interface TelegramResponse {
+  success: boolean;
+  message?: string;
+  phoneNumber?: string;
+  requiresCode?: boolean;
+  requiresPassword?: boolean;
+}
+
 export default function TelegramMTProtoConnect({ 
   onConnect, 
   onError, 
@@ -50,7 +58,7 @@ export default function TelegramMTProtoConnect({
       const response = await apiFetch('/telegram/send-code', {
         method: 'POST',
         body: JSON.stringify({ phoneNumber: phoneNumber.trim() })
-      }, token || undefined);
+      }, token || undefined) as TelegramResponse;
 
       console.log('📡 Respuesta completa de send-code:', response);
       console.log('✅ response.success:', response.success);
@@ -106,7 +114,7 @@ export default function TelegramMTProtoConnect({
           code: code.trim(),
           password: password ? password.trim() : undefined
         })
-      }, token || undefined);
+      }, token || undefined) as TelegramResponse;
 
       console.log('📡 Respuesta de verify-code:', response);
 
@@ -153,7 +161,7 @@ export default function TelegramMTProtoConnect({
           phoneNumber: phoneNumber.trim(),
           password: password.trim()
         })
-      }, token || undefined);
+      }, token || undefined) as TelegramResponse;
 
       if (response.success) {
         setStep('success');
