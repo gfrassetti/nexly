@@ -177,7 +177,7 @@ export class DiscordService {
   }
 
   /**
-   * Envía un mensaje a través de Discord
+   * Envía un mensaje directo a través de Discord
    */
   static async sendMessage(
     integration: any,
@@ -185,9 +185,9 @@ export class DiscordService {
     content: string
   ): Promise<boolean> {
     try {
-      const botToken = integration.meta?.discordBotToken;
-      if (!botToken) {
-        throw new Error("Token del bot de Discord no encontrado");
+      const accessToken = integration.accessToken;
+      if (!accessToken) {
+        throw new Error("Token de acceso de Discord no encontrado");
       }
 
       const response = await axios.post(
@@ -197,7 +197,7 @@ export class DiscordService {
         },
         {
           headers: {
-            Authorization: `Bot ${botToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json"
           },
           timeout: 10000
@@ -305,22 +305,21 @@ export class DiscordService {
   }
 
   /**
-   * Obtiene información del servidor de Discord
+   * Obtiene información del usuario de Discord
    */
-  static async getGuildInfo(integration: any): Promise<any> {
+  static async getUserInfo(integration: any): Promise<any> {
     try {
-      const botToken = integration.meta?.discordBotToken;
-      const guildId = integration.externalId;
+      const accessToken = integration.accessToken;
 
-      if (!botToken || !guildId) {
-        throw new Error("Token del bot o ID del servidor no encontrado");
+      if (!accessToken) {
+        throw new Error("Token de acceso de Discord no encontrado");
       }
 
       const response = await axios.get(
-        `https://discord.com/api/v10/guilds/${guildId}`,
+        `https://discord.com/api/users/@me`,
         {
           headers: {
-            Authorization: `Bot ${botToken}`
+            Authorization: `Bearer ${accessToken}`
           },
           timeout: 10000
         }
@@ -328,9 +327,39 @@ export class DiscordService {
 
       return response.data;
     } catch (error: any) {
-      logger.error("Error al obtener información del servidor de Discord", {
+      logger.error("Error al obtener información del usuario de Discord", {
         error: error.message,
-        guildId: integration.externalId,
+        integrationId: integration._id
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Obtiene canales de mensajes directos
+   */
+  static async getDirectMessageChannels(integration: any): Promise<any[]> {
+    try {
+      const accessToken = integration.accessToken;
+
+      if (!accessToken) {
+        throw new Error("Token de acceso de Discord no encontrado");
+      }
+
+      const response = await axios.get(
+        `https://discord.com/api/users/@me/channels`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+          timeout: 10000
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      logger.error("Error al obtener canales de mensajes directos", {
+        error: error.message,
         integrationId: integration._id
       });
       throw error;

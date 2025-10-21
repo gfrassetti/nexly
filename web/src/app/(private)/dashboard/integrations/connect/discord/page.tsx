@@ -32,7 +32,7 @@ export default function ConnectDiscordPage() {
         </div>
         <h1 className="text-3xl font-bold text-accent-cream">Conectar Discord</h1>
         <p className="text-lg text-accent-cream max-w-2xl mx-auto">
-          Conecta un bot de Discord para gestionar mensajes en tu servidor (comunidad, negocio, etc.).
+          Conecta tu cuenta personal de Discord para gestionar mensajes directos desde Nexly.
         </p>
       </div>
 
@@ -76,10 +76,10 @@ export default function ConnectDiscordPage() {
         <CardContent className="p-6">
           <h3 className="font-semibold text-accent-cream my-4">¿Cómo funciona Discord en Nexly?</h3>
           <div className="space-y-3 text-sm text-accent-cream">
-            <p>• <strong>Bot como intermediario:</strong> Nexly usa un bot para enviar y recibir mensajes en tu servidor</p>
-            <p>• <strong>Gestión de conversaciones:</strong> Los mensajes del servidor aparecen como conversaciones en Nexly</p>
-            <p>• <strong>Contactos automáticos:</strong> Los usuarios del servidor se crean como contactos automáticamente</p>
-            <p>• <strong>Respuestas centralizadas:</strong> Puedes responder desde Nexly y el bot enviará el mensaje</p>
+            <p>• <strong>Conexión directa:</strong> Nexly se conecta a tu cuenta personal de Discord</p>
+            <p>• <strong>Mensajes directos:</strong> Gestionas tus DMs desde Nexly como cualquier otro canal</p>
+            <p>• <strong>Contactos automáticos:</strong> Los usuarios que te escriben se crean como contactos</p>
+            <p>• <strong>Respuestas unificadas:</strong> Respondes desde Nexly y se envía desde tu cuenta</p>
           </div>
         </CardContent>
       </Card>

@@ -16,18 +16,7 @@ interface DiscordConfigProps {
 export default function DiscordConfig({ onSuccess, onError }: DiscordConfigProps) {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    botToken: "",
-    guildId: "",
-    clientId: ""
-  });
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  // No necesitamos formData para OAuth2
 
   const handleConnect = async () => {
     if (!token) {
@@ -35,34 +24,26 @@ export default function DiscordConfig({ onSuccess, onError }: DiscordConfigProps
       return;
     }
 
-    if (!formData.botToken || !formData.guildId) {
-      toast.error("Por favor completa el token del bot y el ID del servidor");
-      return;
-    }
-
     setLoading(true);
     try {
-      const response = await apiFetch("/discord/connect", {
-        method: "POST",
+      // Obtener la URL de OAuth2 de Discord
+      const response = await apiFetch("/discord/oauth/url", {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
       });
 
-      if (response.success) {
-        toast.success("Discord conectado exitosamente");
-        setFormData({ botToken: "", guildId: "", clientId: "" });
-        onSuccess?.();
+      if (response.success && response.url) {
+        // Redirigir a Discord OAuth2
+        window.location.href = response.url;
       } else {
-        throw new Error(response.error || "Error al conectar Discord");
+        throw new Error(response.error || "Error al obtener URL de autorización");
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Error al conectar con Discord";
       toast.error(errorMessage);
       onError?.(errorMessage);
-    } finally {
       setLoading(false);
     }
   };
@@ -79,7 +60,7 @@ export default function DiscordConfig({ onSuccess, onError }: DiscordConfigProps
           Configurar Discord
         </CardTitle>
         <CardDescription>
-          Conecta un bot de Discord para gestionar mensajes en tu servidor. <strong>Necesitas tener un servidor de Discord</strong> (comunidad, negocio, etc.) donde el bot actuará como intermediario.
+          Conecta tu cuenta personal de Discord para gestionar mensajes directos desde Nexly. Simple y rápido, sin necesidad de crear bots.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -87,61 +68,32 @@ export default function DiscordConfig({ onSuccess, onError }: DiscordConfigProps
           <div className="text-sm text-blue-800">
             <strong>¿Qué necesitas?</strong>
             <br />
-            • Un servidor de Discord (comunidad, negocio, etc.)
+            • Una cuenta de Discord (gratuita)
             <br />
-            • Permisos de administrador en ese servidor
+            • Tener mensajes directos habilitados
             <br /><br />
-            <strong>Pasos:</strong>
+            <strong>¿Cómo funciona?</strong>
             <br />
-            1. Crea un bot en el <a href="https://discord.com/developers/applications" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Portal de Desarrolladores</a>
+            • Conectas tu cuenta personal de Discord
             <br />
-            2. Copia el Token del Bot
+            • Nexly accede a tus mensajes directos
             <br />
-            3. Invita el bot a TU servidor
+            • Puedes responder desde Nexly
             <br />
-            4. Copia el ID de TU servidor
+            • Simple y seguro, como conectar Google
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="botToken" className="block text-sm font-medium text-accent-cream">Token del Bot *</label>
-          <input
-            id="botToken"
-            type="password"
-            placeholder="MTxxxxxx.xxxxxx.xxxxxx"
-            value={formData.botToken}
-            onChange={(e) => handleInputChange("botToken", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="guildId" className="block text-sm font-medium text-accent-cream">ID de TU Servidor *</label>
-          <input
-            id="guildId"
-            placeholder="123456789012345678"
-            value={formData.guildId}
-            onChange={(e) => handleInputChange("guildId", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-          />
-          <p className="text-xs text-gray-500">El servidor donde quieres gestionar mensajes</p>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="clientId" className="block text-sm font-medium text-accent-cream">ID de la Aplicación (opcional)</label>
-          <input
-            id="clientId"
-            placeholder="123456789012345678"
-            value={formData.clientId}
-            onChange={(e) => handleInputChange("clientId", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-          />
+        <div className="text-center py-4">
+          <p className="text-sm text-gray-600 mb-4">
+            Haz clic en el botón para autorizar a Nexly a acceder a tus mensajes directos de Discord
+          </p>
         </div>
 
         <Button 
           onClick={handleConnect} 
-          disabled={loading || !formData.botToken || !formData.guildId}
-          className="w-full"
+          disabled={loading}
+          className="w-full bg-indigo-500 hover:bg-indigo-600 text-white"
         >
           {loading ? (
             <>
@@ -149,18 +101,18 @@ export default function DiscordConfig({ onSuccess, onError }: DiscordConfigProps
               Conectando...
             </>
           ) : (
-            "Conectar Discord"
+            "Conectar con Discord"
           )}
         </Button>
 
         <div className="text-xs text-gray-500 space-y-1">
-          <p><strong>Permisos necesarios del bot:</strong></p>
+          <p><strong>Permisos que autorizarás:</strong></p>
           <ul className="list-disc list-inside ml-2">
-            <li>Enviar mensajes</li>
-            <li>Leer historial de mensajes</li>
-            <li>Gestionar mensajes</li>
+            <li>Leer mensajes directos</li>
+            <li>Enviar mensajes directos</li>
+            <li>Ver información básica del perfil</li>
           </ul>
-          <p className="mt-2 text-orange-600"><strong>Nota:</strong> Solo funciona si tienes un servidor de Discord propio</p>
+          <p className="mt-2 text-green-600"><strong>Seguro:</strong> Solo accede a tus mensajes directos, no a servidores</p>
         </div>
       </CardContent>
     </Card>

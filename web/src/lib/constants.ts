@@ -37,7 +37,7 @@ export const INTEGRATIONS = [
     id: "discord", 
     label: "Discord", 
     color: "bg-indigo-500",
-    description: "Conecta un bot de Discord para gestionar mensajes en tu servidor (comunidad, negocio, etc.)."
+    description: "Conecta tu cuenta personal de Discord para gestionar mensajes directos desde Nexly."
   },
 ] as const;
 

@@ -2,19 +2,67 @@ import { Router, Request, Response } from "express";
 import { Types } from "mongoose";
 import { Integration } from "../models/Integration";
 import { User } from "../models/User";
-import { checkAuth } from "../middleware/auth";
+import requireAuth from "../middleware/auth";
 import { syncIntegration } from "../services/syncIntegration";
-import { logger } from "../utils/logger";
-import config from "../config";
+import logger from "../utils/logger";
+import { config } from "../config";
 import { DiscordService } from "../services/discordService";
+import axios from "axios";
 
 const router = Router();
 
 /**
- * POST /discord/connect
- * Conecta un bot de Discord a la cuenta del usuario
+ * GET /discord/oauth/url
+ * Obtiene la URL de autorización OAuth2 de Discord
  */
-router.post("/connect", checkAuth, async (req: Request, res: Response) => {
+router.get("/oauth/url", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Usuario no autenticado" });
+    }
+
+    // Configurar parámetros OAuth2
+    const clientId = process.env.DISCORD_CLIENT_ID;
+    const redirectUri = `${process.env.FRONTEND_URL}/dashboard/integrations/connect/discord/callback`;
+    const scopes = ['identify', 'messages.read', 'messages.write'];
+    
+    if (!clientId) {
+      return res.status(500).json({ error: "Discord client ID no configurado" });
+    }
+
+    // Construir URL de autorización
+    const authUrl = new URL('https://discord.com/api/oauth2/authorize');
+    authUrl.searchParams.append('client_id', clientId);
+    authUrl.searchParams.append('redirect_uri', redirectUri);
+    authUrl.searchParams.append('response_type', 'code');
+    authUrl.searchParams.append('scope', scopes.join(' '));
+    authUrl.searchParams.append('state', userId); // Usar userId como state para seguridad
+
+    res.json({
+      success: true,
+      url: authUrl.toString()
+    });
+
+  } catch (error: any) {
+    logger.error("Error al generar URL de OAuth2 de Discord", {
+      userId: req.user?.id,
+      error: error.message
+    });
+
+    res.status(500).json({
+      error: "Error interno del servidor",
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /discord/connect
+ * Conecta un bot de Discord a la cuenta del usuario (LEGACY - mantener por compatibilidad)
+ */
+router.post("/connect", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const { botToken, guildId, clientId } = req.body;
@@ -73,15 +121,16 @@ router.post("/connect", checkAuth, async (req: Request, res: Response) => {
     const syncResult = await syncIntegration(integration);
 
     if (!syncResult.ok) {
+      const errorMessage = (syncResult as any).error || "Error desconocido";
       logger.error("Error al sincronizar Discord", {
         userId,
         integrationId: integration._id,
-        error: syncResult.error
+        error: errorMessage
       });
       
       return res.status(400).json({
         error: "Error al conectar con Discord",
-        details: syncResult.error
+        details: errorMessage
       });
     }
 
@@ -120,7 +169,7 @@ router.post("/connect", checkAuth, async (req: Request, res: Response) => {
  * GET /discord/status/:integrationId
  * Obtiene el estado de una integración de Discord
  */
-router.get("/status/:integrationId", checkAuth, async (req: Request, res: Response) => {
+router.get("/status/:integrationId", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const { integrationId } = req.params;
@@ -172,7 +221,7 @@ router.get("/status/:integrationId", checkAuth, async (req: Request, res: Respon
  * DELETE /discord/disconnect/:integrationId
  * Desconecta una integración de Discord
  */
-router.delete("/disconnect/:integrationId", checkAuth, async (req: Request, res: Response) => {
+router.delete("/disconnect/:integrationId", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const { integrationId } = req.params;
@@ -279,7 +328,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
  * POST /discord/send-message
  * Envía un mensaje a través de Discord
  */
-router.post("/send-message", checkAuth, async (req: Request, res: Response) => {
+router.post("/send-message", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const { integrationId, channelId, content } = req.body;
@@ -332,6 +381,95 @@ router.post("/send-message", checkAuth, async (req: Request, res: Response) => {
 
     res.status(500).json({
       error: "Error interno del servidor",
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /discord/oauth/callback
+ * Maneja el callback de OAuth2 de Discord
+ */
+router.post("/oauth/callback", async (req: Request, res: Response) => {
+  try {
+    const { code, state } = req.body;
+    
+    if (!code || !state) {
+      return res.status(400).json({ error: "Código de autorización o state faltante" });
+    }
+
+    // Intercambiar código por token de acceso
+    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', {
+      client_id: process.env.DISCORD_CLIENT_ID,
+      client_secret: process.env.DISCORD_CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: `${process.env.FRONTEND_URL}/dashboard/integrations/connect/discord/callback`
+    }, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    const { access_token, refresh_token, expires_in } = tokenResponse.data;
+
+    // Obtener información del usuario de Discord
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    });
+
+    const discordUser = userResponse.data;
+
+    // Crear o actualizar integración
+    const integration = await Integration.findOneAndUpdate(
+      { userId: new Types.ObjectId(state), provider: "discord" },
+      {
+        userId: new Types.ObjectId(state),
+        provider: "discord",
+        externalId: discordUser.id,
+        accessToken: access_token,
+        name: `Discord - ${discordUser.username}`,
+        status: "linked",
+        meta: {
+          discordUserId: discordUser.id,
+          discordUsername: discordUser.username,
+          discordDiscriminator: discordUser.discriminator,
+          discordAvatar: discordUser.avatar,
+          refreshToken: refresh_token,
+          expiresIn: expires_in,
+          connectedAt: new Date()
+        }
+      },
+      { upsert: true, new: true }
+    );
+
+    logger.info("Discord OAuth2 conectado exitosamente", {
+      userId: state,
+      discordUserId: discordUser.id,
+      integrationId: integration._id
+    });
+
+    res.json({
+      success: true,
+      integration: {
+        id: integration._id,
+        provider: integration.provider,
+        name: integration.name,
+        status: integration.status,
+        meta: integration.meta
+      }
+    });
+
+  } catch (error: any) {
+    logger.error("Error en callback de Discord OAuth2", {
+      error: error.message,
+      body: req.body
+    });
+
+    res.status(500).json({
+      error: "Error al procesar autorización de Discord",
       details: error.message
     });
   }
