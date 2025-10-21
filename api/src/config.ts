@@ -42,6 +42,11 @@ export const config = {
   telegramApiId: process.env.TELEGRAM_API_ID || "",
   telegramApiHash: process.env.TELEGRAM_API_HASH || "",
   
+  // Discord OAuth2 Configuration
+  discordClientId: process.env.DISCORD_CLIENT_ID || "",
+  discordClientSecret: process.env.DISCORD_CLIENT_SECRET || "",
+  discordRedirectUri: process.env.DISCORD_REDIRECT_URI || "http://localhost:3000/dashboard/integrations/connect/discord/callback",
+  
   
   // Stripe Configuration
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || "",
