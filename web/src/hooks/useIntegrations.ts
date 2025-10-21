@@ -56,7 +56,7 @@ export function useIntegrations(): UseIntegrationsReturn {
     return false;
   };
 
-  const isIntegrationConnected = (integrationName: string): boolean => {
+  const isIntegrationConnected = (/* integrationName: string */): boolean => {
     // Esta función se sobrescribirá en el componente con los datos reales
     return false;
   };
@@ -100,6 +100,8 @@ export function useIntegrations(): UseIntegrationsReturn {
       window.location.href = '/dashboard/integrations/connect/instagram';
     } else if (integrationName === 'telegram') {
       window.location.href = '/dashboard/integrations/connect/telegram';
+    } else if (integrationName === 'discord') {
+      window.location.href = '/dashboard/integrations/connect/discord';
     } else if (isIntegrationAvailable(integrationName)) {
       // Aquí iría la lógica para conectar otras plataformas
       toast.error(`${integrationName} aún no está implementado`);
@@ -123,6 +125,8 @@ export function useIntegrations(): UseIntegrationsReturn {
       let endpoint = '';
       if (integrationName === 'telegram') {
         endpoint = '/telegram/disconnect';
+      } else if (integrationName === 'discord') {
+        endpoint = `/discord/disconnect/${integrationId}`;
       } else {
         endpoint = `/integrations/${integrationId}`;
       }

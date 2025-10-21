@@ -9,7 +9,7 @@ const messageSchema = new Schema(
     conversationId: { type: Schema.Types.ObjectId, ref: "Conversation" },
     direction: { type: String, enum: ["in", "out"], required: true }, // in = entrante, out = saliente
     body: { type: String, required: true },
-    provider: { type: String, enum: ["whatsapp", "instagram", "messenger", "telegram"], required: true },
+    provider: { type: String, enum: ["whatsapp", "instagram", "messenger", "telegram", "discord"], required: true },
     externalMessageId: { type: String }, // ID del mensaje en el proveedor externo (WhatsApp, etc.)
     integration: { type: Schema.Types.ObjectId, ref: "Integration" }, // Referencia a la integración
     from: { type: String }, // ID del remitente (número de teléfono, usuario de Telegram, etc.)

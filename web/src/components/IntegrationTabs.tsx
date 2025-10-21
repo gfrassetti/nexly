@@ -1,6 +1,6 @@
 "use client";
 
-type Provider = "whatsapp" | "instagram" | "messenger" | "telegram";
+type Provider = "whatsapp" | "instagram" | "messenger" | "telegram" | "discord";
 
 export default function IntegrationTabs({
   provider,
@@ -27,6 +27,8 @@ export default function IntegrationTabs({
       <Tab id="whatsapp" label="whatsapp" />
       <Tab id="instagram" label="instagram" />
       <Tab id="messenger" label="messenger" />
+      <Tab id="telegram" label="telegram" />
+      <Tab id="discord" label="discord" />
     </div>
   );
 }

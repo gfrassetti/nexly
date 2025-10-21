@@ -232,7 +232,7 @@ export default function DashboardPage() {
 
         {/* Messages Activity Chart */}
         <MessagesChart data={messagesData} loading={messagesLoading} />
-
+messagesByIntegrationData
         {/* Messages by Integration Chart */}
         <MessagesByIntegrationChart data={messagesByIntegrationData} loading={byIntegrationLoading} />
 
