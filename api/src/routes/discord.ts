@@ -26,7 +26,7 @@ router.get("/oauth/url", requireAuth, async (req: Request, res: Response) => {
     // Configurar parámetros OAuth2
     const clientId = process.env.DISCORD_CLIENT_ID;
     const redirectUri = `${process.env.FRONTEND_URL}/dashboard/integrations/connect/discord/callback`;
-    const scopes = ['identify', 'dm_channels.read', 'dm_channels.write'];
+    const scopes = ['identify', 'messages.read', 'messages.write'];
     
     if (!clientId) {
       return res.status(500).json({ error: "Discord client ID no configurado" });
