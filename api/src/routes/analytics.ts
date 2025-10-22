@@ -50,8 +50,8 @@ router.get('/dashboard', async (req: AuthRequest, res: Response) => {
       Integration.countDocuments({
         userId: new Types.ObjectId(userId),
         $or: [
-          { status: 'linked' },
-          { 'meta.status': 'linked' }
+          { status: { $in: ['linked', 'active'] } },
+          { 'meta.status': { $in: ['linked', 'active'] } }
         ]
       }),
 
@@ -118,7 +118,7 @@ router.get('/dashboard-stats', async (req: AuthRequest, res: Response) => {
     // Obtener integraciones activas del usuario
     const activeIntegrations = await Integration.find({
       userId: new Types.ObjectId(userId),
-      status: 'linked'
+      status: { $in: ['linked', 'active'] }
     });
 
     const integrationIds = activeIntegrations.map(integration => integration._id);
@@ -547,7 +547,7 @@ router.get('/integration-stats', async (req: AuthRequest, res: Response) => {
 
     const integrations = await Integration.find({
       userId: new Types.ObjectId(userId),
-      status: 'linked'
+      status: { $in: ['linked', 'active'] }
     });
 
     const integrationStats = await Promise.all(
