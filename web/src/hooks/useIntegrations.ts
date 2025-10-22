@@ -1,7 +1,18 @@
 "use client";
+import { useState } from "react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { INTEGRATIONS, type Integration } from "@/lib/constants";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ConnectedIntegration {
   provider: string;
@@ -17,10 +28,23 @@ interface UseIntegrationsReturn {
   getButtonStyle: (integrationName: string, connectedIntegrations?: ConnectedIntegration[]) => string;
   handleIntegrationClick: (integrationName: string) => void;
   handleDisconnect: (integrationName: string, integrationId: string) => Promise<void>;
+  showDisconnectDialog: (integrationName: string, integrationId: string) => void;
+  disconnectDialog: {
+    isOpen: boolean;
+    integrationName: string;
+    integrationId: string;
+  };
+  DisconnectDialog: () => JSX.Element;
 }
 
 export function useIntegrations(): UseIntegrationsReturn {
   const { getMaxIntegrations, status } = useSubscription();
+  
+  const [disconnectDialog, setDisconnectDialog] = useState({
+    isOpen: false,
+    integrationName: '',
+    integrationId: ''
+  });
 
   const isIntegrationAvailable = (
     integrationName: string, 
@@ -111,16 +135,15 @@ export function useIntegrations(): UseIntegrationsReturn {
     }
   };
 
-  const handleDisconnect = async (integrationName: string, integrationId: string) => {
-    // Mostrar confirmación antes de desconectar
-    const confirmed = window.confirm(
-      `¿Estás seguro de que quieres desconectar ${integrationName}? Esta acción no se puede deshacer.`
-    );
-    
-    if (!confirmed) {
-      return;
-    }
+  const showDisconnectDialog = (integrationName: string, integrationId: string) => {
+    setDisconnectDialog({
+      isOpen: true,
+      integrationName,
+      integrationId
+    });
+  };
 
+  const handleDisconnect = async (integrationName: string, integrationId: string) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -154,6 +177,13 @@ export function useIntegrations(): UseIntegrationsReturn {
 
       toast.success(`${integrationName} desconectado exitosamente`);
       
+      // Cerrar el diálogo
+      setDisconnectDialog({
+        isOpen: false,
+        integrationName: '',
+        integrationId: ''
+      });
+      
       // Recargar la página después de un breve delay
       setTimeout(() => {
         window.location.reload();
@@ -164,6 +194,32 @@ export function useIntegrations(): UseIntegrationsReturn {
     }
   };
 
+  const DisconnectDialog = () => (
+    <AlertDialog open={disconnectDialog.isOpen} onOpenChange={() => setDisconnectDialog({ isOpen: false, integrationName: '', integrationId: '' })}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Desconectar {disconnectDialog.integrationName}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta acción desconectará permanentemente tu cuenta de {disconnectDialog.integrationName} de Nexly.
+            Podrás volver a conectarla en cualquier momento, pero perderás el acceso a los mensajes
+            y configuraciones actuales.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setDisconnectDialog({ isOpen: false, integrationName: '', integrationId: '' })}>
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => handleDisconnect(disconnectDialog.integrationName, disconnectDialog.integrationId)} 
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Desconectar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   return {
     integrations: INTEGRATIONS,
     isIntegrationAvailable,
@@ -172,5 +228,8 @@ export function useIntegrations(): UseIntegrationsReturn {
     getButtonStyle,
     handleIntegrationClick,
     handleDisconnect,
+    showDisconnectDialog,
+    disconnectDialog,
+    DisconnectDialog,
   };
 }

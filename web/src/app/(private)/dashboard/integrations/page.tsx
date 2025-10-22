@@ -17,7 +17,7 @@ function IntegrationsContent() {
   const searchParams = useSearchParams();
   const { subscription, getMaxIntegrations, status } = useSubscription();
   const { createPaymentLink } = usePaymentLink();
-  const { integrations, isIntegrationAvailable, getButtonText, handleIntegrationClick, handleDisconnect } = useIntegrations();
+  const { integrations, isIntegrationAvailable, getButtonText, handleIntegrationClick, handleDisconnect, showDisconnectDialog, disconnectDialog, DisconnectDialog } = useIntegrations();
 
   // Función mejorada para manejar clics en integraciones
   const handleIntegrationClickWithLoading = async (integrationId: string) => {
@@ -30,17 +30,8 @@ function IntegrationsContent() {
   };
 
   // Función mejorada para manejar desconexión
-  const handleDisconnectWithLoading = async (integrationId: string, integrationDbId: string) => {
-    setLoadingButtons(prev => ({ ...prev, [integrationId]: true }));
-    try {
-      await handleDisconnect(integrationId, integrationDbId);
-      // Refrescar datos después de desconectar
-      refreshAll();
-    } catch (error) {
-      console.error('Error en desconexión:', error);
-    } finally {
-      setLoadingButtons(prev => ({ ...prev, [integrationId]: false }));
-    }
+  const handleDisconnectWithLoading = (integrationId: string, integrationDbId: string) => {
+    showDisconnectDialog(integrationId, integrationDbId);
   };
   const { showSuccess, showError } = useNotificationHelpers();
   const { refreshAll } = useDataRefresh();
@@ -438,6 +429,9 @@ function IntegrationsContent() {
           </div>
         ))}
       </div>
+      
+      {/* Dialog de confirmación para desconectar */}
+      <DisconnectDialog />
     </div>
   );
 }
