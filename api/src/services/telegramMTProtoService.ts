@@ -161,7 +161,7 @@ export class TelegramMTProtoService {
       
       const client = await this.initClient(userId, sessionString);
       
-      // Guardar en caché
+      // Guardar en cache
       this.clients.set(userId, client);
       
       if (sessionString) {
