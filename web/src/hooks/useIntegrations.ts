@@ -112,6 +112,15 @@ export function useIntegrations(): UseIntegrationsReturn {
   };
 
   const handleDisconnect = async (integrationName: string, integrationId: string) => {
+    // Mostrar confirmación antes de desconectar
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres desconectar ${integrationName}? Esta acción no se puede deshacer.`
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {

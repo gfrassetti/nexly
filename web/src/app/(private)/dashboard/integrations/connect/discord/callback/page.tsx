@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { toast } from 'sonner';
 import apiFetch from '@/lib/api';
 
 interface DiscordCallbackResponse {
@@ -29,18 +30,21 @@ export default function DiscordCallbackPage() {
         const error = searchParams.get('error');
 
         if (error) {
+          toast.error('Autorización denegada por el usuario');
           setStatus('error');
           setMessage('Autorización denegada por el usuario');
           return;
         }
 
         if (!code || !state) {
+          toast.error('Parámetros de autorización faltantes');
           setStatus('error');
           setMessage('Parámetros de autorización faltantes');
           return;
         }
 
         if (!token) {
+          toast.error('No hay token de autenticación');
           setStatus('error');
           setMessage('No hay token de autenticación');
           return;
@@ -57,19 +61,22 @@ export default function DiscordCallbackPage() {
         }) as DiscordCallbackResponse;
 
         if (response.success) {
+          toast.success('Discord conectado exitosamente');
           setStatus('success');
           setMessage('Discord conectado exitosamente');
           
-          // Redirigir después de 2 segundos
+          // Redirigir después de 1 segundo
           setTimeout(() => {
             router.push('/dashboard/integrations');
-          }, 2000);
+          }, 1000);
         } else {
+          toast.error(response.error || 'Error al conectar Discord');
           setStatus('error');
           setMessage(response.error || 'Error al conectar Discord');
         }
 
       } catch (error: any) {
+        toast.error(error.message || 'Error al procesar autorización');
         setStatus('error');
         setMessage(error.message || 'Error al procesar autorización');
       }
