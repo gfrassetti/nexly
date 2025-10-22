@@ -33,7 +33,7 @@ router.get("/oauth/url", requireAuth, async (req: Request, res: Response) => {
     }
 
     // Construir URL de autorización
-    const authUrl = new URL('https://discord.com/api/oauth2/authorize');
+    const authUrl = new URL('https://discord.com/oauth2/authorize');
     authUrl.searchParams.append('client_id', clientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
     authUrl.searchParams.append('response_type', 'code');
