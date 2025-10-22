@@ -81,7 +81,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
           };
         });
         
-        // ✅ INVERTIR ORDEN: Más viejos arriba, más nuevos abajo (como WhatsApp)
+        // ✅ INVERTIR ORDEN: Más viejos arriba, más nuevos abajo
         const sortedMessages = mappedMessages.reverse();
         return sortedMessages;
       }
