@@ -1406,7 +1406,7 @@ router.get("/conversations", async (req: AuthRequest, res: Response) => {
           return res.json({ conversations: [] });
         }
 
-        // Convertir chats de Telegram al formato esperado
+        // Convertir chats de Telegram al formato esperadoo
         const conversations = chatsResult.chats.map((chat, index) => ({
           id: `telegram_${chat.id}`,
           contactId: `telegram_contact_${chat.id}`,
