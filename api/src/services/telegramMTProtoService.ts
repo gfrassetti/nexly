@@ -376,13 +376,22 @@ export class TelegramMTProtoService {
 
   public async getChats(userId: string): Promise<GetChatsResult> {
     try {
-      const client = this.clients.get(userId);
-      
-      if (!client || !client.connected) {
-        logger.error('Cliente de Telegram no conectado en getChats', { userId });
+      // Asegurar que el cliente esté conectado antes de obtener chats
+      const isConnected = await this.connect(userId);
+      if (!isConnected) {
+        logger.error('No se pudo conectar el cliente de Telegram para getChats', { userId });
         return {
           success: false,
           error: 'Cliente de Telegram no conectado',
+        };
+      }
+
+      const client = this.clients.get(userId);
+      if (!client) {
+        logger.error('Cliente de Telegram no encontrado después de conectar', { userId });
+        return {
+          success: false,
+          error: 'Cliente de Telegram no encontrado',
         };
       }
 
@@ -448,13 +457,22 @@ export class TelegramMTProtoService {
 
   public async getMessages(userId: string, chatId: number, limit: number = 20): Promise<GetMessagesResult> {
     try {
-      const client = this.clients.get(userId);
-      
-      if (!client || !client.connected) {
-        logger.error('Cliente de Telegram no conectado en getMessages', { userId, chatId });
+      // Asegurar que el cliente esté conectado antes de obtener mensajes
+      const isConnected = await this.connect(userId);
+      if (!isConnected) {
+        logger.error('No se pudo conectar el cliente de Telegram para getMessages', { userId, chatId });
         return {
           success: false,
           error: 'Cliente de Telegram no conectado',
+        };
+      }
+
+      const client = this.clients.get(userId);
+      if (!client) {
+        logger.error('Cliente de Telegram no encontrado después de conectar', { userId, chatId });
+        return {
+          success: false,
+          error: 'Cliente de Telegram no encontrado',
         };
       }
 
