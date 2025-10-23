@@ -125,6 +125,12 @@ router.post("/publish", requireAuth, upload.single('media'), async (req: Request
           publishResult = await publishToTikTok(integration, mediaFile, caption);
         } else if (platform === "instagram") {
           publishResult = await publishToInstagram(integration, mediaFile, caption);
+        } else {
+          // Plataforma no soportada
+          publishResult = {
+            success: false,
+            error: `Plataforma ${platform} no soportada`
+          };
         }
 
         results.push({
