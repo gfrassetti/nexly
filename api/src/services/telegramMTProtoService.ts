@@ -376,8 +376,24 @@ export class TelegramMTProtoService {
 
   public async getChats(userId: string): Promise<GetChatsResult> {
     try {
+      // Obtener la sessionString de la integración
+      const { Integration } = await import('../models/Integration');
+      const integration = await Integration.findOne({
+        userId: userId,
+        provider: 'telegram',
+        status: { $in: ['active', 'linked'] }
+      });
+
+      if (!integration || !integration.meta?.sessionString) {
+        logger.error('Integración de Telegram no encontrada o sin sessionString', { userId });
+        return {
+          success: false,
+          error: 'Integración de Telegram no encontrada o sin sesión',
+        };
+      }
+
       // Asegurar que el cliente esté conectado antes de obtener chats
-      const isConnected = await this.connect(userId);
+      const isConnected = await this.connect(userId, integration.meta.sessionString);
       if (!isConnected) {
         logger.error('No se pudo conectar el cliente de Telegram para getChats', { userId });
         return {
@@ -457,8 +473,24 @@ export class TelegramMTProtoService {
 
   public async getMessages(userId: string, chatId: number, limit: number = 20): Promise<GetMessagesResult> {
     try {
+      // Obtener la sessionString de la integración
+      const { Integration } = await import('../models/Integration');
+      const integration = await Integration.findOne({
+        userId: userId,
+        provider: 'telegram',
+        status: { $in: ['active', 'linked'] }
+      });
+
+      if (!integration || !integration.meta?.sessionString) {
+        logger.error('Integración de Telegram no encontrada o sin sessionString', { userId, chatId });
+        return {
+          success: false,
+          error: 'Integración de Telegram no encontrada o sin sesión',
+        };
+      }
+
       // Asegurar que el cliente esté conectado antes de obtener mensajes
-      const isConnected = await this.connect(userId);
+      const isConnected = await this.connect(userId, integration.meta.sessionString);
       if (!isConnected) {
         logger.error('No se pudo conectar el cliente de Telegram para getMessages', { userId, chatId });
         return {
