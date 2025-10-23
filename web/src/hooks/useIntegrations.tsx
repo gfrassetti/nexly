@@ -124,8 +124,7 @@ export function useIntegrations(): UseIntegrationsReturn {
       window.location.href = '/dashboard/integrations/connect/instagram';
     } else if (integrationName === 'telegram') {
       window.location.href = '/dashboard/integrations/connect/telegram';
-    } else if (integrationName === 'discord') {
-      window.location.href = '/dashboard/integrations/connect/discord';
+    // Discord removido - no es posible acceder a conversaciones del usuario
     } else if (isIntegrationAvailable(integrationName)) {
       // Aquí iría la lógica para conectar otras plataformas
       toast.error(`${integrationName} aún no está implementado`);
@@ -157,8 +156,7 @@ export function useIntegrations(): UseIntegrationsReturn {
       let endpoint = '';
       if (integrationName === 'telegram') {
         endpoint = '/telegram/disconnect';
-      } else if (integrationName === 'discord') {
-        endpoint = `/discord/disconnect/${integrationId}`;
+      // Discord removido - no es posible acceder a conversaciones del usuario
       } else {
         endpoint = `/integrations/${integrationId}`;
       }

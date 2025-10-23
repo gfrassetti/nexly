@@ -3,7 +3,7 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IntegrationDoc extends Document {
   // 👇 Debe ser ObjectId porque en el schema usás Schema.Types.ObjectId
   userId: Types.ObjectId;
-  provider: "whatsapp" | "instagram" | "messenger" | "telegram" | "discord";
+  provider: "whatsapp" | "instagram" | "messenger" | "telegram";
   externalId: string;
   phoneNumberId?: string;
   accessToken?: string;
@@ -26,11 +26,7 @@ export interface IntegrationDoc extends Document {
     registeredVia?: string;     // 'meta_embedded_signup' | 'manual'
     registrationDate?: Date;
     testMode?: boolean;
-    // Discord Bot specific fields
-    discordBotToken?: string;   // Token del bot de Discord
-    discordGuildId?: string;    // ID del servidor de Discord
-    discordClientId?: string;   // ID de la aplicación Discord
-    discordPermissions?: string; // Permisos del bot
+    // Discord removido - no es posible acceder a conversaciones del usuario
   };
   // timestamps agregados para que TS no proteste en las rutas
   createdAt?: Date;
@@ -42,7 +38,7 @@ const integrationSchema = new Schema<IntegrationDoc>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     provider: {
       type: String,
-      enum: ["whatsapp", "instagram", "messenger", "telegram", "discord"],
+      enum: ["whatsapp", "instagram", "messenger", "telegram"],
       required: true,
     },
     externalId: { type: String, required: true },
@@ -71,11 +67,7 @@ const integrationSchema = new Schema<IntegrationDoc>(
       registeredVia: { type: String },     // 'meta_embedded_signup' | 'manual'
       registrationDate: { type: Date },
       testMode: { type: Boolean },
-      // Discord Bot specific fields
-      discordBotToken: { type: String },   // Token del bot de Discord
-      discordGuildId: { type: String },    // ID del servidor de Discord
-      discordClientId: { type: String },   // ID de la aplicación Discord
-      discordPermissions: { type: String }, // Permisos del bot
+      // Discord removido - no es posible acceder a conversaciones del usuario
     },
   },
   { timestamps: true, versionKey: false }

@@ -32,10 +32,7 @@ export default function InboxPage() {
         // Si es Telegram, usa la ruta específica que definiste
         fetchUrl = '/telegram/chats';
         listPropertyName = 'chats'; // Telegram devuelve la lista bajo la propiedad 'chats'
-      } else if (c === 'discord') {
-        // Si es Discord, usa la ruta específica que definiste
-        fetchUrl = '/discord/chats';
-        listPropertyName = 'chats'; // Discord devuelve la lista bajo la propiedad 'chats'
+      // Discord removido - no es posible acceder a conversaciones del usuario
       } else {
         // Si es otro canal (whatsapp, instagram), usa la ruta genérica
         fetchUrl = `${p}?provider=${c}`;

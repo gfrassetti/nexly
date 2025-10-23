@@ -22,9 +22,7 @@ export async function syncIntegration(integration: IntegrationDoc) {
     return { ok: true, note: "sync for Messenger pendiente" };
   }
 
-  if (integration.provider === "discord") {
-    return await syncDiscord(integration);
-  }
+  // Discord removido - no es posible acceder a conversaciones del usuario
 
   return { ok: true };
 }
@@ -121,63 +119,4 @@ async function syncInstagram(integration: IntegrationDoc) {
   }
 }
 
-async function syncDiscord(integration: IntegrationDoc) {
-  if (!integration.accessToken || !integration.meta?.discordBotToken) {
-    return { ok: false, error: "missing_discord_bot_token" };
-  }
-
-  try {
-    // 🔎 Validar bot de Discord y obtener información del servidor
-    const botUrl = `https://discord.com/api/v10/users/@me`;
-    const guildUrl = `https://discord.com/api/v10/guilds/${integration.externalId}`;
-    
-    const [botRes, guildRes] = await Promise.all([
-      axios.get(botUrl, {
-        headers: { Authorization: `Bot ${integration.meta.discordBotToken}` },
-        timeout: 10000,
-      }),
-      axios.get(guildUrl, {
-        headers: { Authorization: `Bot ${integration.meta.discordBotToken}` },
-        timeout: 10000,
-      }).catch(() => ({ data: null })) // El servidor puede no existir o no tener permisos
-    ]);
-
-    // Actualizar integración con metadata
-    await Integration.updateOne(
-      { _id: integration._id },
-      {
-        $set: {
-          meta: {
-            ...integration.meta,
-            botUsername: botRes.data?.username,
-            botId: botRes.data?.id,
-            guildName: guildRes.data?.name,
-            guildMemberCount: guildRes.data?.member_count,
-            guildIcon: guildRes.data?.icon,
-          },
-          status: "linked",
-        },
-      }
-    );
-
-    return { ok: true, profile: { bot: botRes.data, guild: guildRes.data } };
-  } catch (err: any) {
-    console.error("syncDiscord failed:", err?.response?.data || err?.message);
-    
-    // Marcar como error si falla la sincronización
-    await Integration.updateOne(
-      { _id: integration._id },
-      {
-        $set: {
-          status: "error",
-          meta: {
-            ...integration.meta,
-            error: err?.response?.data?.message || err?.message || "Discord sync failed"
-          }
-        },
-      }
-    );
-    
-    return { ok: false, error: "sync_failed" };
-  }
-}
+// Discord removido - no es posible acceder a conversaciones del usuario

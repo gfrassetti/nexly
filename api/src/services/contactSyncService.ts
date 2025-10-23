@@ -7,7 +7,7 @@ import { TelegramSession } from '../models/TelegramSession';
 import { telegramMTProtoService } from './telegramMTProtoService';
 import { Message } from '../models/Message';
 
-type Provider = 'whatsapp' | 'telegram' | 'instagram' | 'messenger' | 'discord';
+type Provider = 'whatsapp' | 'telegram' | 'instagram' | 'messenger';
 
 interface SyncResult {
   success: boolean;
@@ -69,9 +69,7 @@ export class ContactSyncService {
             case 'instagram':
               result = await this.syncInstagram(userId, integration);
               break;
-            case 'discord':
-              result = await this.syncDiscord(userId, integration);
-              break;
+            // Discord removido - no es posible acceder a conversaciones del usuario
             case 'messenger':
               result = await this.syncMessenger(userId, integration);
               break;
@@ -151,8 +149,7 @@ export class ContactSyncService {
         return await this.syncWhatsApp(userId, integration);
       case 'instagram':
         return await this.syncInstagram(userId, integration);
-      case 'discord':
-        return await this.syncDiscord(userId, integration);
+      // Discord removido - no es posible acceder a conversaciones del usuario
       case 'messenger':
         return await this.syncMessenger(userId, integration);
       default:
@@ -497,50 +494,7 @@ export class ContactSyncService {
     }
   }
 
-  /**
-   * Sincronizar contactos de Discord
-   */
-  private async syncDiscord(userId: string, integration: any): Promise<SyncResult> {
-    try {
-      // Discord no tiene un concepto tradicional de "contactos" como WhatsApp o Telegram
-      // Los "contactos" serían los miembros del servidor o usuarios que han enviado mensajes directos
-      
-      logger.info('Sincronizando Discord', {
-        userId,
-        integrationId: integration._id,
-        guildId: integration.externalId
-      });
-
-      // Por ahora, solo marcamos como sincronizado exitosamente
-      // En el futuro, aquí podrías implementar la lógica para:
-      // 1. Obtener miembros del servidor
-      // 2. Obtener historial de mensajes directos
-      // 3. Crear contactos basados en usuarios que han interactuado
-
-      return {
-        success: true,
-        provider: 'discord',
-        contactsSynced: 0,
-        contactsCreated: 0,
-        contactsUpdated: 0
-      };
-
-    } catch (error) {
-      logger.error('Error en syncDiscord', {
-        userId,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      });
-
-      return {
-        success: false,
-        provider: 'discord',
-        contactsSynced: 0,
-        contactsUpdated: 0,
-        contactsCreated: 0,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      };
-    }
-  }
+  // Discord removido - no es posible acceder a conversaciones del usuario
 
   /**
    * Sincronizar contactos de Messenger

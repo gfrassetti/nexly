@@ -12,7 +12,7 @@ const contactSchema = new Schema(
     // Información adicional por plataforma
     provider: { 
       type: String, 
-      enum: ["whatsapp", "telegram", "instagram", "messenger", "discord"],
+      enum: ["whatsapp", "telegram", "instagram", "messenger"],
       required: true 
     },
     externalId: { type: String }, // ID del contacto en la plataforma externa
