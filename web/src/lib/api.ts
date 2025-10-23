@@ -121,7 +121,7 @@ export function loginApi(body: {
 // Endpoints de CONTACTOS / MENSAJES
 // ------------------------------------------------------
 
-export type Provider = "whatsapp" | "instagram" | "messenger" | "telegram" | "discord";
+export type Provider = "whatsapp" | "instagram" | "messenger" | "telegram" | "tiktok";
 
 export function getContacts(token?: string) {
   return apiFetch<unknown[]>("/contacts", { method: "GET" }, token);
