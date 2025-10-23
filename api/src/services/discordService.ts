@@ -365,4 +365,36 @@ export class DiscordService {
       throw error;
     }
   }
+
+  /**
+   * Obtiene mensajes de un canal específico
+   */
+  static async getChannelMessages(integration: any, channelId: string, limit: number = 50): Promise<any[]> {
+    try {
+      const accessToken = integration.accessToken;
+
+      if (!accessToken) {
+        throw new Error("Token de acceso de Discord no encontrado");
+      }
+
+      const response = await axios.get(
+        `https://discord.com/api/channels/${channelId}/messages?limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+          timeout: 10000
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      logger.error("Error al obtener mensajes del canal de Discord", {
+        error: error.message,
+        channelId,
+        integrationId: integration._id
+      });
+      throw error;
+    }
+  }
 }
