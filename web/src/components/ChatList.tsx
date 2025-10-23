@@ -108,8 +108,9 @@ export default function ChatList({ channel, className = '' }: ChatListProps) {
   const getSendMessageEndpoint = (channel: string): string => {
     switch (channel) {
       case 'telegram': return '/telegram/send-message';
+      case 'instagram': return '/instagram/send-message';
+      case 'tiktok': return '/tiktok/comments';
       case 'whatsapp': return '/integrations/whatsapp/send';
-      case 'instagram': return '/integrations/instagram/send';
       case 'messenger': return '/integrations/messenger/send';
       default: return '/integrations/send';
     }

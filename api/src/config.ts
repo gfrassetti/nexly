@@ -42,7 +42,15 @@ export const config = {
   telegramApiId: process.env.TELEGRAM_API_ID || "",
   telegramApiHash: process.env.TELEGRAM_API_HASH || "",
   
-  // Discord removido - no es posible acceder a conversaciones del usuario
+  // Instagram Configuration
+  instagramClientId: process.env.INSTAGRAM_CLIENT_ID || "",
+  instagramClientSecret: process.env.INSTAGRAM_CLIENT_SECRET || "",
+  instagramRedirectUri: process.env.INSTAGRAM_REDIRECT_URI || "http://localhost:3000/dashboard/integrations/connect/instagram/callback",
+  
+  // TikTok Configuration
+  tiktokClientKey: process.env.TIKTOK_CLIENT_KEY || "",
+  tiktokClientSecret: process.env.TIKTOK_CLIENT_SECRET || "",
+  tiktokRedirectUri: process.env.TIKTOK_REDIRECT_URI || "http://localhost:3000/dashboard/integrations/connect/tiktok/callback",
   
   
   // Stripe Configuration

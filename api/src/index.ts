@@ -24,7 +24,8 @@ import twilioWebhookRouter from "./routes/twilioWebhook";
 import addOnsRouter from "./routes/addOns";
 import usageRouter from "./routes/usage";
 import whatsappRouter from "./routes/whatsapp";
-// Discord removido - no es posible acceder a conversaciones del usuario
+import instagramRouter from "./routes/instagram";
+import tiktokRouter from "./routes/tiktok";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -139,7 +140,8 @@ app.use("/twilio-webhook", twilioWebhookRouter);
 app.use("/addons", paymentRateLimit, sanitizePaymentData, addOnsRouter);
 app.use("/usage", requireAuth, usageRouter);
 app.use("/whatsapp", requireAuth, whatsappRouter);
-// Discord removido - no es posible acceder a conversaciones del usuario
+app.use("/instagram", requireAuth, instagramRouter);
+app.use("/tiktok", requireAuth, tiktokRouter);
 
 // Endpoint raíz
 app.get("/", (req, res) => {
@@ -169,7 +171,8 @@ app.use((req, res) => {
       "/stripe",
       "/ai",
       "/analytics",
-      // Discord removido
+      "/instagram",
+      "/tiktok",
       "/telegram",
       "/whatsapp"
     ]

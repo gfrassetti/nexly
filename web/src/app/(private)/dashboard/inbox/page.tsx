@@ -32,9 +32,16 @@ export default function InboxPage() {
         // Si es Telegram, usa la ruta específica que definiste
         fetchUrl = '/telegram/chats';
         listPropertyName = 'chats'; // Telegram devuelve la lista bajo la propiedad 'chats'
-      // Discord removido - no es posible acceder a conversaciones del usuario
+      } else if (c === 'instagram') {
+        // Si es Instagram, usa la ruta específica
+        fetchUrl = '/instagram/conversations';
+        listPropertyName = 'conversations'; // Instagram devuelve la lista bajo la propiedad 'conversations'
+      } else if (c === 'tiktok') {
+        // Si es TikTok, usa la ruta específica
+        fetchUrl = '/tiktok/comments';
+        listPropertyName = 'comments'; // TikTok devuelve la lista bajo la propiedad 'comments'
       } else {
-        // Si es otro canal (whatsapp, instagram), usa la ruta genérica
+        // Si es otro canal (whatsapp), usa la ruta genérica
         fetchUrl = `${p}?provider=${c}`;
         listPropertyName = 'conversations'; // Otros canales devuelven la lista bajo 'conversations'
       }

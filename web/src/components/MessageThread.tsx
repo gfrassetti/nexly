@@ -43,6 +43,10 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
       // Para Telegram, usar endpoint específico
       if (c === 'telegram') {
         fetchUrl = `/telegram/messages/${threadId}`;
+      } else if (c === 'instagram') {
+        fetchUrl = `/instagram/conversations/${threadId}/messages`;
+      } else if (c === 'tiktok') {
+        fetchUrl = `/tiktok/comments/${threadId}`;
       }
       
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${fetchUrl}`, {

@@ -3,7 +3,7 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IntegrationDoc extends Document {
   // 👇 Debe ser ObjectId porque en el schema usás Schema.Types.ObjectId
   userId: Types.ObjectId;
-  provider: "whatsapp" | "instagram" | "messenger" | "telegram";
+  provider: "whatsapp" | "instagram" | "messenger" | "telegram" | "tiktok";
   externalId: string;
   phoneNumberId?: string;
   accessToken?: string;
@@ -38,7 +38,7 @@ const integrationSchema = new Schema<IntegrationDoc>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     provider: {
       type: String,
-      enum: ["whatsapp", "instagram", "messenger", "telegram"],
+      enum: ["whatsapp", "instagram", "messenger", "telegram", "tiktok"],
       required: true,
     },
     externalId: { type: String, required: true },
