@@ -115,27 +115,27 @@ export default function PublishModule() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-neutral-100 mb-2">
           Publicación Unificada
         </h1>
-        <p className="text-gray-600">
+        <p className="text-neutral-300">
           Publica tu contenido en TikTok e Instagram desde un solo lugar
         </p>
       </div>
 
       {/* Selección de plataformas */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Selecciona las plataformas</h3>
+        <h3 className="text-lg font-semibold text-neutral-100 mb-4">Selecciona las plataformas</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {integrations.map((integration) => (
             <div
               key={integration.id}
               className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                 selectedPlatforms.includes(integration.provider)
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-900/20'
+                  : 'border-neutral-700 hover:border-neutral-600 bg-neutral-800'
               }`}
               onClick={() => handlePlatformToggle(integration.provider)}
             >
@@ -148,8 +148,8 @@ export default function PublishModule() {
                   {getPlatformIcon(integration.provider)}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{integration.name}</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-semibold text-neutral-100">{integration.name}</h4>
+                  <p className="text-sm text-neutral-400">
                     {integration.capabilities.supportsVideo && integration.capabilities.supportsImage
                       ? 'Video e Imagen'
                       : integration.capabilities.supportsVideo
@@ -169,8 +169,8 @@ export default function PublishModule() {
 
       {/* Upload de archivo */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Contenido multimedia</h3>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+        <h3 className="text-lg font-semibold text-neutral-100 mb-4">Contenido multimedia</h3>
+        <div className="border-2 border-dashed border-neutral-600 rounded-lg p-6 text-center bg-neutral-800">
           {mediaPreview ? (
             <div className="space-y-4">
               {mediaFile?.type.startsWith('video/') ? (
@@ -187,7 +187,7 @@ export default function PublishModule() {
                 />
               )}
               <div className="flex items-center justify-center space-x-2">
-                <span className="text-sm text-gray-600">{mediaFile?.name}</span>
+                <span className="text-sm text-neutral-300">{mediaFile?.name}</span>
                 <button
                   onClick={() => {
                     setMediaFile(null);
@@ -196,7 +196,7 @@ export default function PublishModule() {
                       fileInputRef.current.value = '';
                     }
                   }}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-red-400 hover:text-red-300"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -204,9 +204,9 @@ export default function PublishModule() {
             </div>
           ) : (
             <div>
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">Arrastra tu archivo aquí o haz clic para seleccionar</p>
-              <p className="text-sm text-gray-500">
+              <Upload className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+              <p className="text-neutral-300 mb-2">Arrastra tu archivo aquí o haz clic para seleccionar</p>
+              <p className="text-sm text-neutral-500">
                 Formatos soportados: MP4, MOV, AVI, JPG, PNG, GIF
               </p>
               <input
@@ -229,38 +229,38 @@ export default function PublishModule() {
 
       {/* Caption */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Descripción</h3>
+        <h3 className="text-lg font-semibold text-neutral-100 mb-4">Descripción</h3>
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           placeholder="Escribe la descripción de tu publicación..."
-          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full p-4 border border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-neutral-800 text-neutral-100 placeholder-neutral-400"
           rows={4}
         />
       </div>
 
       {/* Hashtags */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Hashtags</h3>
+        <h3 className="text-lg font-semibold text-neutral-100 mb-4">Hashtags</h3>
         <input
           type="text"
           value={hashtags}
           onChange={(e) => setHashtags(e.target.value)}
           placeholder="#hashtag1 #hashtag2 #hashtag3"
-          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-4 border border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-neutral-800 text-neutral-100 placeholder-neutral-400"
         />
       </div>
 
       {/* Programación (opcional) */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Programar publicación (opcional)</h3>
+        <h3 className="text-lg font-semibold text-neutral-100 mb-4">Programar publicación (opcional)</h3>
         <div className="flex items-center space-x-4">
-          <Calendar className="w-5 h-5 text-gray-400" />
+          <Calendar className="w-5 h-5 text-neutral-400" />
           <input
             type="datetime-local"
             value={scheduleTime}
             onChange={(e) => setScheduleTime(e.target.value)}
-            className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="p-3 border border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-neutral-800 text-neutral-100"
           />
         </div>
       </div>
@@ -290,29 +290,29 @@ export default function PublishModule() {
       {/* Resultados de publicación */}
       {publishResults.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Resultados</h3>
+          <h3 className="text-lg font-semibold text-neutral-100 mb-4">Resultados</h3>
           <div className="space-y-3">
             {publishResults.map((result, index) => (
               <div
                 key={index}
                 className={`p-4 rounded-lg flex items-center space-x-3 ${
-                  result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                  result.success ? 'bg-green-900/20 border border-green-600' : 'bg-red-900/20 border border-red-600'
                 }`}
               >
                 {result.success ? (
-                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <CheckCircle className="w-6 h-6 text-green-400" />
                 ) : (
-                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  <AlertCircle className="w-6 h-6 text-red-400" />
                 )}
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     {getPlatformIcon(result.platform)}
-                    <span className="font-semibold capitalize">{result.platform}</span>
+                    <span className="font-semibold capitalize text-neutral-100">{result.platform}</span>
                   </div>
                   {result.success ? (
-                    <p className="text-sm text-green-600">Publicado exitosamente</p>
+                    <p className="text-sm text-green-400">Publicado exitosamente</p>
                   ) : (
-                    <p className="text-sm text-red-600">{result.error}</p>
+                    <p className="text-sm text-red-400">{result.error}</p>
                   )}
                 </div>
               </div>
