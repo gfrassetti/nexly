@@ -26,6 +26,7 @@ import usageRouter from "./routes/usage";
 import whatsappRouter from "./routes/whatsapp";
 import instagramRouter from "./routes/instagram";
 import tiktokRouter from "./routes/tiktok";
+import publishRouter from "./routes/publish";
 import { 
   generalRateLimit, 
   paymentRateLimit, 
@@ -142,6 +143,7 @@ app.use("/usage", requireAuth, usageRouter);
 app.use("/whatsapp", requireAuth, whatsappRouter);
 app.use("/instagram", requireAuth, instagramRouter);
 app.use("/tiktok", requireAuth, tiktokRouter);
+app.use("/publish", requireAuth, publishRouter);
 
 // Endpoint raíz
 app.get("/", (req, res) => {
@@ -174,7 +176,8 @@ app.use((req, res) => {
       "/instagram",
       "/tiktok",
       "/telegram",
-      "/whatsapp"
+      "/whatsapp",
+      "/publish"
     ]
   });
 });
