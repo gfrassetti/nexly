@@ -23,9 +23,16 @@ export default function ConnectWhatsAppPage() {
   };
 
   const handleSignupError = (error: string) => {
-    setConnectionStatus('error');
+    // Solo actualizar estado si es un error técnico real
+    // Las cancelaciones del usuario no deben tratarse como errores
+    if (error && !error.toLowerCase().includes('cancel')) {
+      setConnectionStatus('error');
+      console.error('WhatsApp signup error:', error);
+    } else {
+      // Si es una cancelación, solo cerrar el modal sin tratarlo como error
+      console.info('WhatsApp signup cancelled by user (not an error)');
+    }
     setShowSignup(false);
-    console.error('WhatsApp signup error:', error);
   };
 
   const handleSignupClose = () => {

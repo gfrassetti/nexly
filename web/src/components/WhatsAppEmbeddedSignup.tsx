@@ -83,7 +83,7 @@ export default function WhatsAppEmbeddedSignup({
             // Usuario completó el Embedded Signup
             const { phone_number_id, waba_id } = data.data;
             
-            console.log('WhatsApp Embedded Signup completed', {
+            console.log('✅ WhatsApp Embedded Signup completed successfully', {
               phone_number_id,
               waba_id
             });
@@ -92,17 +92,28 @@ export default function WhatsAppEmbeddedSignup({
             handleSignupSuccess(phone_number_id, waba_id);
             
           } else if (data.event === 'CANCEL') {
+            // Usuario canceló el flujo de Embedded Signup - NO es un error técnico
             const { current_step } = data.data;
-            console.warn('Embedded Signup cancelled at step:', current_step);
+            console.info('ℹ️ WhatsApp Embedded Signup cancelled by user (not an error)', {
+              current_step,
+              note: 'User cancelled the signup flow - this is normal, not a technical error'
+            });
+            
+            // Mostrar mensaje informativo sin tratarlo como error crítico
             setStep('error');
-            setErrorMessage('Proceso de registro cancelado');
-            onError('Proceso cancelado');
+            setErrorMessage('El proceso de registro fue cancelado. Puedes intentarlo de nuevo cuando estés listo.');
+            // IMPORTANTE: No llamar onError() para cancelaciones del usuario
+            // Solo llamar onError() para errores técnicos reales
             
           } else if (data.event === 'ERROR') {
+            // Error real durante el Embedded Signup
             const { error_message } = data.data;
-            console.error('Embedded Signup error:', error_message);
+            console.error('WhatsApp Embedded Signup error:', {
+              error_message,
+              note: 'Technical error during signup flow'
+            });
             setStep('error');
-            setErrorMessage(error_message || 'Error en el proceso de registro');
+            setErrorMessage(error_message || 'Error en el proceso de registro. Por favor, intenta de nuevo.');
             onError(error_message || 'Error desconocido');
           }
         }
