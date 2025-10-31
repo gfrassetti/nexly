@@ -112,9 +112,15 @@ export function useStripeOperations() {
     setError(null);
 
     try {
+      // Obtener token de autenticación
+      const token = localStorage.getItem('token');
+      
       const res = await fetch("/api/stripe/pause-subscription", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ subscriptionId }),
       });
 
@@ -124,10 +130,20 @@ export function useStripeOperations() {
       }
 
       const data = await res.json();
+      
+      toast.success('Suscripción pausada', {
+        description: 'Tu suscripción ha sido pausada exitosamente'
+      });
+      
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error al pausar la suscripción";
       setError(errorMessage);
+      
+      toast.error('Error al pausar', {
+        description: errorMessage
+      });
+      
       console.error("Error al pausar suscripción:", err);
       throw err;
     } finally {
@@ -140,9 +156,15 @@ export function useStripeOperations() {
     setError(null);
 
     try {
+      // Obtener token de autenticación
+      const token = localStorage.getItem('token');
+      
       const res = await fetch("/api/stripe/resume-subscription", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ subscriptionId }),
       });
 
@@ -152,10 +174,20 @@ export function useStripeOperations() {
       }
 
       const data = await res.json();
+      
+      toast.success('Suscripción reanudada', {
+        description: 'Tu suscripción ha sido reanudada exitosamente'
+      });
+      
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Error al reanudar la suscripción";
       setError(errorMessage);
+      
+      toast.error('Error al reanudar', {
+        description: errorMessage
+      });
+      
       console.error("Error al reanudar suscripción:", err);
       throw err;
     } finally {

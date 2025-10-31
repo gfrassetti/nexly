@@ -11,8 +11,8 @@ export async function PUT(request: NextRequest) {
     const token = authHeader?.replace('Bearer ', '') || '';
     
     // Forward the request to the Express backend
-    // El router está montado en /stripe/pause y el endpoint es /pause, entonces la ruta completa es /stripe/pause/pause
-    const response = await fetch(`${backendUrl}/stripe/pause/pause`, {
+    // El router está montado en /stripe/pause y el endpoint es /resume, entonces la ruta completa es /stripe/pause/resume
+    const response = await fetch(`${backendUrl}/stripe/pause/resume`, {
       method: 'POST',
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',
@@ -29,10 +29,11 @@ export async function PUT(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in pause-subscription proxy:', error);
+    console.error('Error in resume-subscription proxy:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }
 }
+

@@ -10,6 +10,7 @@ import Subscription from '../models/Subscription';
 import { User } from '../models/User';
 import { asyncHandler, CustomError } from '../utils/errorHandler';
 import { validateSubscriptionData, paymentRateLimit } from '../middleware/security';
+import { stripeService } from '../services/stripe';
 
 const router = express.Router();
 /**
@@ -240,14 +241,14 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
     }
 
     // Obtener información del usuario
-    const user = await User.findById(userId);
+    let user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
     // CRÍTICO: Buscar la suscripción MÁS RECIENTE y ACTIVA primero
     // No traer suscripciones canceladas si hay una activa
-    const subscription = await Subscription.findOne({ 
+    let subscription = await Subscription.findOne({ 
       userId,
       status: { $nin: ['canceled', 'incomplete_expired'] } // Excluir canceladas y expiradas
     }).sort({ createdAt: -1 }); // Ordenar por más reciente primero
@@ -281,6 +282,124 @@ router.get('/status', authenticateToken, asyncHandler(async (req: any, res: any)
         subscription: null,
         freeTrial: freeTrialInfo
       });
+    }
+
+    // CRÍTICO: Sincronizar con Stripe si el trial terminó pero el status sigue siendo 'trialing'
+    // Esto corrige el problema cuando el webhook no procesó el evento de pago automático
+    if (subscription.stripeSubscriptionId && subscription.trialEndDate && subscription.status === 'trialing') {
+      const now = new Date();
+      const trialEnd = new Date(subscription.trialEndDate);
+      
+      // Si el trial terminó hace más de 5 minutos (para dar tiempo al webhook)
+      if (now > trialEnd && (now.getTime() - trialEnd.getTime()) > 5 * 60 * 1000) {
+        try {
+          console.log(`🔄 Trial terminó pero status sigue siendo 'trialing'. Sincronizando con Stripe...`);
+          
+          // Obtener el estado real de Stripe
+          const stripeSubscription = await stripeService.getSubscription(subscription.stripeSubscriptionId);
+          
+          // Determinar el plan correcto
+          const priceId = stripeSubscription.items.data[0]?.price?.id || '';
+          const mapPriceIdToPlanType = (priceId: string): 'crecimiento' | 'pro' | 'business' => {
+            const basicPriceId = process.env.STRIPE_BASIC_PRICE_ID;
+            const premiumPriceId = process.env.STRIPE_PREMIUM_PRICE_ID;
+            const enterprisePriceId = process.env.STRIPE_ENTERPRISE_PRICE_ID;
+            
+            if (priceId === basicPriceId) return 'crecimiento';
+            if (priceId === premiumPriceId) return 'pro';
+            if (priceId === enterprisePriceId) return 'business';
+            
+            // Fallback por nombre
+            if (priceId.includes('premium') || priceId.includes('pro')) return 'pro';
+            if (priceId.includes('enterprise') || priceId.includes('business')) return 'business';
+            return 'crecimiento';
+          };
+          const planType = mapPriceIdToPlanType(priceId);
+          
+          // Actualizar el estado según lo que Stripe reporta
+          const stripeStatus = stripeSubscription.status;
+          
+          if (stripeStatus === 'active') {
+            console.log(`✅ Actualizando suscripción de 'trialing' a 'active' después de sincronización con Stripe`);
+            
+            // Actualizar suscripción en DB
+            subscription.status = 'active';
+            subscription.planType = planType;
+            subscription.lastPaymentDate = new Date();
+            // No eliminar trialEndDate, solo marcarlo como completado en el status
+            subscription.pausedAt = undefined; // Limpiar pausa si existía
+            
+            const stripeSub = stripeSubscription as any;
+            if (stripeSub.current_period_start) {
+              subscription.currentPeriodStart = new Date(stripeSub.current_period_start * 1000);
+            }
+            if (stripeSub.current_period_end) {
+              subscription.currentPeriodEnd = new Date(stripeSub.current_period_end * 1000);
+            }
+            
+            await subscription.save();
+            
+            // Actualizar estado del usuario
+            user.subscription_status = 'active_paid';
+            user.selectedPlan = planType;
+            user.freeTrialUsed = true;
+            await user.save();
+            
+            console.log(`✅ Suscripción sincronizada: ${subscription._id} -> active_paid`);
+          } else if (stripeStatus === 'past_due' || stripeStatus === 'unpaid') {
+            console.log(`⚠️ Suscripción en Stripe está '${stripeStatus}'. Actualizando...`);
+            subscription.status = stripeStatus as any;
+            subscription.lastPaymentAttempt = new Date();
+            await subscription.save();
+            
+            // El usuario puede seguir con active_trial o active_paid hasta que expire completamente
+          } else if (stripeStatus === 'canceled') {
+            console.log(`⚠️ Suscripción fue cancelada en Stripe. Actualizando...`);
+            subscription.status = 'canceled';
+            const stripeSub = stripeSubscription as any;
+            subscription.cancelledAt = stripeSub.canceled_at 
+              ? new Date(stripeSub.canceled_at * 1000)
+              : new Date();
+            // Mantener trialEndDate para referencia histórica
+            await subscription.save();
+            
+            user.subscription_status = 'cancelled';
+            await user.save();
+          } else if (stripeStatus === 'paused' || stripeSubscription.pause_collection) {
+            console.log(`⚠️ Suscripción está pausada en Stripe. Actualizando...`);
+            subscription.status = 'paused';
+            subscription.pausedAt = new Date();
+            await subscription.save();
+            
+            // Usuario puede seguir con active_paid aunque esté pausada
+          } else if (stripeStatus === 'incomplete' || stripeStatus === 'incomplete_expired') {
+            console.log(`⚠️ Suscripción está incompleta en Stripe: '${stripeStatus}'. Actualizando...`);
+            subscription.status = stripeStatus as any;
+            await subscription.save();
+          } else {
+            console.log(`⚠️ Estado desconocido de Stripe: '${stripeStatus}'. Manteniendo estado local.`);
+          }
+          
+          // Recargar la suscripción desde la DB después de actualizar para obtener los valores actualizados
+          const updatedSubscription = await Subscription.findById(subscription._id);
+          if (updatedSubscription) {
+            subscription = updatedSubscription;
+            // También recargar el usuario
+            const updatedUser = await User.findById(userId);
+            if (updatedUser) {
+              user = updatedUser;
+            }
+          }
+        } catch (error: any) {
+          console.error('⚠️ Error al sincronizar con Stripe (continuando con estado local):', {
+            message: error.message,
+            subscriptionId: subscription.stripeSubscriptionId,
+            error: error
+          });
+          // Continuar con el estado local si hay error al sincronizar
+          // No bloquear la respuesta por un error de sincronización
+        }
+      }
     }
 
     const isTrialActive = (subscription as any).isTrialActive();

@@ -446,10 +446,12 @@ export default function SubscriptionStatus() {
           message: 'Período de prueba activo'
         };
       } else {
+        // Trial terminó - el pago automático debería estar procesándose
+        // Ya que el usuario cargó su tarjeta al registrarse
         return {
-          text: 'Prueba Expirada',
-          className: 'text-warning border border-warning/30',
-          message: 'Período de prueba terminado. Se requiere pago para continuar'
+          text: 'Procesando Pago',
+          className: 'text-accent-blue border border-accent-blue/30',
+          message: 'Período de prueba terminado. Procesando pago automático...'
         };
       }
     }
