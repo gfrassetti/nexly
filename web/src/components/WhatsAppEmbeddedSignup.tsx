@@ -35,36 +35,77 @@ export default function WhatsAppEmbeddedSignup({
 
   useEffect(() => {
     if (isOpen) {
+      console.log('🔵 WhatsApp Embedded Signup modal opened');
+      // Primero cargar el SDK, luego inicializar el signup
       loadFacebookSDK();
-      initializeSignup();
+      // Dar un pequeño delay para que el script comience a cargar
+      setTimeout(() => {
+        initializeSignup();
+      }, 100);
     }
   }, [isOpen]);
 
   // Cargar Facebook SDK según documentación de Meta
   const loadFacebookSDK = () => {
-    if (fbSdkLoaded.current || document.getElementById('facebook-jssdk')) {
+    // Si ya está cargado, verificar que FB esté disponible
+    if (fbSdkLoaded.current && window.FB) {
+      console.log('✅ Facebook SDK already loaded');
       return;
     }
 
-    // Configurar inicialización de Facebook SDK
-    window.fbAsyncInit = function() {
-      window.FB.init({
-        appId: facebookAppId || process.env.NEXT_PUBLIC_META_APP_ID || '',
-        autoLogAppEvents: true,
-        xfbml: true,
-        version: 'v21.0'
-      });
-      fbSdkLoaded.current = true;
-    };
+    // Si ya existe el script pero FB no está disponible, esperar
+    if (document.getElementById('facebook-jssdk') && !window.FB) {
+      console.log('⏳ Facebook SDK script loaded, waiting for initialization...');
+      return;
+    }
 
-    // Cargar el script de Facebook SDK
+    // Si ya existe el script, no cargar de nuevo
+    if (document.getElementById('facebook-jssdk')) {
+      return;
+    }
+
+    console.log('📥 Loading Facebook SDK script...');
+
+    // IMPORTANTE: Según documentación oficial de Meta, fbAsyncInit debe estar definido
+    // ANTES de cargar el script. Si no tenemos el App ID aún, configuramos un placeholder
+    // que se actualizará cuando recibamos el App ID del backend
+    if (!window.fbAsyncInit) {
+      window.fbAsyncInit = function() {
+        // Este placeholder será sobrescrito cuando recibamos el App ID del backend
+        console.log('⏳ fbAsyncInit called but App ID not yet received, waiting...');
+      };
+    }
+
+    // Cargar el script de Facebook SDK según documentación oficial de Meta
+    // https://developers.facebook.com/docs/whatsapp/embedded-signup/default-flow
+    // NOTA: El script debe tener estos atributos exactos: async defer crossorigin="anonymous"
     const script = document.createElement('script');
     script.id = 'facebook-jssdk';
     script.async = true;
     script.defer = true;
     script.crossOrigin = 'anonymous';
     script.src = 'https://connect.facebook.net/en_US/sdk.js';
-    document.body.appendChild(script);
+    
+    script.onload = () => {
+      console.log('📦 Facebook SDK script loaded successfully');
+      // El SDK ejecutará fbAsyncInit automáticamente cuando esté listo
+      // Si fbAsyncInit ya fue configurado con el App ID, se inicializará automáticamente
+    };
+    
+    script.onerror = (error) => {
+      console.error('❌ Error loading Facebook SDK script:', error);
+      setStep('error');
+      setErrorMessage('Error al cargar Facebook SDK. Verifica tu conexión e intenta de nuevo.');
+      onError('Error loading Facebook SDK');
+    };
+    
+    // Insertar el script en el <head> según documentación oficial
+    if (document.head) {
+      document.head.appendChild(script);
+    } else {
+      // Fallback: agregar al body si head no está disponible
+      document.body.appendChild(script);
+    }
   };
 
   // Escuchar mensajes del Embedded Signup según documentación de Meta
@@ -99,22 +140,23 @@ export default function WhatsAppEmbeddedSignup({
               note: 'User cancelled the signup flow - this is normal, not a technical error'
             });
             
-            // Mostrar mensaje informativo sin tratarlo como error crítico
-            setStep('error');
-            setErrorMessage('El proceso de registro fue cancelado. Puedes intentarlo de nuevo cuando estés listo.');
+            // Cerrar el modal sin mostrar error (no es un error técnico)
+            onClose();
             // IMPORTANTE: No llamar onError() para cancelaciones del usuario
             // Solo llamar onError() para errores técnicos reales
             
           } else if (data.event === 'ERROR') {
             // Error real durante el Embedded Signup
             const { error_message } = data.data;
-            console.error('WhatsApp Embedded Signup error:', {
+            console.error('❌ WhatsApp Embedded Signup error from Meta:', {
               error_message,
+              fullData: data,
               note: 'Technical error during signup flow'
             });
             setStep('error');
-            setErrorMessage(error_message || 'Error en el proceso de registro. Por favor, intenta de nuevo.');
-            onError(error_message || 'Error desconocido');
+            const errorMsg = error_message || 'Error en el proceso de registro. Por favor, intenta de nuevo.';
+            setErrorMessage(errorMsg);
+            onError(errorMsg);
           }
         }
       } catch (error) {
@@ -153,8 +195,23 @@ export default function WhatsAppEmbeddedSignup({
 
       const data = await response.json();
       
+      console.log('📦 Backend response:', {
+        success: data.success,
+        hasConfigId: !!data.configId,
+        hasSolutionId: !!data.solutionId,
+        hasFacebookAppId: !!data.facebookAppId,
+        error: data.error
+      });
+
       if (!data.configId || !data.solutionId || !data.facebookAppId) {
-        throw new Error('Configuración incompleta de Embedded Signup');
+        const errorMsg = data.error || 'Configuración incompleta de Embedded Signup';
+        console.error('❌ Configuration incomplete:', {
+          configId: !!data.configId,
+          solutionId: !!data.solutionId,
+          facebookAppId: !!data.facebookAppId,
+          backendError: data.error
+        });
+        throw new Error(errorMsg);
       }
 
       setConfigId(data.configId);
@@ -165,35 +222,136 @@ export default function WhatsAppEmbeddedSignup({
       // Según documentación de Twilio: si usamos números SMS-capables, debemos usar featureType
       const useTwilioNumbers = data.useTwilioNumbers !== false; // Por defecto true
 
-      // Inicializar Facebook SDK con el App ID antes de lanzar el signup
-      if (window.FB && !fbSdkLoaded.current) {
-        window.FB.init({
-          appId: data.facebookAppId,
-          autoLogAppEvents: true,
-          xfbml: true,
-          version: 'v21.0'
-        });
-        fbSdkLoaded.current = true;
+      console.log('📋 Embedded Signup configuration validated:', {
+        configId: data.configId ? `${data.configId.substring(0, 10)}...` : 'NOT SET',
+        solutionId: data.solutionId ? `${data.solutionId.substring(0, 10)}...` : 'NOT SET',
+        facebookAppId: data.facebookAppId ? `${data.facebookAppId.substring(0, 4)}...` : 'NOT SET',
+        useTwilioNumbers
+      });
+
+      // Guardar el App ID
+      setFacebookAppId(data.facebookAppId);
+      
+      // CRÍTICO: Configurar fbAsyncInit ANTES de que el SDK se cargue
+      // Según documentación oficial de Meta: https://developers.facebook.com/docs/whatsapp/embedded-signup/default-flow
+      // fbAsyncInit debe estar definido ANTES de cargar el script del SDK
+      window.fbAsyncInit = function() {
+        console.log('🔧 fbAsyncInit called by Facebook SDK, initializing with App ID:', data.facebookAppId);
+        if (window.FB && data.facebookAppId) {
+          try {
+            window.FB.init({
+              appId: data.facebookAppId,
+              autoLogAppEvents: true,
+              xfbml: true,
+              version: 'v21.0'
+            });
+            fbSdkLoaded.current = true;
+            console.log('✅ Facebook SDK initialized successfully via fbAsyncInit');
+          } catch (error: any) {
+            console.error('❌ Error in fbAsyncInit:', error);
+          }
+        }
+      };
+
+      // Si el SDK ya está cargado, inicializarlo inmediatamente
+      if (window.FB && typeof window.FB.init === 'function' && data.facebookAppId) {
+        try {
+          console.log('🔄 SDK already loaded, initializing immediately...');
+          window.FB.init({
+            appId: data.facebookAppId,
+            autoLogAppEvents: true,
+            xfbml: true,
+            version: 'v21.0'
+          });
+          fbSdkLoaded.current = true;
+          console.log('✅ Facebook SDK initialized successfully');
+        } catch (initError: any) {
+          console.warn('⚠️ Error initializing Facebook SDK (may already be initialized):', initError);
+          // Verificar si ya está inicializado
+          if (window.FB && typeof window.FB.getLoginStatus === 'function' && typeof window.FB.login === 'function') {
+            fbSdkLoaded.current = true;
+            console.log('✅ Facebook SDK already initialized, proceeding...');
+          }
+        }
+      } else {
+        console.log('⏳ SDK not loaded yet, fbAsyncInit will run automatically when SDK loads');
       }
 
-      // Esperar a que Facebook SDK esté cargado
+      // Esperar a que Facebook SDK esté completamente cargado y disponible
+      let attempts = 0;
+      const maxAttempts = 100; // 10 segundos (100ms * 100)
+      
       const checkFBSDK = setInterval(() => {
-        if (window.FB && (fbSdkLoaded.current || window.FB.getLoginStatus)) {
+        attempts++;
+        
+        // Verificar que FB esté disponible, inicializado, y que login funcione
+        const isReady = window.FB && 
+                       typeof window.FB.login === 'function' && 
+                       typeof window.FB.getLoginStatus === 'function' &&
+                       (fbSdkLoaded.current || (window.FB && window.FB.getLoginStatus));
+        
+        if (isReady) {
           clearInterval(checkFBSDK);
+          console.log('✅ Facebook SDK ready, launching Embedded Signup...', {
+            hasFB: !!window.FB,
+            hasLogin: typeof window.FB.login === 'function',
+            hasGetLoginStatus: typeof window.FB.getLoginStatus === 'function',
+            fbSdkLoaded: fbSdkLoaded.current,
+            appId: data.facebookAppId ? `${data.facebookAppId.substring(0, 4)}...` : 'NOT SET'
+          });
+          
           // Lanzar Embedded Signup con featureType si usamos números de Twilio
-          launchEmbeddedSignup(data.configId, data.solutionId, useTwilioNumbers);
+          try {
+            launchEmbeddedSignup(data.configId, data.solutionId, useTwilioNumbers);
+          } catch (error: any) {
+            console.error('❌ Error launching Embedded Signup:', error);
+            setStep('error');
+            setErrorMessage(error.message || 'Error al iniciar el proceso de registro');
+            onError(error.message);
+          }
+        } else if (attempts >= maxAttempts) {
+          // Timeout alcanzado
+          clearInterval(checkFBSDK);
+          console.error('❌ Facebook SDK not ready after 10 seconds', {
+            hasFB: !!window.FB,
+            hasLogin: !!(window.FB && typeof window.FB.login === 'function'),
+            hasGetLoginStatus: !!(window.FB && typeof window.FB.getLoginStatus === 'function'),
+            fbSdkLoaded: fbSdkLoaded.current,
+            scriptLoaded: !!document.getElementById('facebook-jssdk')
+          });
+          setStep('error');
+          setErrorMessage('Error al cargar Facebook SDK. Por favor, recarga la página e intenta de nuevo.');
+          onError('Facebook SDK timeout');
+        } else {
+          // Debug: mostrar progreso cada 20 intentos
+          if (attempts % 20 === 0) {
+            console.log(`⏳ Waiting for Facebook SDK... (${attempts}/${maxAttempts})`, {
+              hasFB: !!window.FB,
+              hasLogin: !!(window.FB && typeof window.FB.login === 'function'),
+              hasGetLoginStatus: !!(window.FB && typeof window.FB.getLoginStatus === 'function'),
+              fbSdkLoaded: fbSdkLoaded.current,
+              scriptLoaded: !!document.getElementById('facebook-jssdk')
+            });
+            
+            // Si el SDK está cargado pero no inicializado, intentar inicializarlo de nuevo
+            if (window.FB && !fbSdkLoaded.current && data.facebookAppId) {
+              console.log('🔄 Retrying SDK initialization...');
+              try {
+                window.FB.init({
+                  appId: data.facebookAppId,
+                  autoLogAppEvents: true,
+                  xfbml: true,
+                  version: 'v21.0'
+                });
+                fbSdkLoaded.current = true;
+                console.log('✅ Facebook SDK initialized on retry');
+              } catch (retryError: any) {
+                console.warn('⚠️ Retry initialization failed:', retryError);
+              }
+            }
+          }
         }
       }, 100);
-
-      // Timeout después de 10 segundos
-      setTimeout(() => {
-        clearInterval(checkFBSDK);
-        if (!window.FB) {
-          setStep('error');
-          setErrorMessage('Error al cargar Facebook SDK. Por favor, recarga la página.');
-          onError('Error al cargar Facebook SDK');
-        }
-      }, 10000);
 
     } catch (error: any) {
       setStep('error');
@@ -209,7 +367,25 @@ export default function WhatsAppEmbeddedSignup({
       throw new Error('Facebook SDK no está disponible');
     }
 
+    if (typeof window.FB.login !== 'function') {
+      throw new Error('Facebook SDK login function no está disponible');
+    }
+
+    console.log('🚀 Launching Facebook Embedded Signup with:', {
+      configId: configId ? `${configId.substring(0, 10)}...` : 'NOT SET',
+      solutionId: solutionId ? `${solutionId.substring(0, 10)}...` : 'NOT SET',
+      useTwilioNumbers,
+      hasFB: !!window.FB,
+      hasFBLogin: typeof window.FB.login === 'function'
+    });
+
     setStep('connecting');
+
+    // IMPORTANTE: Construir URLs de retorno para Embedded Signup
+    // Según documentación de Meta, returnUrl y failureUrl son requeridos
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const returnUrl = `${baseUrl}/dashboard/integrations/connect/whatsapp/success`;
+    const failureUrl = `${baseUrl}/dashboard/integrations/connect/whatsapp/error`;
 
     // Preparar parámetros según documentación de Meta
     // Si usas números SMS-capables de Twilio, incluir featureType: 'only_waba_sharing'
@@ -219,6 +395,8 @@ export default function WhatsAppEmbeddedSignup({
       auth_type: 'rerequest', // Evita errores si el usuario ya está logueado
       response_type: 'code',
       override_default_response_type: true,
+      returnUrl: returnUrl, // URL de éxito - REQUERIDO
+      failureUrl: failureUrl, // URL de error - REQUERIDO
       extras: {
         sessionInfoVersion: 3, // Requerido para obtener WABA ID
         setup: {
@@ -233,15 +411,90 @@ export default function WhatsAppEmbeddedSignup({
       loginOptions.extras.featureType = 'only_waba_sharing';
     }
 
+    // Validar que tenemos todos los parámetros necesarios
+    if (!configId || !solutionId) {
+      throw new Error('Config ID o Solution ID faltantes. Verifica la configuración del servidor.');
+    }
+
+    console.log('📤 Calling FB.login() with options:', {
+      config_id: configId ? `SET (${configId.length} chars)` : 'NOT SET',
+      solution_id: solutionId ? `SET (${solutionId.length} chars)` : 'NOT SET',
+      returnUrl: loginOptions.returnUrl ? 'SET' : 'NOT SET',
+      failureUrl: loginOptions.failureUrl ? 'SET' : 'NOT SET',
+      hasExtras: !!loginOptions.extras,
+      hasSetup: !!loginOptions.extras?.setup,
+      hasSolutionID: !!loginOptions.extras?.setup?.solutionID,
+      hasFeatureType: !!loginOptions.extras?.featureType,
+      fullOptions: JSON.stringify(loginOptions, null, 2)
+    });
+
     // Lanzar Facebook Login con Embedded Signup según documentación oficial
-    window.FB.login(
-      function (response: any) {
-        // No necesitamos hacer nada con la respuesta aquí
-        // Los datos vienen a través del listener de mensajes
-        console.log('Facebook login response:', response);
-      },
-      loginOptions
-    );
+    // NOTA: FB.login() con config_id debería abrir un popup de Facebook para Embedded Signup
+    try {
+      console.log('🔴 About to call FB.login()...', {
+        FB_available: !!window.FB,
+        FB_login_available: typeof window.FB.login === 'function',
+        options: loginOptions
+      });
+
+      // Verificar que FB.login() existe y es una función
+      if (!window.FB || typeof window.FB.login !== 'function') {
+        throw new Error('FB.login() no está disponible. El SDK de Facebook no está cargado correctamente.');
+      }
+
+      const loginResponse = window.FB.login(
+        function (response: any) {
+          // Callback de FB.login() - respuesta inicial
+          console.log('📥 Facebook login callback received:', {
+            status: response?.status,
+            authResponse: response?.authResponse ? 'present' : 'absent',
+            error: response?.error ? response.error : 'none',
+            fullResponse: response,
+            note: 'Actual Embedded Signup data will come via postMessage listener'
+          });
+          
+          // Verificar si hay errores en la respuesta inicial
+          if (response?.error) {
+            console.error('❌ Facebook login error in callback:', response.error);
+            setStep('error');
+            setErrorMessage(response.error.message || 'Error en el inicio de sesión de Facebook');
+            onError(response.error.message || 'Facebook login error');
+          } else if (response?.status === 'connected') {
+            console.log('✅ Facebook login successful, waiting for Embedded Signup postMessage...');
+          } else {
+            console.log('ℹ️ Facebook login status:', response?.status, '- waiting for postMessage...');
+          }
+        },
+        loginOptions
+      );
+      
+      console.log('✅ FB.login() called successfully', {
+        response: loginResponse ? 'received' : 'async callback only',
+        responseType: typeof loginResponse,
+        isPromise: loginResponse && typeof loginResponse.then === 'function',
+        note: 'FB.login() is async - check callback and postMessage listener for results'
+      });
+
+      // Verificar si FB.login() devolvió una promesa (nuevas versiones del SDK)
+      if (loginResponse && typeof loginResponse.then === 'function') {
+        loginResponse.then((response: any) => {
+          console.log('📥 FB.login() promise resolved:', response);
+        }).catch((error: any) => {
+          console.error('❌ FB.login() promise rejected:', error);
+          setStep('error');
+          setErrorMessage(error.message || 'Error al iniciar sesión con Facebook');
+          onError(error.message || 'Facebook login promise error');
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Error calling FB.login():', error, {
+        errorMessage: error.message,
+        errorStack: error.stack,
+        FB_available: !!window.FB,
+        FB_login_type: window.FB ? typeof window.FB.login : 'N/A'
+      });
+      throw error;
+    }
   };
 
   // Manejar éxito del signup
@@ -384,3 +637,4 @@ export default function WhatsAppEmbeddedSignup({
     </Dialog>
   );
 }
+
