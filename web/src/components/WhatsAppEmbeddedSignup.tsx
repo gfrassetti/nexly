@@ -383,9 +383,21 @@ export default function WhatsAppEmbeddedSignup({
 
     // IMPORTANTE: Construir URLs de retorno para Embedded Signup
     // Según documentación de Meta, returnUrl y failureUrl son requeridos
+    // Deben ser URLs absolutas completas
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     const returnUrl = `${baseUrl}/dashboard/integrations/connect/whatsapp/success`;
     const failureUrl = `${baseUrl}/dashboard/integrations/connect/whatsapp/error`;
+
+    // Validar que las URLs están configuradas
+    if (!returnUrl || !failureUrl) {
+      throw new Error('No se pudieron construir las URLs de retorno. Verifica la configuración.');
+    }
+
+    console.log('🔗 URLs de retorno configuradas:', {
+      returnUrl,
+      failureUrl,
+      baseUrl
+    });
 
     // Preparar parámetros según documentación de Meta
     // Si usas números SMS-capables de Twilio, incluir featureType: 'only_waba_sharing'
@@ -395,8 +407,8 @@ export default function WhatsAppEmbeddedSignup({
       auth_type: 'rerequest', // Evita errores si el usuario ya está logueado
       response_type: 'code',
       override_default_response_type: true,
-      returnUrl: returnUrl, // URL de éxito - REQUERIDO
-      failureUrl: failureUrl, // URL de error - REQUERIDO
+      returnUrl: returnUrl, // URL de éxito - REQUERIDO (debe estar en el nivel raíz)
+      failureUrl: failureUrl, // URL de error - REQUERIDO (debe estar en el nivel raíz)
       extras: {
         sessionInfoVersion: 3, // Requerido para obtener WABA ID
         setup: {
@@ -442,6 +454,12 @@ export default function WhatsAppEmbeddedSignup({
         throw new Error('FB.login() no está disponible. El SDK de Facebook no está cargado correctamente.');
       }
 
+      // IMPORTANTE: FB.login() requiere returnUrl y failureUrl cuando se usa con config_id
+      // Verificar que están presentes antes de llamar
+      if (!loginOptions.returnUrl || !loginOptions.failureUrl) {
+        throw new Error('returnUrl y failureUrl son requeridos para Embedded Signup');
+      }
+
       const loginResponse = window.FB.login(
         function (response: any) {
           // Callback de FB.login() - respuesta inicial
@@ -456,9 +474,18 @@ export default function WhatsAppEmbeddedSignup({
           // Verificar si hay errores en la respuesta inicial
           if (response?.error) {
             console.error('❌ Facebook login error in callback:', response.error);
-            setStep('error');
-            setErrorMessage(response.error.message || 'Error en el inicio de sesión de Facebook');
-            onError(response.error.message || 'Facebook login error');
+            
+            // Si el error menciona returnUrl o failureUrl, puede ser un problema de configuración
+            const errorMessage = response.error.message || '';
+            if (errorMessage.toLowerCase().includes('returnurl') || errorMessage.toLowerCase().includes('failureurl')) {
+              setStep('error');
+              setErrorMessage('Error de configuración: Las URLs de retorno no están configuradas correctamente.');
+              onError('URLs de retorno no configuradas correctamente');
+            } else {
+              setStep('error');
+              setErrorMessage(response.error.message || 'Error en el inicio de sesión de Facebook');
+              onError(response.error.message || 'Facebook login error');
+            }
           } else if (response?.status === 'connected') {
             console.log('✅ Facebook login successful, waiting for Embedded Signup postMessage...');
           } else {
