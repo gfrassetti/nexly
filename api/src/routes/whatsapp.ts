@@ -484,25 +484,49 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
         wabaId: WhatsAppBusinessAccountId
       });
     } else {
-      // Twilio ya creó el subaccount, necesitamos obtener el AuthToken
-      // Nota: Si Twilio creó el subaccount, puede que no tengamos el AuthToken inmediatamente
-      // En este caso, necesitarías recuperarlo de Twilio o almacenarlo cuando se crea
-      logger.warn('Subaccount already exists but AuthToken may be missing', {
+      // Twilio ya creó el subaccount en un callback anterior
+      // Intentar obtener el AuthToken del subaccount desde Twilio
+      // CRÍTICO: No usar el master token, siempre necesitamos el AuthToken del subaccount
+      logger.info('Subaccount provided by Twilio, fetching AuthToken', {
         subaccountSid,
         userId
       });
       
-      // Intentar obtener el AuthToken del subaccount desde Twilio
       try {
         const masterClient = new Twilio(config.twilioAccountSid, config.twilioAuthToken);
         const account = await masterClient.api.v2010.accounts(subaccountSid).fetch();
-        subaccountAuthToken = account.authToken;
+        
+        if (account.authToken) {
+          subaccountAuthToken = account.authToken;
+          logger.info('Successfully fetched subaccount AuthToken', {
+            subaccountSid
+          });
+        } else {
+          // Si no se puede obtener el AuthToken, crear un nuevo subaccount
+          logger.warn('Could not fetch AuthToken for existing subaccount, creating new one', {
+            subaccountSid
+          });
+          const subaccountResult = await createTwilioSubaccount(customerName, userId);
+          if (subaccountResult.success) {
+            subaccountSid = subaccountResult.subaccountSid;
+            subaccountAuthToken = subaccountResult.authToken;
+          } else {
+            throw new Error('Failed to create subaccount as fallback');
+          }
+        }
       } catch (error: any) {
-        logger.error('Failed to fetch subaccount AuthToken', {
+        logger.error('Failed to fetch subaccount AuthToken, creating new subaccount', {
           error: error.message,
           subaccountSid
         });
-        // Continuar sin AuthToken por ahora, se puede obtener después
+        
+        // Crear un nuevo subaccount si no se puede obtener el AuthToken
+        const subaccountResult = await createTwilioSubaccount(customerName, userId);
+        if (!subaccountResult.success) {
+          throw new Error(`Failed to create Twilio subaccount: ${subaccountResult.error}`);
+        }
+        subaccountSid = subaccountResult.subaccountSid;
+        subaccountAuthToken = subaccountResult.authToken;
       }
     }
 
@@ -510,11 +534,20 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
     // Verificar si es el primer sender para este WABA
     const isFirstSender = !existingIntegration;
     
+    // CRÍTICO: Usar SOLO el AuthToken del subaccount, nunca el master token
+    if (!subaccountAuthToken) {
+      logger.error('Cannot register sender without subaccount AuthToken', {
+        subaccountSid,
+        userId
+      });
+      throw new Error('Subaccount AuthToken is required to register WhatsApp Sender');
+    }
+
     const senderRegistration = await registerWhatsAppSender(
       phoneNumber,
       WhatsAppBusinessAccountId.toString(),
       subaccountSid!,
-      subaccountAuthToken || config.twilioAuthToken, // Fallback al master token si no hay subaccount token
+      subaccountAuthToken, // ✅ SOLO usar AuthToken del subaccount
       isFirstSender,
       customerName // Profile name para números SMS-capables
     );

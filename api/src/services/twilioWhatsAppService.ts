@@ -52,17 +52,11 @@ export async function sendWhatsAppMessage(
       };
     }
 
-    // 2. Verificar que el sender está ONLINE antes de enviar
-    // Según documentación de Twilio: status puede ser "CREATING", "ONLINE", "OFFLINE"
-    const senderStatus = integration.meta.senderStatus?.toUpperCase();
-    if (senderStatus && senderStatus !== 'ONLINE') {
-      return {
-        success: false,
-        error: `WhatsApp sender is ${senderStatus}. Sender must be ONLINE to send messages. Current status: ${integration.meta.senderStatus}`
-      };
-    }
-
-    // 3. Usar el número de WhatsApp del usuario como "from"
+    // 2. Usar el número de WhatsApp del usuario como "from"
+    // Nota: No verificamos senderStatus aquí porque:
+    // - Si el número está registrado en Twilio, puede enviar mensajes
+    // - El destinatario puede estar offline, WhatsApp entregará el mensaje cuando se conecte
+    // - Si hay un problema con el sender, Twilio retornará un error específico que manejaremos
     const fromNumber = integration.meta.whatsappNumber.startsWith('whatsapp:') 
       ? integration.meta.whatsappNumber 
       : `whatsapp:${integration.meta.whatsappNumber}`;
