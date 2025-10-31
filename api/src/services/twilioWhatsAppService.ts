@@ -23,28 +23,21 @@ export interface TwilioWhatsAppResponse {
 }
 
 /**
- * Enviar mensaje de WhatsApp usando la cuenta Master de Twilio
- * Modelo de Cuenta Única - Nexly paga todos los costos
+ * Enviar mensaje de WhatsApp usando el subaccount del usuario
+ * Cada usuario tiene su propio subaccount en Twilio (creado durante Embedded Signup)
  */
 export async function sendWhatsAppMessage(
   message: TwilioWhatsAppMessage,
   userId: string
 ): Promise<TwilioWhatsAppResponse> {
   try {
-    if (!twilioClient) {
-      return {
-        success: false,
-        error: "Twilio client not initialized. Check your TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN."
-      };
-    }
-
-    logger.info('Sending WhatsApp message via Master account', {
+    logger.info('Sending WhatsApp message via user subaccount', {
       to: message.to,
       userId,
       bodyLength: message.body.length
     });
 
-    // 1. Buscar la integración del usuario para obtener su número de WhatsApp
+    // 1. Buscar la integración del usuario para obtener su subaccount y número
     const Integration = require('../models/Integration').default;
     const integration = await Integration.findOne({
       userId,
@@ -59,24 +52,49 @@ export async function sendWhatsAppMessage(
       };
     }
 
-    // 2. Usar el número de WhatsApp del usuario como "from"
+    // 2. Verificar que el sender está ONLINE antes de enviar
+    // Según documentación de Twilio: status puede ser "CREATING", "ONLINE", "OFFLINE"
+    const senderStatus = integration.meta.senderStatus?.toUpperCase();
+    if (senderStatus && senderStatus !== 'ONLINE') {
+      return {
+        success: false,
+        error: `WhatsApp sender is ${senderStatus}. Sender must be ONLINE to send messages. Current status: ${integration.meta.senderStatus}`
+      };
+    }
+
+    // 3. Usar el número de WhatsApp del usuario como "from"
     const fromNumber = integration.meta.whatsappNumber.startsWith('whatsapp:') 
       ? integration.meta.whatsappNumber 
       : `whatsapp:${integration.meta.whatsappNumber}`;
 
-    // 3. Enviar mensaje usando el cliente Master
-    const twilioMessage = await twilioClient.messages.create({
+    // 4. Usar el subaccount del usuario (NO el master account)
+    const subaccountSid = integration.meta.twilioSubaccountSid;
+    const subaccountAuthToken = integration.meta.twilioSubaccountAuthToken || config.twilioAuthToken;
+
+    if (!subaccountSid) {
+      return {
+        success: false,
+        error: "User subaccount not found. Please reconnect your WhatsApp."
+      };
+    }
+
+    // 5. Crear cliente de Twilio con el subaccount del usuario
+    const userTwilioClient = new Twilio(subaccountSid, subaccountAuthToken);
+
+    // 6. Enviar mensaje usando el subaccount del usuario
+    const twilioMessage = await userTwilioClient.messages.create({
       body: message.body,
       from: fromNumber,
       to: message.to.startsWith('whatsapp:') ? message.to : `whatsapp:${message.to}`,
     });
 
-    logger.info('WhatsApp message sent successfully via Master account', {
+    logger.info('WhatsApp message sent successfully via user subaccount', {
       messageSid: twilioMessage.sid,
       to: message.to,
       from: fromNumber,
       status: twilioMessage.status,
-      userId
+      userId,
+      subaccountSid
     });
 
     return {
@@ -86,7 +104,7 @@ export async function sendWhatsAppMessage(
     };
 
   } catch (error: any) {
-    logger.error('Error sending WhatsApp message via Master account', {
+    logger.error('Error sending WhatsApp message via user subaccount', {
       error: error.message,
       code: error.code,
       moreInfo: error.moreInfo,

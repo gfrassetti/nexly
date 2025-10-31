@@ -1,3 +1,15 @@
+/**
+ * SECURITY: Next.js API Route que actúa como proxy seguro.
+ * ⚠️ IMPORTANTE: Este endpoint NO usa el AuthToken de Twilio directamente.
+ * 
+ * Flujo:
+ * 1. Recibe request del frontend
+ * 2. Envía request al backend Express (que tiene el AuthToken)
+ * 3. Backend genera URL de Twilio y la devuelve
+ * 4. Este endpoint devuelve la URL al frontend
+ * 
+ * El AuthToken de Twilio NUNCA se expone al frontend.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {

@@ -23,9 +23,16 @@ export interface IntegrationDoc extends Document {
     // Twilio WhatsApp specific fields (Modelo Master - Cuenta Única)
     channelSid?: string;        // ID del canal de Twilio (MGxxx o WAxxx) - opcional
     whatsappNumber?: string;    // Número de WhatsApp del usuario (whatsapp:+5491112345678)
-    registeredVia?: string;     // 'meta_embedded_signup' | 'manual'
+    registeredVia?: string;     // 'meta_embedded_signup' | 'manual' | 'twilio_embedded_signup'
     registrationDate?: Date;
     testMode?: boolean;
+    // Twilio Tech Provider Program fields
+    wabaId?: string;            // WhatsApp Business Account ID (WABA ID)
+    twilioSubaccountSid?: string; // Subaccount SID creado por Twilio (ACxxx)
+    twilioSubaccountAuthToken?: string; // AuthToken del subaccount (para uso futuro)
+    facebookBusinessId?: string;  // Facebook Business ID del cliente
+    senderId?: string;           // Sender ID registrado via Senders API (XExxx)
+    senderStatus?: string;       // Status del sender: 'pending' | 'online' | 'offline'
     // Discord removido - no es posible acceder a conversaciones del usuario
   };
   // timestamps agregados para que TS no proteste en las rutas
@@ -64,9 +71,16 @@ const integrationSchema = new Schema<IntegrationDoc>(
       // Twilio WhatsApp specific fields (Modelo Master - Cuenta Única)
       channelSid: { type: String },        // ID del canal de Twilio (opcional)
       whatsappNumber: { type: String },    // Número de WhatsApp (whatsapp:+5491112345678)
-      registeredVia: { type: String },     // 'meta_embedded_signup' | 'manual'
+      registeredVia: { type: String },     // 'meta_embedded_signup' | 'manual' | 'twilio_embedded_signup'
       registrationDate: { type: Date },
       testMode: { type: Boolean },
+      // Twilio Tech Provider Program fields
+      wabaId: { type: String },            // WhatsApp Business Account ID (WABA ID)
+      twilioSubaccountSid: { type: String }, // Subaccount SID creado por Twilio (ACxxx)
+      twilioSubaccountAuthToken: { type: String }, // AuthToken del subaccount (para uso futuro)
+      facebookBusinessId: { type: String },  // Facebook Business ID del cliente
+      senderId: { type: String },           // Sender ID registrado via Senders API (XExxx)
+      senderStatus: { type: String },       // Status del sender: 'pending' | 'online' | 'offline'
       // Discord removido - no es posible acceder a conversaciones del usuario
     },
   },

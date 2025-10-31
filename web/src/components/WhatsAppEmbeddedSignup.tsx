@@ -32,7 +32,11 @@ export default function WhatsAppEmbeddedSignup({
     try {
       setStep('loading');
       
-      // Crear sesión de Embedded Signup
+      /**
+       * SECURITY: Este fetch llama a Next.js API Route que actúa como proxy.
+       * ⚠️ IMPORTANTE: NUNCA hacemos llamadas directas a la API de Twilio desde aquí.
+       * El AuthToken de Twilio permanece siempre en el backend.
+       */
       const response = await fetch('/api/whatsapp/create-signup-session', {
         method: 'POST',
         headers: {

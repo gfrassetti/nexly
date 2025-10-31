@@ -7,6 +7,7 @@ import { Integration } from "../models/Integration";
 import MessageLimit from "../models/MessageLimit";
 import { getIntegrationMessageLimit } from "../services/messageLimits";
 import { createWhatsAppService } from "../services/whatsappService";
+import logger from "../utils/logger";
 
 type AuthRequest = Request & { user?: { id?: string; _id?: string } };
 
@@ -74,29 +75,35 @@ router.post("/send", async (req: AuthRequest, res: Response) => {
     let messageId: string | null = null;
     
     if (provider === 'whatsapp') {
-      // Enviar mensaje real a WhatsApp Cloud API
-      const accessToken = integration.accessToken;
-      const phoneNumberId = integration.phoneNumberId || integration.externalId;
-      
-      if (!accessToken || !phoneNumberId) {
-        return res.status(400).json({ 
-          error: "whatsapp_config_missing", 
-          detail: "Faltan credenciales de WhatsApp (accessToken o phoneNumberId)" 
-        });
-      }
-      
+      // Enviar mensaje usando Twilio (con subaccount del usuario)
       try {
-        const whatsappService = createWhatsAppService(accessToken, phoneNumberId);
-        const response = await whatsappService.sendTextMessage(to, body);
-        messageId = response.messages?.[0]?.id || null;
+        const { sendWhatsAppMessage } = require('../services/twilioWhatsAppService');
+        const response = await sendWhatsAppMessage({
+          to: to,
+          body: body
+        }, rawUserId);
+
+        if (!response.success) {
+          return res.status(500).json({ 
+            error: "whatsapp_send_failed", 
+            detail: response.error || 'Error enviando mensaje' 
+          });
+        }
+
+        messageId = response.messageId || response.sid;
         
-        console.log(`✅ Mensaje WhatsApp enviado exitosamente:`, {
+        logger.info('WhatsApp message sent successfully', {
           messageId,
           to,
-          body: body.substring(0, 50) + '...'
+          userId: rawUserId,
+          bodyLength: body.length
         });
       } catch (error: any) {
-        console.error('❌ Error enviando mensaje WhatsApp:', error.message);
+        logger.error('Error sending WhatsApp message', {
+          error: error.message,
+          to,
+          userId: rawUserId
+        });
         return res.status(500).json({ 
           error: "whatsapp_send_failed", 
           detail: error.message 

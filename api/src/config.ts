@@ -32,6 +32,14 @@ export const config = {
   // TEMPORAL: Reemplaza con tu Facebook Business Manager ID real
   nexlyFacebookBusinessId: process.env.NEXLY_FACEBOOK_BUSINESS_ID,
   
+  // Twilio Tech Provider Program - Partner Solution ID
+  twilioPartnerSolutionId: process.env.TWILIO_PARTNER_SOLUTION_ID || "",
+  
+  // Twilio Phone Number Type
+  // Si usas números SMS-capables de Twilio, debe ser 'sms_capable'
+  // Si usas números voice-only de Twilio, debe ser 'voice_only'
+  // Si los clientes traen sus propios números, debe ser 'byo' (bring your own)
+  twilioPhoneNumberType: process.env.TWILIO_PHONE_NUMBER_TYPE || 'sms_capable', // 'sms_capable' | 'voice_only' | 'byo'
   
   // Twilio Configuration
   twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || "AC8cee5d9e364a2931a091a96a645dee76",
