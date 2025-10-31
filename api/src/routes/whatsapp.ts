@@ -29,24 +29,16 @@ router.post('/create-signup-session', authenticateToken, async (req: Request, re
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    const { returnUrl, failureUrl } = req.body;
-
-    if (!returnUrl || !failureUrl) {
-      return res.status(400).json({ error: 'returnUrl y failureUrl son requeridos' });
-    }
-
-    logger.info('Creating WhatsApp Embedded Signup session', {
-      userId,
-      returnUrl,
-      failureUrl
+    logger.info('Creating WhatsApp Embedded Signup session with Meta Facebook SDK', {
+      userId
     });
 
-    // Verificar que tenemos las configuraciones necesarias
-    if (!config.nexlyFacebookBusinessId) {
-      logger.error('NEXLY_FACEBOOK_BUSINESS_ID not configured');
+    // Verificar que tenemos las configuraciones necesarias para Meta Embedded Signup
+    if (!config.metaConfigId) {
+      logger.error('META_CONFIG_ID not configured');
       return res.status(500).json({
         success: false,
-        error: 'Configuración de Facebook Business Manager faltante'
+        error: 'Config ID de Meta faltante. Necesitas obtenerlo de tu Meta App Dashboard.'
       });
     }
 
@@ -58,64 +50,29 @@ router.post('/create-signup-session', authenticateToken, async (req: Request, re
       });
     }
 
-    // Configurar parámetros para Embedded Signup según documentación de Twilio
-    const signupParams = new URLSearchParams({
-      // Account SID de la cuenta maestra de Twilio
-      accountSid: config.twilioAccountSid || '',
-      
-      // Facebook Business Manager ID de Nexly (requerido para el Embedded Signup)
-      facebookBusinessId: config.nexlyFacebookBusinessId,
-      
-      // Partner Solution ID (requerido para Tech Provider Program)
-      partnerSolutionId: config.twilioPartnerSolutionId,
-      
-      // URLs de retorno (importante: deben ser HTTPS en producción)
-      returnUrl: returnUrl,
-      failureUrl: failureUrl,
-      
-      // Payload con información del usuario (se devuelve en la URL de retorno)
-      payload: JSON.stringify({ 
-        userId: userId, 
-        sessionId: `signup_${userId}_${Date.now()}`,
-        timestamp: new Date().toISOString()
-      }),
-      
-      // Configuración de la aplicación
-      appName: 'Nexly',
-      
-      // Configuración de branding (opcional)
-      brandingColor: '#10B981',
-      
-      // Configuración específica para WhatsApp Business
-      solutionId: 'whatsapp_business_api'
-    });
+    if (!config.metaAppId) {
+      logger.error('META_APP_ID not configured');
+      return res.status(500).json({
+        success: false,
+        error: 'Meta App ID no configurado. Necesitas configurar tu Meta App ID.'
+      });
+    }
 
-    // Si usas números SMS-capables de Twilio, agregar featureType para saltar pasos de número
-    // Twilio manejará los OTPs automáticamente via Senders API
-    // Nota: Este parámetro puede variar según la documentación de Twilio
-    // Si Twilio requiere pasarlo como parámetro de URL, descomenta la siguiente línea:
-    // if (config.twilioPhoneNumberType === 'sms_capable') {
-    //   signupParams.append('featureType', 'only_waba_sharing');
-    // }
-
-    // URL oficial de Twilio para Embedded Signup de WhatsApp Business
-    const twilioSignupUrl = `https://www.twilio.com/console/whatsapp/embedded-signup?${signupParams.toString()}`;
-
-    logger.info('Generated Twilio Embedded Signup URL', {
+    // Devolver Config ID y Solution ID para usar con Facebook SDK
+    // Según documentación de Meta: https://www.twilio.com/docs/whatsapp/isv/tech-provider-program/integration-guide
+    logger.info('Returning Meta Embedded Signup configuration', {
       userId,
-      signupUrl: twilioSignupUrl,
-      params: Object.fromEntries(signupParams),
-      config: {
-        hasAccountSid: !!config.twilioAccountSid,
-        hasFacebookBusinessId: !!config.nexlyFacebookBusinessId,
-        facebookBusinessId: config.nexlyFacebookBusinessId
-      }
+      hasConfigId: !!config.metaConfigId,
+      hasSolutionId: !!config.twilioPartnerSolutionId,
+      hasMetaAppId: !!config.metaAppId
     });
 
     res.json({
       success: true,
-      signupUrl: twilioSignupUrl,
-      sessionId: `signup_${userId}_${Date.now()}`
+      configId: config.metaConfigId, // Config ID de Meta (obtenido del Meta App Dashboard)
+      solutionId: config.twilioPartnerSolutionId, // Partner Solution ID de Twilio
+      facebookAppId: config.metaAppId, // Meta App ID para inicializar Facebook SDK
+      useTwilioNumbers: config.twilioPhoneNumberType === 'sms_capable' // Indicar si usamos números de Twilio
     });
 
   } catch (error: any) {
@@ -384,59 +341,45 @@ async function registerWhatsAppSender(
   }
 }
 
-// Callback para manejar el redireccionamiento de éxito del Embedded Signup
-router.get('/onboarding-callback', async (req: Request, res: Response) => {
+// Callback POST para recibir datos del frontend (Facebook SDK de Meta)
+router.post('/onboarding-callback', authenticateToken, async (req: Request, res: Response) => {
   try {
-    // Leer los parámetros de Twilio de la URL
-    const { 
-      TwilioNumber, 
-      WhatsAppBusinessAccountId, 
-      FacebookBusinessId,
-      SubaccountSid,
-      payload 
-    } = req.query;
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'Usuario no autenticado' 
+      });
+    }
 
-    logger.info('Received WhatsApp onboarding callback from Twilio', {
-      TwilioNumber,
-      WhatsAppBusinessAccountId,
-      FacebookBusinessId,
-      SubaccountSid,
-      allQueryParams: req.query
+    // Leer los datos de Meta Embedded Signup del body
+    const { 
+      phone_number_id,  // Phone Number ID de Meta
+      waba_id           // WhatsApp Business Account ID de Meta
+    } = req.body;
+
+    logger.info('Received WhatsApp onboarding callback from Meta Embedded Signup', {
+      phone_number_id,
+      waba_id,
+      userId
     });
 
-    if (!payload) {
-      logger.error('Missing payload in callback');
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations/connect/whatsapp/error?msg=Datos incompletos`);
-    }
-
-    let userId: string;
-    try {
-      const payloadData = JSON.parse(payload as string);
-      userId = payloadData.userId;
-    } catch (parseError: any) {
-      logger.error('Error parsing payload', { error: parseError.message, payload });
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations/connect/whatsapp/error?msg=Error procesando datos`);
-    }
-
-    if (!TwilioNumber || !WhatsAppBusinessAccountId || !userId) {
-      logger.error('Missing required parameters in callback', {
-        hasTwilioNumber: !!TwilioNumber,
-        hasWabaId: !!WhatsAppBusinessAccountId,
-        hasUserId: !!userId
+    if (!phone_number_id || !waba_id) {
+      logger.error('Missing required parameters from Meta Embedded Signup', {
+        hasPhoneNumberId: !!phone_number_id,
+        hasWabaId: !!waba_id,
+        userId
       });
-      return res.redirect(`${config.frontendUrl}/dashboard/integrations/connect/whatsapp/error?msg=Datos incompletos`);
+      return res.status(400).json({ 
+        success: false,
+        error: 'Datos incompletos de Meta Embedded Signup' 
+      });
     }
 
-    // Normalizar el número de teléfono
-    const phoneNumber = TwilioNumber.toString().startsWith('whatsapp:')
-      ? TwilioNumber.toString()
-      : `whatsapp:${TwilioNumber}`;
-
-    logger.info('Processing WhatsApp signup callback', {
-      phoneNumber,
-      wabaId: WhatsAppBusinessAccountId,
-      userId,
-      subaccountSid: SubaccountSid
+    logger.info('Processing WhatsApp signup callback from Meta', {
+      phone_number_id,
+      waba_id,
+      userId
     });
 
     // Obtener información del usuario para el nombre del subaccount
@@ -444,12 +387,12 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
     const customerName = user?.username || user?.email || `Customer ${userId}`;
 
     // 1. Verificar o crear subaccount para este cliente
-    let subaccountSid = SubaccountSid?.toString();
+    let subaccountSid: string | undefined;
     let subaccountAuthToken: string | undefined;
 
     // Buscar si ya existe una integración con este WABA (cliente existente)
     const existingIntegration = await Integration.findOne({
-      'meta.wabaId': WhatsAppBusinessAccountId.toString()
+      'meta.wabaId': waba_id.toString()
     });
 
     if (existingIntegration && existingIntegration.meta?.twilioSubaccountSid) {
@@ -460,9 +403,9 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
       logger.info('Using existing subaccount for customer', {
         subaccountSid,
         userId,
-        wabaId: WhatsAppBusinessAccountId
+        wabaId: waba_id
       });
-    } else if (!subaccountSid) {
+    } else {
       // Cliente nuevo: crear subaccount
       const subaccountResult = await createTwilioSubaccount(customerName, userId);
       
@@ -470,9 +413,12 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
         logger.error('Failed to create Twilio subaccount', {
           error: subaccountResult.error,
           userId,
-          wabaId: WhatsAppBusinessAccountId
+          wabaId: waba_id
         });
-        throw new Error('Failed to create Twilio subaccount');
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create Twilio subaccount'
+        });
       }
 
       subaccountSid = subaccountResult.subaccountSid;
@@ -481,85 +427,106 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
       logger.info('Created new Twilio subaccount for customer', {
         subaccountSid,
         userId,
-        wabaId: WhatsAppBusinessAccountId
+        wabaId: waba_id
       });
-    } else {
-      // Twilio ya creó el subaccount en un callback anterior
-      // Intentar obtener el AuthToken del subaccount desde Twilio
-      // CRÍTICO: No usar el master token, siempre necesitamos el AuthToken del subaccount
-      logger.info('Subaccount provided by Twilio, fetching AuthToken', {
-        subaccountSid,
-        userId
-      });
+    }
+
+    // 2. Obtener número de teléfono desde Meta Graph API
+    // Según documentación de Twilio: Meta solo devuelve phone_number_id, necesitamos obtener el número real
+    // Documentación: https://www.twilio.com/docs/whatsapp/isv/tech-provider-program/integration-guide#collect-the-phone-number
+    let phoneNumber: string | undefined;
+    let displayPhoneNumber: string | undefined;
+    
+    try {
+      // Obtener número de teléfono desde Meta Graph API usando phone_number_id
+      // Necesitamos un access token del WABA para hacer esta llamada
+      // Por ahora, intentamos obtenerlo del cliente o usamos el App Access Token si está disponible
+      const metaAccessToken = config.metaAccessToken; // Token de la app de Meta
       
-      try {
-        const masterClient = new Twilio(config.twilioAccountSid, config.twilioAuthToken);
-        const account = await masterClient.api.v2010.accounts(subaccountSid).fetch();
-        
-        if (account.authToken) {
-          subaccountAuthToken = account.authToken;
-          logger.info('Successfully fetched subaccount AuthToken', {
-            subaccountSid
-          });
-        } else {
-          // Si no se puede obtener el AuthToken, crear un nuevo subaccount
-          logger.warn('Could not fetch AuthToken for existing subaccount, creating new one', {
-            subaccountSid
-          });
-          const subaccountResult = await createTwilioSubaccount(customerName, userId);
-          if (subaccountResult.success) {
-            subaccountSid = subaccountResult.subaccountSid;
-            subaccountAuthToken = subaccountResult.authToken;
-          } else {
-            throw new Error('Failed to create subaccount as fallback');
+      if (metaAccessToken && phone_number_id) {
+        try {
+          // Obtener información del número desde Meta Graph API
+          // Endpoint: GET https://graph.facebook.com/v21.0/{phone_number_id}
+          const phoneResponse = await axios.get(
+            `https://graph.facebook.com/v21.0/${phone_number_id}`,
+            {
+              params: {
+                fields: 'id,display_phone_number,verified_name',
+                access_token: metaAccessToken
+              }
+            }
+          );
+
+          displayPhoneNumber = phoneResponse.data?.display_phone_number;
+          
+          // Convertir display_phone_number a formato E.164 si es necesario
+          if (displayPhoneNumber) {
+            // Asegurar formato E.164 (agregar + si no está)
+            phoneNumber = displayPhoneNumber.startsWith('+') 
+              ? `whatsapp:${displayPhoneNumber}` 
+              : `whatsapp:+${displayPhoneNumber}`;
           }
+
+          logger.info('Phone number obtained from Meta Graph API', {
+            phone_number_id,
+            display_phone_number: displayPhoneNumber,
+            phoneNumber
+          });
+        } catch (phoneError: any) {
+          logger.warn('Could not obtain phone number from Meta Graph API', {
+            error: phoneError.message,
+            phone_number_id,
+            note: 'Sender registration will be delayed until phone number is available'
+          });
+          // Continuar sin número por ahora, se obtendrá después
         }
-      } catch (error: any) {
-        logger.error('Failed to fetch subaccount AuthToken, creating new subaccount', {
-          error: error.message,
+      } else {
+        logger.warn('Meta Access Token not available, cannot fetch phone number', {
+          hasAccessToken: !!metaAccessToken,
+          phone_number_id
+        });
+      }
+    } catch (error: any) {
+      logger.warn('Error obtaining phone number from Meta', {
+        error: error.message,
+        phone_number_id
+      });
+      // Continuar sin número, se registrará después
+    }
+
+    // 3. Registrar el WhatsApp Sender si tenemos el número
+    // Si no tenemos el número, se registrará después cuando esté disponible
+    let senderRegistration: { success: boolean; senderId?: string; senderStatus?: string; error?: string } | null = null;
+    
+    if (phoneNumber && subaccountSid && subaccountAuthToken) {
+      // Verificar si es el primer sender para este WABA
+      const isFirstSender = !existingIntegration;
+      
+      senderRegistration = await registerWhatsAppSender(
+        phoneNumber,
+        waba_id.toString(),
+        subaccountSid,
+        subaccountAuthToken,
+        isFirstSender,
+        customerName // Profile name para números SMS-capables
+      );
+
+      if (!senderRegistration.success) {
+        logger.error('Failed to register WhatsApp Sender', {
+          error: senderRegistration.error,
+          phoneNumber,
+          wabaId: waba_id,
           subaccountSid
         });
-        
-        // Crear un nuevo subaccount si no se puede obtener el AuthToken
-        const subaccountResult = await createTwilioSubaccount(customerName, userId);
-        if (!subaccountResult.success) {
-          throw new Error(`Failed to create Twilio subaccount: ${subaccountResult.error}`);
-        }
-        subaccountSid = subaccountResult.subaccountSid;
-        subaccountAuthToken = subaccountResult.authToken;
+        // Continuar de todas formas, ya que el WABA ya está creado
       }
-    }
-
-    // 2. Registrar el WhatsApp Sender usando la Senders API
-    // Verificar si es el primer sender para este WABA
-    const isFirstSender = !existingIntegration;
-    
-    // CRÍTICO: Usar SOLO el AuthToken del subaccount, nunca el master token
-    if (!subaccountAuthToken) {
-      logger.error('Cannot register sender without subaccount AuthToken', {
-        subaccountSid,
-        userId
+    } else {
+      logger.info('Skipping sender registration - phone number not available', {
+        phone_number_id,
+        waba_id,
+        hasPhoneNumber: !!phoneNumber,
+        note: 'Sender will be registered after obtaining phone number from Meta Graph API'
       });
-      throw new Error('Subaccount AuthToken is required to register WhatsApp Sender');
-    }
-
-    const senderRegistration = await registerWhatsAppSender(
-      phoneNumber,
-      WhatsAppBusinessAccountId.toString(),
-      subaccountSid!,
-      subaccountAuthToken, // ✅ SOLO usar AuthToken del subaccount
-      isFirstSender,
-      customerName // Profile name para números SMS-capables
-    );
-
-    if (!senderRegistration.success) {
-      logger.error('Failed to register WhatsApp Sender', {
-        error: senderRegistration.error,
-        phoneNumber,
-        wabaId: WhatsAppBusinessAccountId,
-        subaccountSid
-      });
-      // Continuar de todas formas, ya que el WABA ya está creado
     }
 
     // 3. Crear o actualizar la integración en la base de datos
@@ -568,27 +535,31 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
         userId,
         provider: 'whatsapp',
         $or: [
-          { 'meta.wabaId': WhatsAppBusinessAccountId.toString() },
-          { 'meta.whatsappNumber': phoneNumber }
+          { 'meta.wabaId': waba_id.toString() },
+          { 'meta.phoneNumberId': phone_number_id }
         ]
       },
       {
         userId,
         provider: 'whatsapp',
-        externalId: WhatsAppBusinessAccountId.toString(),
-        phoneNumberId: phoneNumber,
+        externalId: waba_id.toString(),
+        phoneNumberId: phone_number_id, // Meta Phone Number ID (diferente del número real)
         status: 'linked',
         meta: {
-          whatsappNumber: phoneNumber,
-          wabaId: WhatsAppBusinessAccountId.toString(),
+          phoneNumberId: phone_number_id, // Meta Phone Number ID
+          wabaId: waba_id.toString(),
           twilioSubaccountSid: subaccountSid,
           twilioSubaccountAuthToken: subaccountAuthToken,
-          facebookBusinessId: FacebookBusinessId?.toString(),
-          senderId: senderRegistration.senderId,
-          senderStatus: senderRegistration.senderStatus || 'pending',
-          registeredVia: 'twilio_embedded_signup',
+          whatsappNumber: phoneNumber || undefined, // Número en formato E.164 (si se obtuvo de Meta)
+          displayPhoneNumber: displayPhoneNumber || undefined, // Número display (si se obtuvo de Meta)
+          senderId: senderRegistration?.senderId, // Sender ID (si se registró)
+          senderStatus: senderRegistration?.senderStatus || (phoneNumber ? 'pending' : undefined), // Status del sender
+          registeredVia: 'meta_embedded_signup', // ✅ Usando Meta Embedded Signup
           registrationDate: new Date(),
-          isActive: true
+          isActive: true,
+          // Estado: pendiente si no se obtuvo el número o no se registró el sender
+          needsPhoneNumber: !phoneNumber,
+          needsSenderRegistration: !senderRegistration?.success && !!phoneNumber
         }
       },
       {
@@ -600,32 +571,46 @@ router.get('/onboarding-callback', async (req: Request, res: Response) => {
     if (!integration) {
       logger.error('Failed to create/update WhatsApp integration', {
         userId,
-        phoneNumber,
-        wabaId: WhatsAppBusinessAccountId
+        phone_number_id,
+        waba_id
       });
-      throw new Error('Failed to create WhatsApp integration');
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create WhatsApp integration'
+      });
     }
 
-    logger.info('WhatsApp integration created/updated successfully', {
+    logger.info('WhatsApp integration created/updated successfully via Meta Embedded Signup', {
       integrationId: String(integration._id) || integration.id,
       userId,
-      phoneNumber,
-      wabaId: WhatsAppBusinessAccountId,
-      senderId: senderRegistration.senderId
+      phone_number_id,
+      waba_id
     });
 
-    // 3. Redirigir al frontend de éxito
-    const successUrl = `${config.frontendUrl}/dashboard/integrations/connect/whatsapp/success?phone=${encodeURIComponent(TwilioNumber.toString())}`;
-    return res.redirect(successUrl);
+    // Devolver éxito al frontend (ya no redirigimos, el frontend maneja la UI)
+    return res.json({
+      success: true,
+      message: 'WhatsApp integration registered successfully',
+      integration: {
+        id: integration._id,
+        phone_number_id,
+        waba_id,
+        status: 'linked',
+        note: 'Phone number will be obtained from Meta Graph API. Sender registration pending.'
+      }
+    });
 
   } catch (error: any) {
-    logger.error('Error processing Twilio onboarding callback', {
+    logger.error('Error processing WhatsApp onboarding callback from Meta', {
       error: error.message,
       stack: error.stack,
-      query: req.query
+      body: req.body
     });
-    const errorUrl = `${config.frontendUrl}/dashboard/integrations/connect/whatsapp/error?msg=${encodeURIComponent('Error procesando el registro')}`;
-    res.redirect(errorUrl);
+
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Error procesando el registro de WhatsApp'
+    });
   }
 });
 

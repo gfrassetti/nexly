@@ -1,53 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+/**
+ * POST /api/whatsapp/onboarding-callback
+ * 
+ * Proxy endpoint para enviar datos de Meta Embedded Signup al backend.
+ * Recibe phone_number_id y waba_id del frontend y los envía al backend para
+ * crear subaccount y registrar sender.
+ */
+export async function POST(request: NextRequest) {
   try {
-    // Obtener los parámetros de la URL
-    const { searchParams } = new URL(request.url);
-    const TwilioNumber = searchParams.get('TwilioNumber');
-    const WhatsAppBusinessAccountId = searchParams.get('WhatsAppBusinessAccountId');
-    const FacebookBusinessId = searchParams.get('FacebookBusinessId');
-    const payload = searchParams.get('payload');
+    // Obtener el token de autenticación de las cookies
+    const token = request.cookies.get('token')?.value;
 
-    console.log('WhatsApp onboarding callback received:', {
-      TwilioNumber,
-      WhatsAppBusinessAccountId,
-      FacebookBusinessId,
-      payload
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'No autorizado' },
+        { status: 401 }
+      );
+    }
+
+    // Leer los datos del body (phone_number_id y waba_id de Meta)
+    const body = await request.json();
+    const { phone_number_id, waba_id } = body;
+
+    if (!phone_number_id || !waba_id) {
+      return NextResponse.json(
+        { success: false, error: 'Datos incompletos de Meta Embedded Signup' },
+        { status: 400 }
+      );
+    }
+
+    // Proxear la request al backend
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const response = await fetch(`${backendUrl}/whatsapp/onboarding-callback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        phone_number_id,
+        waba_id
+      })
     });
 
-    if (!payload) {
-      return NextResponse.redirect(
-        new URL('/dashboard/integrations/connect/whatsapp/error?msg=Datos incompletos', request.url)
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: data.error || 'Error en el servidor' },
+        { status: response.status }
       );
     }
 
-    const { userId } = JSON.parse(payload);
-
-    if (TwilioNumber && WhatsAppBusinessAccountId && userId) {
-      console.log('WhatsApp signup successful:', { 
-        TwilioNumber, 
-        WhatsAppBusinessAccountId,
-        userId 
-      });
-      
-      // TODO: Aquí podrías hacer una llamada al backend para actualizar la base de datos
-      // await updateWhatsAppIntegration({ userId, phoneNumber: TwilioNumber, ... });
-      
-      // Redirigir a la página de éxito
-      return NextResponse.redirect(
-        new URL(`/dashboard/integrations/connect/whatsapp/success?phone=${TwilioNumber}`, request.url)
-      );
-    }
-
-    return NextResponse.redirect(
-      new URL('/dashboard/integrations/connect/whatsapp/error?msg=Datos incompletos', request.url)
-    );
+    return NextResponse.json(data);
 
   } catch (error: any) {
     console.error('Error processing WhatsApp onboarding callback:', error);
-    return NextResponse.redirect(
-      new URL('/dashboard/integrations/connect/whatsapp/error', request.url)
+    return NextResponse.json(
+      { success: false, error: error.message || 'Error procesando callback' },
+      { status: 500 }
     );
   }
 }
