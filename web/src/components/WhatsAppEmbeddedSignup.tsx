@@ -381,44 +381,26 @@ export default function WhatsAppEmbeddedSignup({
 
     setStep('connecting');
 
-    // IMPORTANTE: Construir URLs de retorno para Embedded Signup
-    // Según documentación de Meta, returnUrl y failureUrl son requeridos
-    // Deben ser URLs absolutas completas
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const returnUrl = `${baseUrl}/dashboard/integrations/connect/whatsapp/success`;
-    const failureUrl = `${baseUrl}/dashboard/integrations/connect/whatsapp/error`;
-
-    // Validar que las URLs están configuradas
-    if (!returnUrl || !failureUrl) {
-      throw new Error('No se pudieron construir las URLs de retorno. Verifica la configuración.');
-    }
-
-    console.log('🔗 URLs de retorno configuradas:', {
-      returnUrl,
-      failureUrl,
-      baseUrl
-    });
-
-    // Preparar parámetros según documentación oficial de Meta Embedded Signup
-    // Documentación: https://developers.facebook.com/docs/whatsapp/embedded-signup/default-flow
-    // NOTA: returnUrl y failureUrl son REQUERIDOS por Meta cuando se usa config_id
+    // Preparar parámetros según documentación oficial de Twilio Tech Provider Program
+    // Documentación: https://www.twilio.com/docs/whatsapp/isv/tech-provider-program/integration-guide
+    // NOTA: Esta es la estructura EXACTA según la documentación de Twilio
     const loginOptions: any = {
-      config_id: configId, // Config ID de Meta (requerido para Embedded Signup)
-      auth_type: 'rerequest', // Permite re-solicitar permisos si el usuario ya está logueado
+      config_id: configId, // Config ID de Meta (requerido)
+      auth_type: 'rerequest', // Evita errores si el usuario ya está logueado
       response_type: 'code',
       override_default_response_type: true,
-      returnUrl: returnUrl, // URL de éxito - REQUERIDO por Meta
-      failureUrl: failureUrl, // URL de error - REQUERIDO por Meta
       extras: {
-        sessionInfoVersion: 3, // Requerido para obtener WABA ID y phone_number_id
+        sessionInfoVersion: 3, // Requerido para obtener WABA ID
         setup: {
-          solutionID: solutionId // Partner Solution ID de Twilio (opcional, pero recomendado)
+          solutionID: solutionId // Partner Solution ID de Twilio
         }
       }
     };
 
-    // Si usas números SMS-capables de Twilio (según documentación de Twilio Tech Provider)
-    // Esto permite que Twilio maneje los OTPs automáticamente
+    // Si usas números SMS-capables de Twilio, agregar featureType
+    // Según documentación: "set the following 'featureType' to 'only_waba_sharing'
+    // if and only if using a Twilio SMS-capable number, otherwise
+    // do not include it or set it to null"
     if (useTwilioNumbers) {
       loginOptions.extras.featureType = 'only_waba_sharing';
     }
@@ -428,15 +410,15 @@ export default function WhatsAppEmbeddedSignup({
       throw new Error('Config ID o Solution ID faltantes. Verifica la configuración del servidor.');
     }
 
-    console.log('📤 Calling FB.login() with options:', {
+    console.log('📤 Calling FB.login() with options (según documentación Twilio):', {
       config_id: configId ? `SET (${configId.length} chars)` : 'NOT SET',
       solution_id: solutionId ? `SET (${solutionId.length} chars)` : 'NOT SET',
-      returnUrl: loginOptions.returnUrl ? 'SET' : 'NOT SET',
-      failureUrl: loginOptions.failureUrl ? 'SET' : 'NOT SET',
       hasExtras: !!loginOptions.extras,
+      hasSessionInfoVersion: loginOptions.extras?.sessionInfoVersion === 3,
       hasSetup: !!loginOptions.extras?.setup,
       hasSolutionID: !!loginOptions.extras?.setup?.solutionID,
       hasFeatureType: !!loginOptions.extras?.featureType,
+      featureType: loginOptions.extras?.featureType || 'null (not using Twilio SMS-capable numbers)',
       fullOptions: JSON.stringify(loginOptions, null, 2)
     });
 
@@ -454,25 +436,9 @@ export default function WhatsAppEmbeddedSignup({
         throw new Error('FB.login() no está disponible. El SDK de Facebook no está cargado correctamente.');
       }
 
-      // IMPORTANTE: Meta requiere returnUrl y failureUrl cuando se usa config_id para Embedded Signup
-      // Verificar que están presentes y son URLs válidas
-      if (!loginOptions.returnUrl || !loginOptions.failureUrl) {
-        const errorMsg = 'returnUrl y failureUrl son requeridos para Embedded Signup';
-        console.error('❌', errorMsg, {
-          returnUrl: loginOptions.returnUrl,
-          failureUrl: loginOptions.failureUrl
-        });
-        throw new Error(errorMsg);
-      }
-
-      // Validar que las URLs son absolutas (requisito de Meta)
-      if (!loginOptions.returnUrl.startsWith('http') || !loginOptions.failureUrl.startsWith('http')) {
-        const errorMsg = 'returnUrl y failureUrl deben ser URLs absolutas (comenzar con http:// o https://)';
-        console.error('❌', errorMsg, {
-          returnUrl: loginOptions.returnUrl,
-          failureUrl: loginOptions.failureUrl
-        });
-        throw new Error(errorMsg);
+      // Validar que tenemos los parámetros requeridos según documentación de Twilio
+      if (!loginOptions.config_id || !loginOptions.extras?.setup?.solutionID) {
+        throw new Error('config_id y solutionID son requeridos para Embedded Signup');
       }
 
       const loginResponse = window.FB.login(
