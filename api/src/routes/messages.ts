@@ -136,7 +136,7 @@ router.post("/send", async (req: AuthRequest, res: Response) => {
       provider: provider,
     });
 
-    // Incrementar contador de mensajes
+    // Incrementar contador de mensajess
     await MessageLimit.incrementMessageCount(
       rawUserId, 
       integrationId, 
