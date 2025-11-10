@@ -207,16 +207,30 @@ export async function processIncomingWhatsAppMessage(
 
     // 1. Encontrar el usuario propietario del número de WhatsApp Business (toNumber)
     const Integration = require('../models/Integration').default;
-    const integration = await Integration.findOne({
+    const integrationMatchers = [
+      { 'meta.whatsappNumber': `whatsapp:${toNumber}` },
+      { 'meta.whatsappNumber': toNumber },
+      { phoneNumberId: toNumber },
+      { externalId: toNumber }
+    ];
+
+    let integration = await Integration.findOne({
       provider: "whatsapp",
-      status: "linked",
-      $or: [
-        { 'meta.whatsappNumber': `whatsapp:${toNumber}` },
-        { 'meta.whatsappNumber': toNumber },
-        { phoneNumberId: toNumber },
-        { externalId: toNumber }
-      ]
+      status: { $in: ["linked", "pending"] },
+      $or: integrationMatchers
     });
+
+    if (!integration) {
+      integration = await Integration.findOne({
+        provider: "whatsapp",
+        status: { $ne: "error" },
+        meta: { $exists: true },
+        $or: [
+          ...integrationMatchers,
+          { 'meta.testMode': true }
+        ]
+      });
+    }
 
     if (!integration) {
       logger.warn('No integration found for incoming WhatsApp message', {
@@ -302,7 +316,6 @@ export async function processIncomingWhatsAppMessage(
       // Reabrir conversación si está cerrada
       if (conversation.status === 'closed') {
         conversation.status = 'open';
-        await conversation.save();
       }
     }
 
@@ -322,6 +335,10 @@ export async function processIncomingWhatsAppMessage(
       timestamp: new Date(),
       isRead: false
     });
+
+    // Actualizar timestamps para ordenar correctamente en el inbox
+    conversation.updatedAt = new Date();
+    await conversation.save();
 
     logger.info('WhatsApp message saved to database', {
       messageId: message._id.toString(),

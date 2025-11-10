@@ -6,13 +6,13 @@ import InboxList from "@/components/InboxList";
 import MessageThread from "@/components/MessageThread";
 import Composer from "@/components/Composer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { sendMessage } from "@/hooks/sendMessage";
 import { CHANNELS } from "@/lib/constants";
 import { useSearchParams } from "next/navigation";
 
 export default function InboxPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { refreshInbox } = useDataRefresh();
   const searchParams = useSearchParams();
   const contactId = searchParams.get('contact');
@@ -61,22 +61,23 @@ export default function InboxPage() {
           
           // Para conversaciones privadas de Telegram, usar username o firstName
           if (c === 'telegram' && !title) {
-            title = conv.username || conv.firstName || conv.lastName || 'Usuario Desconocido';
+            title = conv.username || conv.firstName || conv.lastName || 'Unknown user';
           }
           
           // Fallback final
           if (!title) {
-            title = 'Sin nombre';
+            title = 'No name';
           }
           
           return {
             id: String(conv.id), // Asegurarse de que el ID es un string
             title: title,
-            last: conv.lastMessage || conv.last || 'Último mensaje no disponible',
+            last: conv.lastMessage || conv.last || 'No message available',
             at: conv.lastMessageTime || conv.at || new Date().toISOString(),
             unread: conv.unreadCount > 0,
             platform: conv.provider || c,
             avatar: conv.avatar,
+            contactId: conv.contactId ? String(conv.contactId) : undefined,
             // Información adicional para Telegram
             chatType: conv.chatType,
             telegramUsername: conv.telegramUsername,
@@ -91,9 +92,10 @@ export default function InboxPage() {
       return data;
     },
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      dedupingInterval: 10000, // Cache por 10 segundos para evitar refetch constante
+      refreshInterval: channel === 'whatsapp' ? 3000 : 0,
+      dedupingInterval: 10000,
     }
   );
 
@@ -231,7 +233,7 @@ export default function InboxPage() {
       }));
       
     } catch (error) {
-      console.error('Error enviando mensaje:', error);
+      console.error('Error sending message:', error);
       throw error; // Re-lanzar para que Composer lo maneje
     }
   }
@@ -261,12 +263,20 @@ export default function InboxPage() {
             ))}
           </div>
           
-          {/* Contador de conversaciones y estado de contacto */}
-          <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-neutral-400">
+          {/* Contador de conversaciones, estado de contacto y cuenta */}
+          <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-neutral-400">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 text-neutral-300">
+              <span className="uppercase tracking-wide text-[10px] sm:text-xs text-neutral-500">
+                Account
+              </span>
+              <span className="font-medium text-neutral-100">
+                {user?.email || user?.username || 'Unknown account'}
+              </span>
+            </div>
             {contactId && isLoadingContact && (
               <div className="hidden sm:flex items-center gap-2 text-blue-400">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                Cargando contacto...
+                Loading contact...
               </div>
             )}
             {contactId && contactData && (
@@ -274,7 +284,7 @@ export default function InboxPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                {contactData.name || contactData.phone || 'Contacto seleccionado'}
+                {contactData.name || contactData.phone || 'Selected contact'}
               </div>
             )}
             <span className="whitespace-nowrap">{conversationsData?.conversations?.length || 0} conv.</span>
@@ -286,7 +296,7 @@ export default function InboxPage() {
           <div className="relative">
             <input
               type="text"
-              placeholder={`Buscar en ${channel}...`}
+              placeholder={`Search in ${channel}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-3 sm:px-4 py-2 pl-8 sm:pl-10 text-accent-cream placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
@@ -346,7 +356,7 @@ export default function InboxPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Volver a conversaciones
+                Back to conversations
               </button>
             </div>
           )}

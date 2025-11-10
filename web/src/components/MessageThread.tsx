@@ -25,13 +25,13 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
 
   // Validar que el threadId corresponda al canal actual
   const isValidThread = threadId && channel && (
-    // Para Telegram, el threadId debe contener "telegram_" o ser un ID numérico (como 777000)
     (channel === 'telegram' && (threadId.includes('telegram_') || /^\d+$/.test(threadId))) ||
-    // Para WhatsApp, el threadId debe contener "whatsapp_" o ser un número de teléfono
-    (channel === 'whatsapp' && (threadId.includes('whatsapp_') || /^\d+$/.test(threadId))) ||
-    // Para Instagram, el threadId debe contener "instagram_"
+    (channel === 'whatsapp' && (
+      /^[0-9a-fA-F]{24}$/.test(threadId) ||
+      threadId.includes('whatsapp_') ||
+      /^\+?[0-9]{10,15}$/.test(threadId)
+    )) ||
     (channel === 'instagram' && threadId.includes('instagram_')) ||
-    // Para Messenger, el threadId debe contener "messenger_" o ser un ID de Facebook
     (channel === 'messenger' && (threadId.includes('messenger_') || /^\d+$/.test(threadId)))
   );
 
@@ -129,7 +129,7 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
   // Formatear tiempo
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('es-ES', { 
+    return date.toLocaleTimeString('en-US', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
@@ -166,8 +166,8 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
           <svg className="w-16 h-16 mx-auto mb-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
-          <h3 className="text-lg font-medium mb-2">Selecciona una conversación</h3>
-          <p className="text-sm">Elige una conversación de {channel} para comenzar a chatear</p>
+          <h3 className="text-lg font-medium mb-2">Select a conversation</h3>
+          <p className="text-sm">Choose a {channel} conversation to start chatting</p>
         </div>
       </div>
     );
@@ -252,8 +252,8 @@ export default function MessageThread({ threadId, token, channel, onMessageSent 
             {threadId.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <h3 className="font-medium text-accent-cream">Conversación {threadId}</h3>
-            <p className="text-sm text-neutral-400 capitalize">{channel} • Activo</p>
+            <h3 className="font-medium text-accent-cream">Conversation {threadId}</h3>
+            <p className="text-sm text-neutral-400 capitalize">{channel} • Active</p>
           </div>
         </div>
       </div>
