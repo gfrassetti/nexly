@@ -91,7 +91,6 @@ const AddOnPurchaseSchema = new Schema(
 
 // Índices para optimizar consultas
 AddOnPurchaseSchema.index({ userId: 1, effectiveDate: 1 });
-AddOnPurchaseSchema.index({ stripeSessionId: 1 });
 AddOnPurchaseSchema.index({ status: 1 });
 
 // Método para verificar si el add-on está activo
